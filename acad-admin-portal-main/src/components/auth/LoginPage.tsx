@@ -1,0 +1,157 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { GraduationCap, User, Lock } from "lucide-react";
+
+const LoginPage = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Simple validation
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // API call to backend login endpoint
+      const response = await fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Store authentication data
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("userEmail", data.admin.email);
+        localStorage.setItem("userName", data.admin.name);
+        localStorage.setItem("authToken", data.token);
+        
+        toast({
+          title: "Success",
+          description: data.message || "Login successful!",
+        });
+        navigate("/dashboard");
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Login failed. Please check your credentials.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Error",
+        description: "Network error. Please check your connection and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-university-blue-light to-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <div className="bg-primary p-3 rounded-full">
+              <GraduationCap className="h-8 w-8 text-primary-foreground" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-primary">University Admin</h1>
+          <p className="text-muted-foreground mt-2">Sign in to your admin panel</p>
+        </div>
+
+        <Card className="shadow-lg border-0">
+          <CardHeader>
+            <CardTitle>Welcome Back</CardTitle>
+            <CardDescription>
+              Enter your credentials to access the admin panel
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="admin@university.edu"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? "Signing in..." : "Sign In"}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Button
+                variant="link"
+                className="p-0 text-primary"
+                onClick={() => navigate("/signup")}
+              >
+                Sign up here
+              </Button>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default LoginPage;
