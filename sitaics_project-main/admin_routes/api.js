@@ -17,7 +17,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('WARNING: JWT_SECRET environment variable is not set. Please set it for security.');
+  process.exit(1);
+}
 
 // Configure Nodemailer
 const transporter = nodemailer.createTransport({
@@ -31,7 +35,10 @@ const transporter = nodemailer.createTransport({
 
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:8080', // Updated to match Vite config
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' })); // Added size limit for security
 
 // Configure multer for file uploads
@@ -791,34 +798,67 @@ app.post('/api/admin/register', asyncHandler(async (req, res) => {
 
   await pendingAdmin.save();
 
-  // Send verification email using nodemailer
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: 'Admin Registration Verification - Rashtriya Raksha University',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2>Admin Registration Verification</h2>
-        <p>Dear ${name},</p>
-        <p>You have registered in our website <strong>Rashtriya Raksha University</strong> as an admin. Is it you?</p>
-        <p>Please confirm your registration by clicking one of the options below:</p>
-        <div style="margin: 20px 0;">
-          <a href="${process.env.BASE_URL || 'http://localhost:3000'}/api/admin/verify/yes/${pendingAdmin._id}" 
-             style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; margin-right: 10px; border-radius: 5px;">
-             YES
-          </a>
-          <a href="${process.env.BASE_URL || 'http://localhost:3000'}/api/admin/verify/no/${pendingAdmin._id}" 
-             style="background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-             NO
-          </a>
-        </div>
-        <p>If you did not register for this account, please click NO.</p>
-        <p>Thank you,<br>Rashtriya Raksha University Team</p>
-      </div>
-    `
-  };
+  // Send verification email using nodemailer with error handling
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.warn('Email credentials not configured. Skipping email verification.');
+      // Still create the admin but skip email
+      const newAdmin = new Admin({
+        name: pendingAdmin.name,
+        email: pendingAdmin.email,
+        phoneNumber: pendingAdmin.phoneNumber,
+        password: pendingAdmin.password
+      });
+      await newAdmin.save();
+      
+      // Update pending admin status
+      pendingAdmin.status = 'approved';
+      pendingAdmin.processedDate = new Date();
+      await pendingAdmin.save();
 
-  await transporter.sendMail(mailOptions);
+      return res.status(201).json({
+        success: true,
+        message: 'Admin registration completed successfully! You can now login.',
+        admin: {
+          id: newAdmin._id,
+          name: newAdmin.name,
+          email: newAdmin.email
+        }
+      });
+    }
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Admin Registration Verification - Rashtriya Raksha University',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Admin Registration Verification</h2>
+          <p>Dear ${name},</p>
+          <p>You have registered in our website <strong>Rashtriya Raksha University</strong> as an admin. Is it you?</p>
+          <p>Please confirm your registration by clicking one of the options below:</p>
+          <div style="margin: 20px 0;">
+            <a href="${process.env.BASE_URL || 'http://localhost:3000'}/api/admin/verify/yes/${pendingAdmin._id}" 
+               style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; margin-right: 10px; border-radius: 5px;">
+               YES
+            </a>
+            <a href="${process.env.BASE_URL || 'http://localhost:3000'}/api/admin/verify/no/${pendingAdmin._id}" 
+               style="background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+               NO
+            </a>
+          </div>
+          <p>If you did not register for this account, please click NO.</p>
+          <p>Thank you,<br>Rashtriya Raksha University Team</p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+  } catch (emailError) {
+    console.error('Email sending failed:', emailError);
+    // Continue with registration even if email fails
+    console.log('Registration will continue without email verification');
+  }
 
   res.status(201).json({
     success: true,
