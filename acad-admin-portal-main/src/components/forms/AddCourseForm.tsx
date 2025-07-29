@@ -6,43 +6,77 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Clock, Users } from "lucide-react";
+import { BookOpen, Plus, Trash2 } from "lucide-react";
+
+interface Subject {
+  noOfPeriods: number;
+  periodsMin: number;
+  totalMins: number;
+  totalHrs: number;
+  credits: number;
+}
 
 const AddCourseForm = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     ID: "",
-    Name: "",
-    eligibleDepartments: [] as string[],
+    courseName: "",
+    organization: "",
+    duration: "",
+    indoorCredits: 0,
+    outdoorCredits: 0,
+    field: "",
     startDate: "",
-    endDate: "",
-    completed: "no",
-    field: ""
+    completionStatus: "upcoming"
   });
+  const [subjects, setSubjects] = useState<Subject[]>([
+    {
+      noOfPeriods: 1,
+      periodsMin: 1,
+      totalMins: 1,
+      totalHrs: 1,
+      credits: 0
+    }
+  ]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'indoorCredits' || name === 'outdoorCredits' ? parseInt(value) || 0 : value.trim()
+    }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    if (name === "eligibleDepartments") {
-      // Handle multiple department selection
-      setFormData(prev => ({
-        ...prev,
-        eligibleDepartments: prev.eligibleDepartments.includes(value) 
-          ? prev.eligibleDepartments.filter(dept => dept !== value)
-          : [...prev.eligibleDepartments, value]
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+  const handleSubjectChange = (index: number, field: keyof Subject, value: string) => {
+    const newSubjects = [...subjects];
+    newSubjects[index] = {
+      ...newSubjects[index],
+      [field]: parseInt(value) || 0
+    };
+    setSubjects(newSubjects);
+  };
+
+  const addSubject = () => {
+    setSubjects([...subjects, {
+      noOfPeriods: 1,
+      periodsMin: 1,
+      totalMins: 1,
+      totalHrs: 1,
+      credits: 0
+    }]);
+  };
+
+  const removeSubject = (index: number) => {
+    if (subjects.length > 1) {
+      setSubjects(subjects.filter((_, i) => i !== index));
     }
   };
 
@@ -50,13 +84,46 @@ const AddCourseForm = () => {
     e.preventDefault();
     
     // Validation
-    if (!formData.ID || !formData.Name || formData.eligibleDepartments.length === 0 || !formData.startDate || !formData.endDate || !formData.field) {
+    if (!formData.ID || !formData.courseName || !formData.organization || !formData.duration || !formData.field || !formData.startDate) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
         variant: "destructive",
       });
       return;
+    }
+
+    if (formData.indoorCredits < 0 || formData.outdoorCredits < 0) {
+      toast({
+        title: "Error",
+        description: "Credits must be non-negative numbers",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate start date
+    const startDateObj = new Date(formData.startDate);
+    if (isNaN(startDateObj.getTime())) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid start date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate subjects
+    for (let i = 0; i < subjects.length; i++) {
+      const subject = subjects[i];
+      if (subject.noOfPeriods < 1 || subject.periodsMin < 1 || subject.totalMins < 1 || subject.totalHrs < 1 || subject.credits < 0) {
+        toast({
+          title: "Error",
+          description: `Subject ${i + 1}: All values must be positive numbers, credits must be non-negative`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -82,13 +149,16 @@ const AddCourseForm = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          ID: formData.ID,
-          Name: formData.Name,
-          eligibleDepartments: formData.eligibleDepartments,
+          ID: formData.ID.trim(),
+          courseName: formData.courseName.trim(),
+          organization: formData.organization.trim(),
+          duration: formData.duration.trim(),
+          indoorCredits: formData.indoorCredits,
+          outdoorCredits: formData.outdoorCredits,
+          field: formData.field.trim(),
           startDate: formData.startDate,
-          endDate: formData.endDate,
-          completed: formData.completed,
-          field: formData.field
+          completionStatus: formData.completionStatus,
+          subjects: subjects
         }),
       });
 
@@ -103,13 +173,22 @@ const AddCourseForm = () => {
         // Reset form
         setFormData({
           ID: "",
-          Name: "",
-          eligibleDepartments: [],
+          courseName: "",
+          organization: "",
+          duration: "",
+          indoorCredits: 0,
+          outdoorCredits: 0,
+          field: "",
           startDate: "",
-          endDate: "",
-          completed: "no",
-          field: ""
+          completionStatus: "upcoming"
         });
+        setSubjects([{
+          noOfPeriods: 1,
+          periodsMin: 1,
+          totalMins: 1,
+          totalHrs: 1,
+          credits: 0
+        }]);
       } else {
         toast({
           title: "Error",
@@ -163,50 +242,68 @@ const AddCourseForm = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="Name">Course Name *</Label>
+                <Label htmlFor="courseName">Course Name *</Label>
                 <Input
-                  id="Name"
-                  name="Name"
+                  id="courseName"
+                  name="courseName"
                   placeholder="Enter course name"
-                  value={formData.Name}
+                  value={formData.courseName}
                   onChange={handleInputChange}
                   required
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="field">Field *</Label>
-              <Input
-                id="field"
-                name="field"
-                placeholder="Enter the field/domain of the course"
-                value={formData.field}
-                onChange={handleInputChange}
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="organization">Organization *</Label>
+                <Input
+                  id="organization"
+                  name="organization"
+                  placeholder="Enter organization name"
+                  value={formData.organization}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Eligible Departments * (Select multiple)</Label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-4 border rounded-md">
-                {["Engineering", "Business", "Science", "Arts", "Medicine", "Law", "Computer Science", "Mathematics"].map((dept) => (
-                  <label key={dept} className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.eligibleDepartments.includes(dept)}
-                      onChange={() => handleSelectChange("eligibleDepartments", dept)}
-                      className="rounded"
-                    />
-                    <span className="text-sm">{dept}</span>
-                  </label>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration *</Label>
+                <Input
+                  id="duration"
+                  name="duration"
+                  placeholder="e.g., 6 months, 1 year"
+                  value={formData.duration}
+                  onChange={handleInputChange}
+                  required
+                />
               </div>
-              {formData.eligibleDepartments.length > 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Selected: {formData.eligibleDepartments.join(", ")}
-                </p>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="indoorCredits">Indoor Credits</Label>
+                <Input
+                  id="indoorCredits"
+                  name="indoorCredits"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={formData.indoorCredits}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="outdoorCredits">Outdoor Credits</Label>
+                <Input
+                  id="outdoorCredits"
+                  name="outdoorCredits"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={formData.outdoorCredits}
+                  onChange={handleInputChange}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -222,31 +319,127 @@ const AddCourseForm = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="endDate">End Date *</Label>
-                <Input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  value={formData.endDate}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="completed">Completion Status</Label>
+                <Label htmlFor="completionStatus">Completion Status</Label>
                 <Select 
-                  value={formData.completed} 
-                  onValueChange={(value) => handleSelectChange("completed", value)}
+                  value={formData.completionStatus} 
+                  onValueChange={(value) => handleSelectChange("completionStatus", value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="no">Not Completed</SelectItem>
-                    <SelectItem value="yes">Completed</SelectItem>
+                    <SelectItem value="upcoming">Upcoming</SelectItem>
+                    <SelectItem value="ongoing">Ongoing</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="field">Field *</Label>
+                <Input
+                  id="field"
+                  name="field"
+                  placeholder="Enter the field/domain of the course"
+                  value={formData.field}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+            </div>
+
+
+
+            {/* Subjects Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Subjects *</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addSubject}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Subject
+                </Button>
+              </div>
+              
+              {subjects.map((subject, index) => (
+                <Card key={index} className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-medium">Subject {index + 1}</h4>
+                    {subjects.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeSubject(index)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`noOfPeriods-${index}`}>No. of Periods *</Label>
+                      <Input
+                        id={`noOfPeriods-${index}`}
+                        type="number"
+                        min="1"
+                        value={subject.noOfPeriods}
+                        onChange={(e) => handleSubjectChange(index, 'noOfPeriods', e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`periodsMin-${index}`}>Periods Min *</Label>
+                      <Input
+                        id={`periodsMin-${index}`}
+                        type="number"
+                        min="1"
+                        value={subject.periodsMin}
+                        onChange={(e) => handleSubjectChange(index, 'periodsMin', e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`totalMins-${index}`}>Total Minutes *</Label>
+                      <Input
+                        id={`totalMins-${index}`}
+                        type="number"
+                        min="1"
+                        value={subject.totalMins}
+                        onChange={(e) => handleSubjectChange(index, 'totalMins', e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`totalHrs-${index}`}>Total Hours *</Label>
+                      <Input
+                        id={`totalHrs-${index}`}
+                        type="number"
+                        min="1"
+                        value={subject.totalHrs}
+                        onChange={(e) => handleSubjectChange(index, 'totalHrs', e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`credits-${index}`}>Credits</Label>
+                      <Input
+                        id={`credits-${index}`}
+                        type="number"
+                        min="0"
+                        value={subject.credits}
+                        onChange={(e) => handleSubjectChange(index, 'credits', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
 
             <div className="flex gap-4 pt-4">

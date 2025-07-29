@@ -246,8 +246,8 @@ const BulkImportForm = ({ type, title, description }: BulkImportFormProps) => {
                 <div>
                   <p className="font-medium">Required Fields</p>
                   <p className="text-muted-foreground">
-                    {type === "mou" ? "ID, nameOfPartnerInstitution, strategicAreas" :
-                     type === "courses" ? "ID, Name, eligibleDepartments, startDate, endDate, field" :
+                    {type === "mou" ? "ID, nameOfPartnerInstitution, strategicAreas, dateOfSigning, validity, affiliationDate" :
+                     type === "courses" ? "courseName, organization, duration, indoorCredits, outdoorCredits, field, startDate, completionStatus, subjects" :
                      "All mandatory fields as per template"}
                   </p>
                 </div>

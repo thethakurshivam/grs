@@ -1,5 +1,46 @@
 const mongoose = require('mongoose');
 
+// Subject schema (embedded within courses)
+const subjectSchema = new mongoose.Schema({
+  // Number of periods
+  noOfPeriods: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  
+  // Periods minimum
+  periodsMin: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  
+  // Total minutes
+  totalMins: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  
+  // Total hours
+  totalHrs: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  
+  // Credits
+  credits: {
+    type: Number,
+    required: true,
+    min: 0
+  }
+}, {
+  _id: false // This will be embedded in courses, so no separate _id needed
+});
+
+// Course schema with all your specified fields
 const courseSchema = new mongoose.Schema({
   // Unique identifier for the course
   ID: {
@@ -9,71 +50,197 @@ const courseSchema = new mongoose.Schema({
     trim: true
   },
   
-  // Name of the course
-  Name: {
+  // Course name
+  courseName: {
+    type: String,
+    required: true,
+    trim: true,
+    unique: true
+  },
+  
+  // Organization
+  organization: {
     type: String,
     required: true,
     trim: true
   },
   
-  // Eligible departments for the course
-  eligibleDepartments: {
-    type: [String],
+  // Duration
+  duration: {
+    type: String,
     required: true,
-    validate: {
-      validator: function(departments) {
-        return departments && departments.length > 0;
-      },
-      message: 'At least one eligible department must be specified'
-    }
+    trim: true
   },
   
-  // Course start date
+  // Indoor credits
+  indoorCredits: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  
+  // Outdoor credits
+  outdoorCredits: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  
+  // Field
+  field: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  
+  // Start date of the course
   startDate: {
     type: Date,
     required: true
   },
   
-  // Course end date
-  endDate: {
-    type: Date,
-    required: true
-  },
-  
-  // Course completion status
-  completed: {
+  // Completion status of the course
+  completionStatus: {
     type: String,
     required: true,
-    enum: ['no', 'yes'],
-    default: 'no'
+    enum: ['ongoing', 'completed', 'upcoming'],
+    default: 'upcoming'
   },
   
-  // Field of the course
-  field: {
-    type: String,
+  // Subjects array - each course can have many subjects
+  subjects: {
+    type: [subjectSchema],
     required: true,
-    trim: true
+    validate: {
+      validator: function(subjects) {
+        return subjects && subjects.length > 0;
+      },
+      message: 'At least one subject must be specified'
+    }
   }
 }, {
-  collection: 'courses'
+  collection: 'courses',
+  timestamps: true
 });
 
-// Index for the unique ID field
-courseSchema.index({ ID: 1 });
-
-// Pre-save middleware to validate dates and update completion status
+// Middleware to automatically update completion status based on duration
 courseSchema.pre('save', function(next) {
-  if (this.startDate >= this.endDate) {
-    next(new Error('End date must be after start date'));
-  } else {
-    // Auto-update completion status based on current date
-    const currentDate = new Date();
-    if (currentDate > this.endDate) {
-      this.completed = 'yes';
+  const course = this;
+  
+  // Only run this middleware if startDate and duration are present
+  if (course.startDate && course.duration) {
+    const now = new Date();
+    const startDate = new Date(course.startDate);
+    
+    // Parse duration to get the number of months/days
+    const durationStr = course.duration.toLowerCase();
+    let durationInDays = 0;
+    
+    // Extract number and unit from duration string
+    const durationMatch = durationStr.match(/(\d+)\s*(day|days|month|months|year|years|week|weeks)/);
+    
+    if (durationMatch) {
+      const number = parseInt(durationMatch[1]);
+      const unit = durationMatch[2];
+      
+      switch (unit) {
+        case 'day':
+        case 'days':
+          durationInDays = number;
+          break;
+        case 'week':
+        case 'weeks':
+          durationInDays = number * 7;
+          break;
+        case 'month':
+        case 'months':
+          durationInDays = number * 30; // Approximate
+          break;
+        case 'year':
+        case 'years':
+          durationInDays = number * 365; // Approximate
+          break;
+      }
     }
-    next();
+    
+    // Calculate end date
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + durationInDays);
+    
+    // Update completion status based on current date
+    if (now < startDate) {
+      course.completionStatus = 'upcoming';
+    } else if (now >= startDate && now <= endDate) {
+      course.completionStatus = 'ongoing';
+    } else {
+      course.completionStatus = 'completed';
+    }
   }
+  
+  next();
 });
+
+// Static method to update completion status for all courses
+courseSchema.statics.updateAllCompletionStatuses = async function() {
+  const courses = await this.find({});
+  const now = new Date();
+  
+  for (const course of courses) {
+    if (course.startDate && course.duration) {
+      const startDate = new Date(course.startDate);
+      
+      // Parse duration
+      const durationStr = course.duration.toLowerCase();
+      let durationInDays = 0;
+      
+      const durationMatch = durationStr.match(/(\d+)\s*(day|days|month|months|year|years|week|weeks)/);
+      
+      if (durationMatch) {
+        const number = parseInt(durationMatch[1]);
+        const unit = durationMatch[2];
+        
+        switch (unit) {
+          case 'day':
+          case 'days':
+            durationInDays = number;
+            break;
+          case 'week':
+          case 'weeks':
+            durationInDays = number * 7;
+            break;
+          case 'month':
+          case 'months':
+            durationInDays = number * 30;
+            break;
+          case 'year':
+          case 'years':
+            durationInDays = number * 365;
+            break;
+        }
+      }
+      
+      // Calculate end date
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + durationInDays);
+      
+      // Determine new status
+      let newStatus = course.completionStatus;
+      if (now < startDate) {
+        newStatus = 'upcoming';
+      } else if (now >= startDate && now <= endDate) {
+        newStatus = 'ongoing';
+      } else {
+        newStatus = 'completed';
+      }
+      
+      // Update if status changed
+      if (newStatus !== course.completionStatus) {
+        course.completionStatus = newStatus;
+        await course.save();
+      }
+    }
+  }
+};
 
 // Create and export the model
 const Course = mongoose.model('Course', courseSchema);

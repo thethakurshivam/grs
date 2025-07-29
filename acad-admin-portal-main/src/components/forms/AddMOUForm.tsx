@@ -14,7 +14,10 @@ const AddMOUForm = () => {
   const [formData, setFormData] = useState({
     ID: "",
     nameOfPartnerInstitution: "",
-    strategicAreas: ""
+    strategicAreas: "",
+    dateOfSigning: "",
+    validity: "",
+    affiliationDate: ""
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -36,10 +39,32 @@ const AddMOUForm = () => {
     e.preventDefault();
     
     // Validation
-    if (!formData.ID || !formData.nameOfPartnerInstitution || !formData.strategicAreas) {
+    if (!formData.ID || !formData.nameOfPartnerInstitution || !formData.strategicAreas || !formData.dateOfSigning || !formData.validity || !formData.affiliationDate) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate date format
+    const signingDate = new Date(formData.dateOfSigning);
+    if (isNaN(signingDate.getTime())) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid date for Date of Signing",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate affiliation date format
+    const affiliationDateObj = new Date(formData.affiliationDate);
+    if (isNaN(affiliationDateObj.getTime())) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid date for Affiliation Date",
         variant: "destructive",
       });
       return;
@@ -70,7 +95,10 @@ const AddMOUForm = () => {
         body: JSON.stringify({
           ID: formData.ID,
           nameOfPartnerInstitution: formData.nameOfPartnerInstitution,
-          strategicAreas: formData.strategicAreas
+          strategicAreas: formData.strategicAreas,
+          dateOfSigning: formData.dateOfSigning,
+          validity: formData.validity,
+          affiliationDate: formData.affiliationDate
         }),
       });
 
@@ -86,7 +114,10 @@ const AddMOUForm = () => {
         setFormData({
           ID: "",
           nameOfPartnerInstitution: "",
-          strategicAreas: ""
+          strategicAreas: "",
+          dateOfSigning: "",
+          validity: "",
+          affiliationDate: ""
         });
       } else {
         toast({
@@ -163,6 +194,42 @@ const AddMOUForm = () => {
                 rows={4}
                 required
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="dateOfSigning">Date of Signing *</Label>
+                <Input
+                  id="dateOfSigning"
+                  name="dateOfSigning"
+                  type="date"
+                  value={formData.dateOfSigning}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="validity">Validity *</Label>
+                <Input
+                  id="validity"
+                  name="validity"
+                  placeholder="e.g., 5 years, 2025-2030"
+                  value={formData.validity}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="affiliationDate">Affiliation Date *</Label>
+                <Input
+                  id="affiliationDate"
+                  name="affiliationDate"
+                  type="date"
+                  value={formData.affiliationDate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
             </div>
 
             <div className="flex gap-4 pt-4">

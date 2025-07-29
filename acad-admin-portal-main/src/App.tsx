@@ -7,6 +7,9 @@ import LoginPage from "./components/auth/LoginPage";
 import SignupPage from "./components/auth/SignupPage";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 import DashboardOverview from "./components/dashboard/DashboardOverview";
+import MOUListPage from "./components/dashboard/MOUListPage";
+import CompletedCoursesListPage from "./components/dashboard/CompletedCoursesListPage";
+import OngoingCoursesListPage from "./components/dashboard/OngoingCoursesListPage";
 import AddMOUForm from "./components/forms/AddMOUForm";
 import AddCourseForm from "./components/forms/AddCourseForm";
 import BulkImportForm from "./components/forms/BulkImportForm";
@@ -27,6 +30,9 @@ const App = () => (
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardOverview />} />
+            <Route path="mous" element={<MOUListPage />} />
+            <Route path="completed-courses" element={<CompletedCoursesListPage />} />
+            <Route path="ongoing-courses" element={<OngoingCoursesListPage />} />
             <Route path="add-mou" element={<AddMOUForm />} />
             <Route path="bulk-import-mou" element={
               <BulkImportForm 

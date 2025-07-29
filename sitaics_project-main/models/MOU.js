@@ -21,6 +21,25 @@ const mouSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
+  },
+  
+  // Date of signing the MOU
+  dateOfSigning: {
+    type: Date,
+    required: true
+  },
+  
+  // Validity period of the MOU
+  validity: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  
+  // Affiliation date
+  affiliationDate: {
+    type: Date,
+    required: true
   }
 }, {
   collection: 'mous'

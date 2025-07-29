@@ -38,18 +38,70 @@ const BulkImportStudentsForm = () => {
 
     setIsUploading(true);
 
-    // Simulate upload process
-    setTimeout(() => {
-      toast({
-        title: "Success",
-        description: `${selectedFile.name} has been uploaded successfully!`,
+    try {
+      // Get authentication token
+      const token = localStorage.getItem("authToken");
+      
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please login again to continue",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('excelFile', selectedFile);
+
+      // API call to backend bulk import students endpoint
+      const response = await fetch('http://localhost:3000/api/participants/import', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+          // Don't set Content-Type header for FormData - browser will set it automatically with boundary
+        },
+        body: formData,
       });
-      setSelectedFile(null);
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Show detailed results if available
+        let successMessage = data.message || `${selectedFile.name} has been uploaded successfully!`;
+        
+        if (data.results) {
+          const { totalRows, successCount, errorCount, duplicateCount } = data.results;
+          successMessage = `Import completed! ${successCount} students imported successfully, ${errorCount} errors, ${duplicateCount} duplicates out of ${totalRows} total rows.`;
+        }
+
+        toast({
+          title: "Success",
+          description: successMessage,
+        });
+
+        setSelectedFile(null);
+        // Reset file input
+        const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to upload file. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Bulk import error:', error);
+      toast({
+        title: "Error",
+        description: "Network error. Please check your connection and try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsUploading(false);
-      // Reset file input
-      const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-    }, 2000);
+    }
   };
 
   const downloadTemplate = () => {

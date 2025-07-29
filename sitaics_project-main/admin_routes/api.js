@@ -36,7 +36,7 @@ const transporter = nodemailer.createTransport({
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:8080', // Updated to match Vite config
+  origin: process.env.FRONTEND_URL || ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080'], // Allow multiple frontend ports
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' })); // Added size limit for security
@@ -173,14 +173,385 @@ app.get('/api/mous', authenticateToken, asyncHandler(async (req, res) => {
   });
 }));
 
-// Route to get all currently running courses (completed = "no")
-app.get('/api/courses/running', authenticateToken, asyncHandler(async (req, res) => {
-  const runningCourses = await Course.find({ completed: "no" });
-  res.json({
-    success: true,
-    count: runningCourses.length,
-    data: runningCourses
-  });
+// Route to add a single MOU
+app.post('/api/mous', authenticateToken, asyncHandler(async (req, res) => {
+  const { ID, nameOfPartnerInstitution, strategicAreas, dateOfSigning, validity, affiliationDate } = req.body;
+
+  // Validate required fields
+  if (!ID || !nameOfPartnerInstitution || !strategicAreas || !dateOfSigning || !validity || !affiliationDate) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required fields (ID, nameOfPartnerInstitution, strategicAreas, dateOfSigning, validity, affiliationDate)'
+    });
+  }
+
+  // Validate date format
+  const signingDate = new Date(dateOfSigning);
+  if (isNaN(signingDate.getTime())) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid date format for dateOfSigning'
+    });
+  }
+
+  // Validate affiliation date format
+  const affiliationDateObj = new Date(affiliationDate);
+  if (isNaN(affiliationDateObj.getTime())) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid date format for affiliationDate'
+    });
+  }
+
+  try {
+    // Check for duplicate ID
+    const existingMOU = await MOU.findOne({ ID: ID.trim() });
+    if (existingMOU) {
+      return res.status(409).json({
+        success: false,
+        error: 'MOU with this ID already exists'
+      });
+    }
+
+    // Check if school exists, create or update
+    const trimmedSchoolName = nameOfPartnerInstitution.trim();
+    let existingSchool = await School.findOne({ name: trimmedSchoolName });
+
+    if (!existingSchool) {
+      const newSchool = new School({
+        name: trimmedSchoolName,
+        count: 1
+      });
+      await newSchool.save();
+    } else {
+      existingSchool.count += 1;
+      await existingSchool.save();
+    }
+
+    // Create new MOU
+    const newMOU = new MOU({
+      ID: ID.trim(),
+      nameOfPartnerInstitution: trimmedSchoolName,
+      strategicAreas: strategicAreas.trim(),
+      dateOfSigning: signingDate,
+      validity: validity.trim(),
+      affiliationDate: affiliationDateObj
+    });
+
+    const savedMOU = await newMOU.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'MOU created successfully',
+      data: savedMOU
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Error creating MOU: ' + error.message
+    });
+  }
+}));
+
+// Route to get all courses with filtering
+app.get('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
+  const { 
+    completionStatus, 
+    field, 
+    organization, 
+    startDateFrom, 
+    startDateTo,
+    sortBy = 'startDate',
+    sortOrder = 'desc'
+  } = req.query;
+
+  // Build filter object
+  const filter = {};
+  
+  if (completionStatus) {
+    filter.completionStatus = completionStatus;
+  }
+  
+  if (field) {
+    filter.field = { $regex: field, $options: 'i' }; // Case-insensitive search
+  }
+  
+  if (organization) {
+    filter.organization = { $regex: organization, $options: 'i' }; // Case-insensitive search
+  }
+  
+  // Date range filtering
+  if (startDateFrom || startDateTo) {
+    filter.startDate = {};
+    if (startDateFrom) {
+      filter.startDate.$gte = new Date(startDateFrom);
+    }
+    if (startDateTo) {
+      filter.startDate.$lte = new Date(startDateTo);
+    }
+  }
+
+  // Build sort object
+  const sort = {};
+  sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+  try {
+    const courses = await Course.find(filter).sort(sort);
+    
+    // Calculate completion status based on start date and duration if needed
+    const coursesWithCalculatedStatus = courses.map(course => {
+      const courseObj = course.toObject();
+      
+      // If completion status is not set, calculate it based on start date
+      if (!courseObj.completionStatus || courseObj.completionStatus === 'upcoming') {
+        const now = new Date();
+        const startDate = new Date(courseObj.startDate);
+        
+        if (startDate > now) {
+          courseObj.completionStatus = 'upcoming';
+        } else {
+          // For simplicity, assume ongoing if started but not explicitly completed
+          courseObj.completionStatus = 'ongoing';
+        }
+      }
+      
+      return courseObj;
+    });
+
+    res.json({
+      success: true,
+      count: coursesWithCalculatedStatus.length,
+      data: coursesWithCalculatedStatus,
+      filters: {
+        completionStatus,
+        field,
+        organization,
+        startDateFrom,
+        startDateTo
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Error fetching courses: ' + error.message
+    });
+  }
+}));
+
+// Route to add a single course
+app.post('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
+  const { ID, courseName, organization, duration, indoorCredits, outdoorCredits, field, startDate, completionStatus, subjects } = req.body;
+
+  // Validate required fields
+  if (!ID || !courseName || !organization || !duration || !field || !startDate) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required fields (ID, courseName, organization, duration, field, startDate)'
+    });
+  }
+
+  // Validate numeric fields
+  if (isNaN(indoorCredits) || isNaN(outdoorCredits) || indoorCredits < 0 || outdoorCredits < 0) {
+    return res.status(400).json({
+      success: false,
+      error: 'indoorCredits and outdoorCredits must be valid non-negative numbers'
+    });
+  }
+
+  // Validate start date
+  const startDateObj = new Date(startDate);
+  if (isNaN(startDateObj.getTime())) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid date format for startDate'
+    });
+  }
+
+  // Validate completion status
+  const validStatuses = ['ongoing', 'completed', 'upcoming'];
+  if (completionStatus && !validStatuses.includes(completionStatus)) {
+    return res.status(400).json({
+      success: false,
+      error: 'completionStatus must be one of: ongoing, completed, upcoming'
+    });
+  }
+
+  // Validate subjects array
+  if (!subjects || !Array.isArray(subjects) || subjects.length === 0) {
+    return res.status(400).json({
+      success: false,
+      error: 'At least one subject is required'
+    });
+  }
+
+  // Validate and sanitize each subject
+  const validatedSubjects = [];
+  for (let i = 0; i < subjects.length; i++) {
+    const subject = subjects[i];
+    if (!subject.noOfPeriods || !subject.periodsMin || !subject.totalMins || !subject.totalHrs || subject.credits === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: `Subject ${i + 1}: Missing required fields (noOfPeriods, periodsMin, totalMins, totalHrs, credits)`
+      });
+    }
+
+    // Convert to numbers and validate
+    const noOfPeriods = parseInt(subject.noOfPeriods);
+    const periodsMin = parseInt(subject.periodsMin);
+    const totalMins = parseInt(subject.totalMins);
+    const totalHrs = parseInt(subject.totalHrs);
+    const credits = parseInt(subject.credits);
+
+    if (isNaN(noOfPeriods) || noOfPeriods < 1 || 
+        isNaN(periodsMin) || periodsMin < 1 || 
+        isNaN(totalMins) || totalMins < 1 || 
+        isNaN(totalHrs) || totalHrs < 1 || 
+        isNaN(credits) || credits < 0) {
+      return res.status(400).json({
+        success: false,
+        error: `Subject ${i + 1}: Invalid numeric values`
+      });
+    }
+
+    // Add validated subject
+    validatedSubjects.push({
+      noOfPeriods,
+      periodsMin,
+      totalMins,
+      totalHrs,
+      credits
+    });
+  }
+
+  try {
+    // Check for duplicate course name (case-insensitive)
+    const trimmedCourseName = courseName.trim();
+    
+    // Debug: Log what we're searching for
+    console.log('Searching for course name:', trimmedCourseName);
+    
+    const existingCourse = await Course.findOne({ 
+      courseName: { $regex: new RegExp(`^${trimmedCourseName}$`, 'i') }
+    });
+    
+    // Debug: Log what we found
+    if (existingCourse) {
+      console.log('Found existing course:', existingCourse.courseName);
+    } else {
+      console.log('No existing course found');
+    }
+    
+    if (existingCourse) {
+      return res.status(409).json({
+        success: false,
+        error: `A course with the name "${existingCourse.courseName}" already exists`
+      });
+    }
+    
+    // Additional check: also check for exact match (case-sensitive)
+    const exactMatch = await Course.findOne({ courseName: trimmedCourseName });
+    if (exactMatch) {
+      console.log('Found exact match:', exactMatch.courseName);
+      return res.status(409).json({
+        success: false,
+        error: `A course with the exact name "${exactMatch.courseName}" already exists`
+      });
+    }
+
+    // Check if field exists, create or update (similar to MOU->School relationship)
+    const trimmedFieldName = field.trim();
+    let existingField = await Field.findOne({ nameOfTheField: trimmedFieldName });
+
+    if (!existingField) {
+      const newField = new Field({
+        nameOfTheField: trimmedFieldName,
+        count: 1
+      });
+      await newField.save();
+    } else {
+      existingField.count += 1;
+      await existingField.save();
+    }
+
+    // Create new course with validated subjects
+    console.log('Creating new course with name:', courseName.trim());
+    
+    const newCourse = new Course({
+      ID: ID.trim(),
+      courseName: courseName.trim(),
+      organization: organization.trim(),
+      duration: duration.trim(),
+      indoorCredits: parseInt(indoorCredits),
+      outdoorCredits: parseInt(outdoorCredits),
+      field: trimmedFieldName,
+      startDate: startDateObj,
+      completionStatus: completionStatus || 'upcoming',
+      subjects: validatedSubjects // Use validated subjects instead of raw input
+    });
+
+    console.log('Attempting to save course...');
+    const savedCourse = await newCourse.save();
+    console.log('Course saved successfully:', savedCourse.courseName);
+
+    res.status(201).json({
+      success: true,
+      message: 'Course created successfully',
+      data: savedCourse
+    });
+
+  } catch (error) {
+    console.log('Error occurred during course creation:', error);
+    console.log('Error code:', error.code);
+    console.log('Error message:', error.message);
+    
+    // Handle duplicate key error specifically
+    if (error.code === 11000) {
+      console.log('Duplicate key error detected');
+      return res.status(409).json({
+        success: false,
+        error: 'A course with this name already exists'
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Error creating course: ' + error.message
+    });
+  }
+}));
+
+// Debug route to check existing course names
+app.get('/api/courses/debug', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    const courses = await Course.find({}, 'courseName');
+    res.json({
+      success: true,
+      count: courses.length,
+      courseNames: courses.map(c => c.courseName)
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Error fetching course names: ' + error.message
+    });
+  }
+}));
+
+// Route to update completion status for all courses
+app.post('/api/courses/update-completion-status', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    await Course.updateAllCompletionStatuses();
+    res.json({
+      success: true,
+      message: 'Completion status updated for all courses'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Error updating completion status: ' + error.message
+    });
+  }
 }));
 
 // Route to get all schools with count > 0 as links
@@ -231,17 +602,6 @@ app.get('/api/schools/:schoolId', authenticateToken, asyncHandler(async (req, re
     school: school,
     count: schoolMOUs.length,
     data: schoolMOUs
-  });
-}));
-
-// Route to get all completed courses (completed = "yes")
-app.get('/api/courses/completed', authenticateToken, asyncHandler(async (req, res) => {
-  const completedCourses = await Course.find({ completed: "yes" });
-  
-  res.json({
-    success: true,
-    count: completedCourses.length,
-    data: completedCourses
   });
 }));
 
@@ -346,13 +706,38 @@ app.post('/api/mous/import', authenticateToken, upload.single('excelFile'), asyn
         const ID = sanitizeInput(row.ID || row.id || '');
         const nameOfPartnerInstitution = sanitizeInput(row.nameOfPartnerInstitution || row.NameOfPartnerInstitution || '');
         const strategicAreas = sanitizeInput(row.strategicAreas || row.StrategicAreas || '');
+        const dateOfSigning = row.dateOfSigning || row.DateOfSigning || '';
+        const validity = sanitizeInput(row.validity || row.Validity || '');
+        const affiliationDate = row.affiliationDate || row.AffiliationDate || '';
 
         // Validate required fields
-        if (!ID || !nameOfPartnerInstitution || !strategicAreas) {
+        if (!ID || !nameOfPartnerInstitution || !strategicAreas || !dateOfSigning || !validity || !affiliationDate) {
           results.errors.push({
             row: rowNumber,
             data: row,
-            error: 'Missing required fields (ID, nameOfPartnerInstitution, strategicAreas)'
+            error: 'Missing required fields (ID, nameOfPartnerInstitution, strategicAreas, dateOfSigning, validity, affiliationDate)'
+          });
+          continue;
+        }
+
+        // Validate date format
+        const signingDate = new Date(dateOfSigning);
+        if (isNaN(signingDate.getTime())) {
+          results.errors.push({
+            row: rowNumber,
+            data: row,
+            error: 'Invalid date format for dateOfSigning'
+          });
+          continue;
+        }
+
+        // Validate affiliation date format
+        const affiliationDateObj = new Date(affiliationDate);
+        if (isNaN(affiliationDateObj.getTime())) {
+          results.errors.push({
+            row: rowNumber,
+            data: row,
+            error: 'Invalid date format for affiliationDate'
           });
           continue;
         }
@@ -387,7 +772,10 @@ app.post('/api/mous/import', authenticateToken, upload.single('excelFile'), asyn
         const newMOU = new MOU({
           ID: ID.trim(),
           nameOfPartnerInstitution: trimmedSchoolName,
-          strategicAreas: strategicAreas.trim()
+          strategicAreas: strategicAreas.trim(),
+          dateOfSigning: signingDate,
+          validity: validity.trim(),
+          affiliationDate: affiliationDateObj
         });
 
         const savedMOU = await newMOU.save();
@@ -609,116 +997,168 @@ app.post('/api/courses/import', authenticateToken, upload.single('excelFile'), a
     // Process each row
     for (let i = 0; i < jsonData.length; i++) {
       const row = jsonData[i];
-      const rowNumber = i + 2; // Excel row number (starting from row 2, assuming row 1 is headers)
+      const rowNumber = i + 2;
 
       try {
         // Sanitize inputs
-        const ID = sanitizeInput(row.ID || row.id || '');
-        const Name = sanitizeInput(row.Name || row.name || '');
+        const courseName = sanitizeInput(row.courseName || row.CourseName || '');
+        const organization = sanitizeInput(row.organization || row.Organization || '');
+        const duration = sanitizeInput(row.duration || row.Duration || '');
+        const indoorCredits = parseInt(row.indoorCredits || row.IndoorCredits || '0');
+        const outdoorCredits = parseInt(row.outdoorCredits || row.OutdoorCredits || '0');
         const field = sanitizeInput(row.field || row.Field || '');
-        const eligibleDepartments = row.eligibleDepartments || row.EligibleDepartments || '';
         const startDate = row.startDate || row.StartDate || '';
-        const endDate = row.endDate || row.EndDate || '';
-        const completed = row.completed || row.Completed || 'no';
-
-        // Validate required fields
-        if (!ID || !Name || !field || !eligibleDepartments || !startDate || !endDate) {
+        const completionStatus = row.completionStatus || row.CompletionStatus || 'upcoming';
+        
+        // Parse subjects array
+        let subjects = [];
+        try {
+          if (row.subjects) {
+            if (typeof row.subjects === 'string') {
+              subjects = JSON.parse(row.subjects);
+            } else {
+              subjects = row.subjects;
+            }
+          }
+        } catch (parseError) {
           results.errors.push({
             row: rowNumber,
             data: row,
-            error: 'Missing required fields (ID, Name, field, eligibleDepartments, startDate, endDate)'
+            error: 'Invalid subjects format. Must be valid JSON array'
           });
           continue;
         }
 
-        // Check for duplicate ID
-        const existingCourse = await Course.findOne({ ID: ID });
+        // Validate required fields
+        if (!courseName || !organization || !duration || isNaN(indoorCredits) || isNaN(outdoorCredits) || !field || !startDate || !subjects || subjects.length === 0) {
+          results.errors.push({
+            row: rowNumber,
+            data: row,
+            error: 'Missing required fields (courseName, organization, duration, indoorCredits, outdoorCredits, field, startDate, subjects)'
+          });
+          continue;
+        }
+
+        // Validate start date format
+        const startDateObj = new Date(startDate);
+        if (isNaN(startDateObj.getTime())) {
+          results.errors.push({
+            row: rowNumber,
+            data: row,
+            error: 'Invalid date format for startDate'
+          });
+          continue;
+        }
+
+        // Validate completion status
+        const validStatuses = ['ongoing', 'completed', 'upcoming'];
+        if (completionStatus && !validStatuses.includes(completionStatus)) {
+          results.errors.push({
+            row: rowNumber,
+            data: row,
+            error: 'completionStatus must be one of: ongoing, completed, upcoming'
+          });
+          continue;
+        }
+
+        // Validate subjects array
+        let validSubjects = [];
+        for (let j = 0; j < subjects.length; j++) {
+          const subject = subjects[j];
+          
+          // Validate subject fields
+          if (!subject.noOfPeriods || !subject.periodsMin || !subject.totalMins || !subject.totalHrs || subject.credits === undefined) {
+            results.errors.push({
+              row: rowNumber,
+              data: row,
+              error: `Subject ${j + 1}: Missing required fields (noOfPeriods, periodsMin, totalMins, totalHrs, credits)`
+            });
+            continue;
+          }
+
+          // Convert to numbers and validate
+          const noOfPeriods = parseInt(subject.noOfPeriods);
+          const periodsMin = parseInt(subject.periodsMin);
+          const totalMins = parseInt(subject.totalMins);
+          const totalHrs = parseInt(subject.totalHrs);
+          const credits = parseInt(subject.credits);
+
+          if (isNaN(noOfPeriods) || noOfPeriods < 1 || 
+              isNaN(periodsMin) || periodsMin < 1 || 
+              isNaN(totalMins) || totalMins < 1 || 
+              isNaN(totalHrs) || totalHrs < 1 || 
+              isNaN(credits) || credits < 0) {
+            results.errors.push({
+              row: rowNumber,
+              data: row,
+              error: `Subject ${j + 1}: Invalid numeric values`
+            });
+            continue;
+          }
+
+          validSubjects.push({
+            noOfPeriods,
+            periodsMin,
+            totalMins,
+            totalHrs,
+            credits
+          });
+        }
+
+        if (validSubjects.length === 0) {
+          results.errors.push({
+            row: rowNumber,
+            data: row,
+            error: 'At least one valid subject is required'
+          });
+          continue;
+        }
+
+        // Check for duplicate course name
+        const existingCourse = await Course.findOne({ courseName: courseName.trim() });
         if (existingCourse) {
           results.duplicates.push({
             row: rowNumber,
             data: row,
-            error: 'Course with this ID already exists'
+            error: 'A course with this name already exists'
           });
           continue;
-        }
-
-        // Process eligibleDepartments - convert string to array if needed
-        let departmentsArray;
-        if (typeof eligibleDepartments === 'string') {
-          departmentsArray = eligibleDepartments.split(',').map(dept => sanitizeInput(dept).trim()).filter(dept => dept);
-        } else if (Array.isArray(eligibleDepartments)) {
-          departmentsArray = eligibleDepartments.map(dept => sanitizeInput(dept).trim()).filter(dept => dept);
-        } else {
-          results.errors.push({
-            row: rowNumber,
-            data: row,
-            error: 'eligibleDepartments must be a string (comma-separated) or array'
-          });
-          continue;
-        }
-
-        if (departmentsArray.length === 0) {
-          results.errors.push({
-            row: rowNumber,
-            data: row,
-            error: 'At least one eligible department must be specified'
-          });
-          continue;
-        }
-
-        // Validate dates
-        const startDateObj = new Date(startDate);
-        const endDateObj = new Date(endDate);
-
-        if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
-          results.errors.push({
-            row: rowNumber,
-            data: row,
-            error: 'Invalid date format'
-          });
-          continue;
-        }
-
-        if (startDateObj >= endDateObj) {
-          results.errors.push({
-            row: rowNumber,
-            data: row,
-            error: 'End date must be after start date'
-          });
-          continue;
-        }
-
-        // Check if field exists, create if not
-        const trimmedField = field.trim();
-        let existingField = await Field.findOne({ nameOfTheField: trimmedField });
-
-        if (!existingField) {
-          const newField = new Field({
-            nameOfTheField: trimmedField,
-            count: 1
-          });
-          await newField.save();
-        } else {
-          existingField.count += 1;
-          await existingField.save();
         }
 
         // Create new course
         const newCourse = new Course({
-          ID: ID.trim(),
-          Name: Name.trim(),
-          eligibleDepartments: departmentsArray,
+          courseName: courseName.trim(),
+          organization: organization.trim(),
+          duration: duration.trim(),
+          indoorCredits: indoorCredits,
+          outdoorCredits: outdoorCredits,
+          field: field.trim(),
           startDate: startDateObj,
-          endDate: endDateObj,
-          completed: completed || 'no',
-          field: trimmedField
+          completionStatus: completionStatus,
+          subjects: validSubjects
         });
 
-        const savedCourse = await newCourse.save();
-        results.success.push({
-          row: rowNumber,
-          data: savedCourse
-        });
+        try {
+          const savedCourse = await newCourse.save();
+          results.success.push({
+            row: rowNumber,
+            data: savedCourse
+          });
+        } catch (error) {
+          if (error.code === 11000) {
+            results.duplicates.push({
+              row: rowNumber,
+              data: row,
+              error: 'A course with this name already exists'
+            });
+          } else {
+            results.errors.push({
+              row: rowNumber,
+              data: row,
+              error: error.message
+            });
+          }
+        }
 
       } catch (error) {
         results.errors.push({
@@ -922,298 +1362,8 @@ app.get('/api/admin/verify/yes/:pendingAdminId', asyncHandler(async (req, res) =
   });
 }));
 
-// Route for email verification - NO option (kept as GET for email links)
-app.get('/api/admin/verify/no/:pendingAdminId', asyncHandler(async (req, res) => {
-  const pendingAdminId = sanitizeInput(req.params.pendingAdminId);
-
-  // Validate MongoDB ObjectId format
-  if (!mongoose.Types.ObjectId.isValid(pendingAdminId)) {
-    return res.status(400).json({
-      success: false,
-      error: 'Invalid pending admin ID format'
-    });
-  }
-
-  // Find the pending admin
-  const pendingAdmin = await PendingAdmin.findById(pendingAdminId);
-  if (!pendingAdmin) {
-    return res.status(404).json({
-      success: false,
-      error: 'Pending admin not found'
-    });
-  }
-
-  // Check if already processed
-  if (pendingAdmin.status !== 'pending') {
-    return res.status(400).json({
-      success: false,
-      error: 'Registration request already processed'
-    });
-  }
-
-  // Update pending admin status to rejected
-  pendingAdmin.status = 'rejected';
-  pendingAdmin.processedDate = new Date();
-  await pendingAdmin.save();
-
-  res.json({
-    success: true,
-    message: 'Admin registration has been declined. The request has been rejected.'
-  });
-}));
-
-// Route for admin to add new MOU
-app.post('/api/mous', authenticateToken, asyncHandler(async (req, res) => {
-  // Retrieve the information about the MOU from request body
-  let { ID, nameOfPartnerInstitution, strategicAreas } = req.body;
-  
-  // Sanitize inputs
-  ID = sanitizeInput(ID);
-  nameOfPartnerInstitution = sanitizeInput(nameOfPartnerInstitution);
-  strategicAreas = sanitizeInput(strategicAreas);
-  
-  // Validate required fields
-  if (!ID || !nameOfPartnerInstitution || !strategicAreas) {
-    return res.status(400).json({
-      success: false,
-      error: 'All fields (ID, nameOfPartnerInstitution, strategicAreas) are required'
-    });
-  }
-  
-  // Check if MOU with same ID already exists
-  const existingMOU = await MOU.findOne({ ID: ID });
-  if (existingMOU) {
-    return res.status(409).json({
-      success: false,
-      error: 'MOU with this ID already exists'
-    });
-  }
-  
-  // Check if the school name exists in the School schema
-  const trimmedSchoolName = nameOfPartnerInstitution.trim();
-  let existingSchool = await School.findOne({ name: trimmedSchoolName });
-  
-  if (!existingSchool) {
-    // If school doesn't exist, create new school with count = 1
-    const newSchool = new School({
-      name: trimmedSchoolName,
-      count: 1
-    });
-    await newSchool.save();
-  } else {
-    // If school exists, increment its count by 1
-    existingSchool.count += 1;
-    await existingSchool.save();
-  }
-  
-  // Create new MOU object
-  const newMOU = new MOU({
-    ID: ID.trim(),
-    nameOfPartnerInstitution: trimmedSchoolName,
-    strategicAreas: strategicAreas.trim()
-  });
-  
-  // Save the MOU in the database
-  const savedMOU = await newMOU.save();
-  
-  // Return success response
-  res.status(201).json({
-    success: true,
-    message: 'MOU added successfully',
-    data: savedMOU
-  });
-}));
-
-// Route for admin to add new Course
-app.post('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
-  // Retrieve all the information about the course from request body
-  let { 
-    ID, 
-    Name, 
-    eligibleDepartments, 
-    startDate, 
-    endDate, 
-    completed, 
-    field 
-  } = req.body;
-  
-  // Sanitize inputs
-  ID = sanitizeInput(ID);
-  Name = sanitizeInput(Name);
-  field = sanitizeInput(field);
-  
-  // Validate required fields
-  if (!ID || !Name || !eligibleDepartments || !startDate || !endDate || !field) {
-    return res.status(400).json({
-      success: false,
-      error: 'All fields (ID, Name, eligibleDepartments, startDate, endDate, field) are required'
-    });
-  }
-  
-  // Validate eligibleDepartments is an array and not empty
-  if (!Array.isArray(eligibleDepartments) || eligibleDepartments.length === 0) {
-    return res.status(400).json({
-      success: false,
-      error: 'eligibleDepartments must be a non-empty array'
-    });
-  }
-  
-  // Check if Course with same ID already exists
-  const existingCourse = await Course.findOne({ ID: ID });
-  if (existingCourse) {
-    return res.status(409).json({
-      success: false,
-      error: 'Course with this ID already exists'
-    });
-  }
-  
-  // Validate date format and logic
-  const startDateObj = new Date(startDate);
-  const endDateObj = new Date(endDate);
-  
-  if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
-    return res.status(400).json({
-      success: false,
-      error: 'Invalid date format. Please use valid date format'
-    });
-  }
-  
-  if (startDateObj >= endDateObj) {
-    return res.status(400).json({
-      success: false,
-      error: 'End date must be after start date'
-    });
-  }
-  
-  // Check if the field exists in the Field schema
-  const trimmedField = field.trim();
-  let existingField = await Field.findOne({ nameOfTheField: trimmedField });
-  
-  if (!existingField) {
-    // If field doesn't exist, create new field with count = 1
-    const newField = new Field({
-      nameOfTheField: trimmedField,
-      count: 1
-    });
-    await newField.save();
-  } else {
-    // If field exists, increment its count by 1
-    existingField.count += 1;
-    await existingField.save();
-  }
-  
-  // Sanitize eligibleDepartments array
-  const sanitizedDepartments = eligibleDepartments.map(dept => sanitizeInput(dept).trim());
-  
-  // Create new Course object
-  const newCourse = new Course({
-    ID: ID.trim(),
-    Name: Name.trim(),
-    eligibleDepartments: sanitizedDepartments,
-    startDate: startDateObj,
-    endDate: endDateObj,
-    completed: completed || 'no', // Default to 'no' if not provided
-    field: trimmedField
-  });
-  
-  // Save the Course in the database
-  const savedCourse = await newCourse.save();
-  
-  // Return success response
-  res.status(201).json({
-    success: true,
-    message: 'Course added successfully',
-    data: savedCourse
-  });
-}));
-
-// Add route for adding participants/students
-app.post('/api/participants', authenticateToken, asyncHandler(async (req, res) => {
-  let participantData = { ...req.body };
-  
-  // Sanitize string fields
-  const stringFields = [
-    'batchNo', 'rank', 'serialNumberRRU', 'enrollmentNumber', 'fullName',
-    'birthPlace', 'birthState', 'country', 'aadharNo', 'mobileNumber',
-    'alternateNumber', 'email', 'address'
-  ];
-  
-  stringFields.forEach(field => {
-    if (participantData[field]) {
-      participantData[field] = sanitizeInput(participantData[field]);
-    }
-  });
-  
-  // Validate required fields
-  const requiredFields = [
-    'srNo', 'batchNo', 'rank', 'serialNumberRRU', 'enrollmentNumber',
-    'fullName', 'gender', 'dateOfBirth', 'birthPlace', 'birthState',
-    'country', 'aadharNo', 'mobileNumber', 'email', 'address'
-  ];
-  
-  for (const field of requiredFields) {
-    if (!participantData[field]) {
-      return res.status(400).json({
-        success: false,
-        error: `${field} is required`
-      });
-    }
-  }
-  
-  // Create new participant
-  const newParticipant = new Candidate(participantData);
-  const savedParticipant = await newParticipant.save();
-  
-  res.status(201).json({
-    success: true,
-    message: 'Participant added successfully',
-    data: savedParticipant
-  });
-}));
-
-// Global error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  
-  // Handle duplicate key error specifically
-  if (err.code === 11000) {
-    return res.status(409).json({
-      success: false,
-      error: 'Duplicate entry - record already exists'
-    });
-  }
-  
-  // Handle validation errors
-  if (err.name === 'ValidationError') {
-    return res.status(400).json({
-      success: false,
-      error: err.message
-    });
-  }
-  
-  // Handle cast errors (invalid ObjectId)
-  if (err.name === 'CastError') {
-    return res.status(400).json({
-      success: false,
-      error: 'Invalid ID format'
-    });
-  }
-  
-  // Default error response
-  res.status(500).json({
-    success: false,
-    error: 'Something went wrong!'
-  });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Route not found'
-  });
-});
-
+// Start the server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`API endpoints available at http://localhost:${PORT}/api`);
 });
