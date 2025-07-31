@@ -22,8 +22,8 @@ const DashboardLayout = () => {
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div>
-                <h2 className="text-lg font-semibold text-foreground">University Admin Panel</h2>
-                <p className="text-sm text-muted-foreground">Manage your university operations efficiently</p>
+                <h2 className="text-lg font-semibold text-black">University Admin Panel</h2>
+                <p className="text-sm text-black">Manage your university operations efficiently</p>
               </div>
             </div>
             

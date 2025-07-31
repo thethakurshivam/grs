@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 interface MOU {
   _id: string;
   ID: string;
+  school: string;
   nameOfPartnerInstitution: string;
   strategicAreas: string;
   dateOfSigning: string;
@@ -16,6 +17,11 @@ interface MOUResponse {
   success: boolean;
   count: number;
   data: MOU[];
+}
+
+interface SingleMOUResponse {
+  success: boolean;
+  data: MOU;
 }
 
 export const useMOU = () => {
@@ -75,6 +81,39 @@ export const useMOU = () => {
     }
   };
 
+  const fetchMOUById = async (mouId: string): Promise<MOU | null> => {
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        throw new Error('No authentication token found. Please log in again.');
+      }
+
+      const response = await fetch(`http://localhost:3000/api/mous/${mouId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: SingleMOUResponse = await response.json();
+      
+      if (data.success) {
+        return data.data;
+      } else {
+        throw new Error(data.error || 'Failed to fetch MOU');
+      }
+    } catch (err) {
+      console.error('Error in fetchMOUById:', err);
+      return null;
+    }
+  };
+
   useEffect(() => {
     fetchMOU();
   }, []);
@@ -84,6 +123,7 @@ export const useMOU = () => {
     count,
     loading,
     error,
-    refetch: fetchMOU
+    refetch: fetchMOU,
+    fetchMOUById
   };
 }; 

@@ -85,67 +85,59 @@ const LoginPage = () => {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-primary">University Admin</h1>
-          <p className="text-muted-foreground mt-2">Sign in to your admin panel</p>
+          <p className="text-black mt-2">Sign in to your admin panel</p>
         </div>
 
         <Card className="shadow-lg border-0">
           <CardHeader>
-            <CardTitle>Welcome Back</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-black">Welcome Back</CardTitle>
+            <CardDescription className="text-black">
               Enter your credentials to access the admin panel
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-black font-semibold">Email</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@university.edu"
+                    placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 text-black"
                     required
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-black font-semibold">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type="password"
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 text-black"
                     required
                   />
                 </div>
               </div>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="text-center">
-            <p className="text-sm text-muted-foreground">
+          <CardFooter className="flex justify-center">
+            <p className="text-sm text-black">
               Don't have an account?{" "}
-              <Button
-                variant="link"
-                className="p-0 text-primary"
-                onClick={() => navigate("/signup")}
-              >
-                Sign up here
-              </Button>
+              <a href="/signup" className="text-primary hover:underline font-medium">
+                Sign up
+              </a>
             </p>
           </CardFooter>
         </Card>

@@ -10,6 +10,7 @@ import {
   Activity
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSchools } from "@/hooks/useSchools";
 import ParticipantsCard from "./ParticipantsCard";
 import FieldsCard from "./FieldsCard";
 import MOUCard from "./MOUCard";
@@ -18,20 +19,17 @@ import OngoingCoursesCountCard from "./OngoingCoursesCountCard";
 
 const DashboardOverview = () => {
   const navigate = useNavigate();
+  const { schools, count, loading, error } = useSchools();
   
-  // Mock data for other cards - these should also be replaced with real API data
-  const stats = {
-    schoolMOUActivity: 28,
-  };
-
   const dashboardCards = [
     {
       title: "MOU School Activity",
-      value: stats.schoolMOUActivity,
+      value: loading ? "Loading..." : error ? "Error" : count,
       description: "Active MOUs under schools",
       icon: School,
       color: "text-purple-600",
-      bgColor: "bg-purple-50"
+      bgColor: "bg-purple-50",
+      onClick: () => navigate('/dashboard/schools')
     },
   ];
 
@@ -44,8 +42,8 @@ const DashboardOverview = () => {
             <Activity className="h-8 w-8" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Dashboard Overview</h1>
-            <p className="text-primary-foreground/80 mt-1">
+            <h1 className="text-3xl font-bold text-white">Dashboard Overview</h1>
+            <p className="text-white/90 mt-1">
               Welcome to your university admin panel. Monitor and manage all activities from here.
             </p>
           </div>
@@ -64,9 +62,13 @@ const DashboardOverview = () => {
         <OngoingCoursesCountCard />
         
         {dashboardCards.map((card, index) => (
-          <Card key={index} className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
+          <Card 
+            key={index} 
+            className="hover:shadow-lg transition-all duration-200 border-0 shadow-md cursor-pointer"
+            onClick={card.onClick}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-black">
                 {card.title}
               </CardTitle>
               <div className={`p-2 rounded-full ${card.bgColor}`}>
@@ -75,10 +77,10 @@ const DashboardOverview = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <div className="text-3xl font-bold text-foreground">
+                <div className="text-3xl font-bold text-black">
                   {card.value}
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-black">
                   {card.description}
                 </p>
               </div>
@@ -96,11 +98,11 @@ const DashboardOverview = () => {
       {/* Quick Actions */}
       <Card className="border-0 shadow-md">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-black">
             <Target className="h-5 w-5 text-primary" />
             Quick Actions
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-black">
             Frequently used administrative functions
           </CardDescription>
         </CardHeader>
@@ -111,24 +113,24 @@ const DashboardOverview = () => {
               onClick={() => navigate('/dashboard/add-mou')}
             >
               <FileText className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold">New MOU</h3>
-              <p className="text-sm text-muted-foreground">Create a new memorandum</p>
+              <h3 className="font-semibold text-black">New MOU</h3>
+              <p className="text-sm text-black">Create a new memorandum</p>
             </div>
             <div 
               className="p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => navigate('/dashboard/add-course')}
             >
               <BookOpen className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold">Add Course</h3>
-              <p className="text-sm text-muted-foreground">Register new course</p>
+              <h3 className="font-semibold text-black">Add Course</h3>
+              <p className="text-sm text-black">Register new course</p>
             </div>
             <div 
               className="p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => navigate('/dashboard/bulk-import-students')}
             >
               <Users className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold">Import Students</h3>
-              <p className="text-sm text-muted-foreground">Bulk student registration</p>
+              <h3 className="font-semibold text-black">Import Students</h3>
+              <p className="text-sm text-black">Bulk student registration</p>
             </div>
           </div>
         </CardContent>

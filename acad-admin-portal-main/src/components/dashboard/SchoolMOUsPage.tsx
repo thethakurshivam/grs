@@ -1,11 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, ArrowLeft, Calendar, Building, Target, GraduationCap } from "lucide-react";
-import { useMOU } from "@/hooks/useMOU";
-import { useNavigate } from "react-router-dom";
+import { useSchoolMOUs } from "@/hooks/useSchoolMOUs";
+import { useNavigate, useParams } from "react-router-dom";
 
-const MOUListPage = () => {
-  const { mous, loading, error, refetch } = useMOU();
+const SchoolMOUsPage = () => {
+  const { schoolName } = useParams<{ schoolName: string }>();
+  const decodedSchoolName = schoolName ? decodeURIComponent(schoolName) : '';
+  const { mous, school, loading, error, refetch } = useSchoolMOUs(decodedSchoolName);
   const navigate = useNavigate();
 
   const formatDate = (dateString: string) => {
@@ -23,14 +25,14 @@ const MOUListPage = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/dashboard/schools')}
             className="hover:bg-accent"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-black">All MOUs</h1>
-            <p className="text-black">Loading MOU data...</p>
+            <h1 className="text-2xl font-bold">School MOUs</h1>
+            <p className="text-muted-foreground">Loading MOUs data...</p>
           </div>
         </div>
         
@@ -61,20 +63,20 @@ const MOUListPage = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/dashboard/schools')}
             className="hover:bg-accent"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-black">All MOUs</h1>
-            <p className="text-black">Error loading MOU data</p>
+            <h1 className="text-2xl font-bold">School MOUs</h1>
+            <p className="text-muted-foreground">Error loading MOUs data</p>
           </div>
         </div>
         
         <Card className="border-0 shadow-md">
           <CardContent className="p-6 text-center">
-            <p className="text-black mb-4">{error}</p>
+            <p className="text-muted-foreground mb-4">{error}</p>
             <Button onClick={refetch}>Retry</Button>
           </CardContent>
         </Card>
@@ -89,20 +91,20 @@ const MOUListPage = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/dashboard/schools')}
           className="hover:bg-accent"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-black">All MOUs</h1>
+          <h1 className="text-2xl font-bold text-black">School MOUs</h1>
           <p className="text-black">
-            {mous.length} memorandum{mous.length !== 1 ? 's' : ''} of understanding
+            {school?.name} - {mous.length} MOU{mous.length !== 1 ? 's' : ''}
           </p>
         </div>
       </div>
 
-      {/* MOU List */}
+      {/* MOUs List */}
       <div className="grid gap-4">
         {mous.length === 0 ? (
           <Card className="border-0 shadow-md">
@@ -110,7 +112,7 @@ const MOUListPage = () => {
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No MOUs Found</h3>
               <p className="text-muted-foreground mb-4">
-                No memorandums of understanding have been created yet.
+                No memorandums of understanding found for {school?.name}.
               </p>
               <Button onClick={() => navigate('/dashboard/add-mou')}>
                 Create First MOU
@@ -170,4 +172,4 @@ const MOUListPage = () => {
   );
 };
 
-export default MOUListPage; 
+export default SchoolMOUsPage; 

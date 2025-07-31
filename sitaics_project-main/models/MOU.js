@@ -9,6 +9,13 @@ const mouSchema = new mongoose.Schema({
     trim: true
   },
   
+  // School field
+  school: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  
   // Name of the partner institution
   nameOfPartnerInstitution: {
     type: String,
@@ -43,6 +50,35 @@ const mouSchema = new mongoose.Schema({
   }
 }, {
   collection: 'mous'
+});
+
+// Pre-save middleware to handle school count updates
+mouSchema.pre('save', async function(next) {
+  try {
+    // Only run this middleware if school field is modified or this is a new document
+    if (this.isModified('school') || this.isNew) {
+      const School = mongoose.model('School');
+      
+      // Check if school already exists
+      let school = await School.findOne({ name: this.school });
+      
+      if (school) {
+        // School exists, don't increment count - just leave it as is
+        // The count should represent the number of unique schools, not MOUs
+      } else {
+        // School doesn't exist, create new school with count 1
+        const newSchool = new School({
+          name: this.school,
+          count: 1
+        });
+        await newSchool.save();
+      }
+    }
+    
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
 // Index for the unique ID field

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 interface Course {
   _id: string;
   ID: string;
+  mou_id: string;
   courseName: string;
   organization: string;
   duration: string;
@@ -32,6 +33,7 @@ interface CompletedCoursesResponse {
     organization: string | null;
     startDateFrom: string | null;
     startDateTo: string | null;
+    mou_id: string | null;
   };
 }
 

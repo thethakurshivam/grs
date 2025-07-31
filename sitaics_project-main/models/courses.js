@@ -50,6 +50,13 @@ const courseSchema = new mongoose.Schema({
     trim: true
   },
   
+  // Reference to MOU
+  mou_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'MOU',
+    required: true
+  },
+  
   // Course name
   courseName: {
     type: String,

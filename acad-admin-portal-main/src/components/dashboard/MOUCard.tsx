@@ -18,7 +18,7 @@ const MOUCard = () => {
         onClick={handleCardClick}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-black">
             Total MOUs
           </CardTitle>
           <div className="p-2 rounded-full bg-blue-50">
@@ -27,10 +27,10 @@ const MOUCard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <div className="text-3xl font-bold text-foreground">
+            <div className="text-3xl font-bold text-black">
               Loading...
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-black">
               Active memorandums of understanding
             </p>
           </div>
@@ -46,7 +46,7 @@ const MOUCard = () => {
         onClick={handleCardClick}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-black">
             Total MOUs
           </CardTitle>
           <div className="p-2 rounded-full bg-blue-50">
@@ -55,10 +55,10 @@ const MOUCard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <div className="text-3xl font-bold text-foreground">
+            <div className="text-3xl font-bold text-black">
               Error
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-black">
               Failed to load MOU data
             </p>
           </div>
@@ -73,7 +73,7 @@ const MOUCard = () => {
       onClick={handleCardClick}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-sm font-medium text-black">
           Total MOUs
         </CardTitle>
         <div className="p-2 rounded-full bg-blue-50">
@@ -82,10 +82,10 @@ const MOUCard = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          <div className="text-3xl font-bold text-foreground">
+          <div className="text-3xl font-bold text-black">
             {count}
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-black">
             Active memorandums of understanding
           </p>
         </div>

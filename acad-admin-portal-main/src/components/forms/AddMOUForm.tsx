@@ -13,12 +13,25 @@ const AddMOUForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     ID: "",
+    school: "",
     nameOfPartnerInstitution: "",
     strategicAreas: "",
     dateOfSigning: "",
     validity: "",
     affiliationDate: ""
   });
+
+  // Sample fields for the dropdown
+  const sampleFields = [
+    "Computer Science",
+    "Engineering",
+    "Business Administration",
+    "Medicine",
+    "Arts and Humanities",
+    "Social Sciences",
+    "Natural Sciences",
+    "Technology"
+  ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -39,7 +52,7 @@ const AddMOUForm = () => {
     e.preventDefault();
     
     // Validation
-    if (!formData.ID || !formData.nameOfPartnerInstitution || !formData.strategicAreas || !formData.dateOfSigning || !formData.validity || !formData.affiliationDate) {
+    if (!formData.ID || !formData.school || !formData.nameOfPartnerInstitution || !formData.strategicAreas || !formData.dateOfSigning || !formData.validity || !formData.affiliationDate) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -94,6 +107,7 @@ const AddMOUForm = () => {
         },
         body: JSON.stringify({
           ID: formData.ID,
+          school: formData.school,
           nameOfPartnerInstitution: formData.nameOfPartnerInstitution,
           strategicAreas: formData.strategicAreas,
           dateOfSigning: formData.dateOfSigning,
@@ -113,6 +127,7 @@ const AddMOUForm = () => {
         // Reset form
         setFormData({
           ID: "",
+          school: "",
           nameOfPartnerInstitution: "",
           strategicAreas: "",
           dateOfSigning: "",
@@ -145,34 +160,50 @@ const AddMOUForm = () => {
           <FileText className="h-6 w-6 text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Add New MOU</h1>
-          <p className="text-muted-foreground">Create a new Memorandum of Understanding</p>
+          <h1 className="text-2xl font-bold text-black">Add New MOU</h1>
+          <p className="text-black">Create a new Memorandum of Understanding</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>MOU Details</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-black">MOU Details</CardTitle>
+          <CardDescription className="text-black">
             Enter the details for the new MOU partnership
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="ID">MOU ID *</Label>
-              <Input
-                id="ID"
-                name="ID"
-                placeholder="Enter unique MOU ID"
-                value={formData.ID}
-                onChange={handleInputChange}
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="ID" className="text-black font-semibold">MOU ID *</Label>
+                <Input
+                  id="ID"
+                  name="ID"
+                  placeholder="Enter unique MOU ID"
+                  value={formData.ID}
+                  onChange={handleInputChange}
+                  required
+                  className="text-black"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="school" className="text-black font-semibold">School *</Label>
+                <Input
+                  id="school"
+                  name="school"
+                  placeholder="Enter school name"
+                  value={formData.school}
+                  onChange={handleInputChange}
+                  required
+                  className="text-black"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="nameOfPartnerInstitution">Partner Institution Name *</Label>
+              <Label htmlFor="nameOfPartnerInstitution" className="text-black font-semibold">Partner Institution Name *</Label>
               <Input
                 id="nameOfPartnerInstitution"
                 name="nameOfPartnerInstitution"
@@ -180,25 +211,29 @@ const AddMOUForm = () => {
                 value={formData.nameOfPartnerInstitution}
                 onChange={handleInputChange}
                 required
+                className="text-black"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="strategicAreas">Strategic Areas *</Label>
-              <Textarea
-                id="strategicAreas"
-                name="strategicAreas"
-                placeholder="Describe the strategic areas covered by this MOU"
-                value={formData.strategicAreas}
-                onChange={handleInputChange}
-                rows={4}
-                required
-              />
+              <Label htmlFor="strategicAreas" className="text-black font-semibold">Strategic Areas *</Label>
+              <Select onValueChange={(value) => handleSelectChange("strategicAreas", value)} defaultValue={formData.strategicAreas}>
+                <SelectTrigger className="w-full text-black">
+                  <SelectValue placeholder="Select strategic areas" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sampleFields.map((field) => (
+                    <SelectItem key={field} value={field} className="text-black">
+                      {field}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="dateOfSigning">Date of Signing *</Label>
+                <Label htmlFor="dateOfSigning" className="text-black font-semibold">Date of Signing *</Label>
                 <Input
                   id="dateOfSigning"
                   name="dateOfSigning"
@@ -206,10 +241,11 @@ const AddMOUForm = () => {
                   value={formData.dateOfSigning}
                   onChange={handleInputChange}
                   required
+                  className="text-black"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="validity">Validity *</Label>
+                <Label htmlFor="validity" className="text-black font-semibold">Validity *</Label>
                 <Input
                   id="validity"
                   name="validity"
@@ -217,10 +253,11 @@ const AddMOUForm = () => {
                   value={formData.validity}
                   onChange={handleInputChange}
                   required
+                  className="text-black"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="affiliationDate">Affiliation Date *</Label>
+                <Label htmlFor="affiliationDate" className="text-black font-semibold">Affiliation Date *</Label>
                 <Input
                   id="affiliationDate"
                   name="affiliationDate"
@@ -228,6 +265,7 @@ const AddMOUForm = () => {
                   value={formData.affiliationDate}
                   onChange={handleInputChange}
                   required
+                  className="text-black"
                 />
               </div>
             </div>

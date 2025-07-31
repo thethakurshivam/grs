@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useMOU } from "@/hooks/useMOU";
 import { BookOpen, Plus, Trash2 } from "lucide-react";
 
 interface Subject {
@@ -18,9 +19,11 @@ interface Subject {
 
 const AddCourseForm = () => {
   const { toast } = useToast();
+  const { mous, loading: mousLoading, error: mousError } = useMOU();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     ID: "",
+    mou_id: "",
     courseName: "",
     organization: "",
     duration: "",
@@ -84,10 +87,10 @@ const AddCourseForm = () => {
     e.preventDefault();
     
     // Validation
-    if (!formData.ID || !formData.courseName || !formData.organization || !formData.duration || !formData.field || !formData.startDate) {
+    if (!formData.ID || !formData.mou_id || !formData.courseName || !formData.organization || !formData.duration || !formData.field || !formData.startDate) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Please fill in all required fields including MOU selection",
         variant: "destructive",
       });
       return;
@@ -150,6 +153,7 @@ const AddCourseForm = () => {
         },
         body: JSON.stringify({
           ID: formData.ID.trim(),
+          mou_id: formData.mou_id,
           courseName: formData.courseName.trim(),
           organization: formData.organization.trim(),
           duration: formData.duration.trim(),
@@ -173,6 +177,7 @@ const AddCourseForm = () => {
         // Reset form
         setFormData({
           ID: "",
+          mou_id: "",
           courseName: "",
           organization: "",
           duration: "",
@@ -200,13 +205,63 @@ const AddCourseForm = () => {
       console.error('Course creation error:', error);
       toast({
         title: "Error",
-        description: "Network error. Please check your connection and try again.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Show loading state while MOUs are being fetched
+  if (mousLoading) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            Add New Course
+          </CardTitle>
+          <CardDescription>
+            Create a new course with all required details
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+              <p>Loading MOUs...</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show error state if MOUs failed to load
+  if (mousError) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            Add New Course
+          </CardTitle>
+          <CardDescription>
+            Create a new course with all required details
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">Error loading MOUs: {mousError}</p>
+              <Button onClick={() => window.location.reload()}>Retry</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -215,15 +270,15 @@ const AddCourseForm = () => {
           <BookOpen className="h-6 w-6 text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Add New Course</h1>
-          <p className="text-muted-foreground">Create a new course offering</p>
+          <h1 className="text-2xl font-bold text-black">Add New Course</h1>
+          <p className="text-black">Create a new course for the university</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Course Information</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-black">Course Details</CardTitle>
+          <CardDescription className="text-black">
             Enter the details for the new course
           </CardDescription>
         </CardHeader>
@@ -231,18 +286,7 @@ const AddCourseForm = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="ID">Course ID *</Label>
-                <Input
-                  id="ID"
-                  name="ID"
-                  placeholder="Enter unique course ID"
-                  value={formData.ID}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="courseName">Course Name *</Label>
+                <Label htmlFor="courseName" className="text-black font-semibold">Course Name *</Label>
                 <Input
                   id="courseName"
                   name="courseName"
@@ -250,13 +294,49 @@ const AddCourseForm = () => {
                   value={formData.courseName}
                   onChange={handleInputChange}
                   required
+                  className="text-black"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mou_id" className="text-black font-semibold">MOU *</Label>
+                <Select onValueChange={(value) => handleSelectChange("mou_id", value)} defaultValue={formData.mou_id}>
+                  <SelectTrigger className="w-full text-black">
+                    <SelectValue placeholder="Select MOU" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mousLoading ? (
+                      <SelectItem value="" disabled>Loading MOUs...</SelectItem>
+                    ) : mousError ? (
+                      <SelectItem value="" disabled>Error loading MOUs</SelectItem>
+                    ) : (
+                      mous.map((mou) => (
+                        <SelectItem key={mou._id} value={mou._id} className="text-black">
+                          {mou.ID} - {mou.nameOfPartnerInstitution}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="organization">Organization *</Label>
+                <Label htmlFor="field" className="text-black font-semibold">Field *</Label>
+                <Input
+                  id="field"
+                  name="field"
+                  placeholder="Enter field of study"
+                  value={formData.field}
+                  onChange={handleInputChange}
+                  required
+                  className="text-black"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="organization" className="text-black font-semibold">Organization *</Label>
                 <Input
                   id="organization"
                   name="organization"
@@ -264,51 +344,14 @@ const AddCourseForm = () => {
                   value={formData.organization}
                   onChange={handleInputChange}
                   required
+                  className="text-black"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="duration">Duration *</Label>
-                <Input
-                  id="duration"
-                  name="duration"
-                  placeholder="e.g., 6 months, 1 year"
-                  value={formData.duration}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="indoorCredits">Indoor Credits</Label>
-                <Input
-                  id="indoorCredits"
-                  name="indoorCredits"
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={formData.indoorCredits}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="outdoorCredits">Outdoor Credits</Label>
-                <Input
-                  id="outdoorCredits"
-                  name="outdoorCredits"
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={formData.outdoorCredits}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date *</Label>
+                <Label htmlFor="startDate" className="text-black font-semibold">Start Date *</Label>
                 <Input
                   id="startDate"
                   name="startDate"
@@ -316,130 +359,46 @@ const AddCourseForm = () => {
                   value={formData.startDate}
                   onChange={handleInputChange}
                   required
+                  className="text-black"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="completionStatus">Completion Status</Label>
-                <Select 
-                  value={formData.completionStatus} 
-                  onValueChange={(value) => handleSelectChange("completionStatus", value)}
-                >
-                  <SelectTrigger>
+                <Label htmlFor="endDate" className="text-black font-semibold">End Date *</Label>
+                <Input
+                  id="endDate"
+                  name="endDate"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={handleInputChange}
+                  required
+                  className="text-black"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="completionStatus" className="text-black font-semibold">Status *</Label>
+                <Select onValueChange={(value) => handleSelectChange("completionStatus", value)} defaultValue={formData.completionStatus}>
+                  <SelectTrigger className="w-full text-black">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="upcoming">Upcoming</SelectItem>
-                    <SelectItem value="ongoing">Ongoing</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="ongoing" className="text-black">Ongoing</SelectItem>
+                    <SelectItem value="completed" className="text-black">Completed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="field">Field *</Label>
-                <Input
-                  id="field"
-                  name="field"
-                  placeholder="Enter the field/domain of the course"
-                  value={formData.field}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
             </div>
 
-
-
-            {/* Subjects Section */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>Subjects *</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addSubject}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Subject
-                </Button>
-              </div>
-              
-              {subjects.map((subject, index) => (
-                <Card key={index} className="p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium">Subject {index + 1}</h4>
-                    {subjects.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeSubject(index)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`noOfPeriods-${index}`}>No. of Periods *</Label>
-                      <Input
-                        id={`noOfPeriods-${index}`}
-                        type="number"
-                        min="1"
-                        value={subject.noOfPeriods}
-                        onChange={(e) => handleSubjectChange(index, 'noOfPeriods', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`periodsMin-${index}`}>Periods Min *</Label>
-                      <Input
-                        id={`periodsMin-${index}`}
-                        type="number"
-                        min="1"
-                        value={subject.periodsMin}
-                        onChange={(e) => handleSubjectChange(index, 'periodsMin', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`totalMins-${index}`}>Total Minutes *</Label>
-                      <Input
-                        id={`totalMins-${index}`}
-                        type="number"
-                        min="1"
-                        value={subject.totalMins}
-                        onChange={(e) => handleSubjectChange(index, 'totalMins', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`totalHrs-${index}`}>Total Hours *</Label>
-                      <Input
-                        id={`totalHrs-${index}`}
-                        type="number"
-                        min="1"
-                        value={subject.totalHrs}
-                        onChange={(e) => handleSubjectChange(index, 'totalHrs', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`credits-${index}`}>Credits</Label>
-                      <Input
-                        id={`credits-${index}`}
-                        type="number"
-                        min="0"
-                        value={subject.credits}
-                        onChange={(e) => handleSubjectChange(index, 'credits', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </Card>
-              ))}
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-black font-semibold">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                placeholder="Enter course description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows={4}
+                className="text-black"
+              />
             </div>
 
             <div className="flex gap-4 pt-4">

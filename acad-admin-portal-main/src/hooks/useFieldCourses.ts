@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 interface Course {
   _id: string;
   ID: string;
+  mou_id: string;
   courseName: string;
   organization: string;
   duration: string;

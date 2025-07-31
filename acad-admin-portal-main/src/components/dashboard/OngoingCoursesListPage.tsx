@@ -1,12 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, ArrowLeft, Calendar, Building, Target, Clock, GraduationCap } from "lucide-react";
+import { BookOpen, ArrowLeft, Calendar, Building, Target, Clock, GraduationCap, FileText, Hash, Award, School } from "lucide-react";
 import { useOngoingCoursesCount } from "@/hooks/useOngoingCoursesCount";
+import { useMOU } from "@/hooks/useMOU";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const OngoingCoursesListPage = () => {
   const { courses, loading, error, refetch } = useOngoingCoursesCount();
+  const { fetchMOUById } = useMOU();
   const navigate = useNavigate();
+  const [mouDetails, setMouDetails] = useState<{[key: string]: any}>({});
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -15,6 +19,28 @@ const OngoingCoursesListPage = () => {
       day: 'numeric'
     });
   };
+
+  // Fetch MOU details for all courses
+  useEffect(() => {
+    const fetchMOUDetails = async () => {
+      const details: {[key: string]: any} = {};
+      
+      for (const course of courses) {
+        if (course.mou_id && !mouDetails[course.mou_id]) {
+          const mou = await fetchMOUById(course.mou_id);
+          if (mou) {
+            details[course.mou_id] = mou;
+          }
+        }
+      }
+      
+      setMouDetails(prev => ({ ...prev, ...details }));
+    };
+
+    if (courses.length > 0) {
+      fetchMOUDetails();
+    }
+  }, [courses, fetchMOUById]);
 
   if (loading) {
     return (
@@ -29,8 +55,8 @@ const OngoingCoursesListPage = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Ongoing Courses</h1>
-            <p className="text-muted-foreground">Loading ongoing courses data...</p>
+            <h1 className="text-2xl font-bold text-black">Ongoing Courses</h1>
+            <p className="text-black">Loading ongoing courses data...</p>
           </div>
         </div>
         
@@ -67,14 +93,14 @@ const OngoingCoursesListPage = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Ongoing Courses</h1>
-            <p className="text-muted-foreground">Error loading ongoing courses data</p>
+            <h1 className="text-2xl font-bold text-black">Ongoing Courses</h1>
+            <p className="text-black">Error loading ongoing courses data</p>
           </div>
         </div>
         
         <Card className="border-0 shadow-md">
           <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground mb-4">{error}</p>
+            <p className="text-black mb-4">{error}</p>
             <Button onClick={refetch}>Retry</Button>
           </CardContent>
         </Card>
@@ -95,22 +121,22 @@ const OngoingCoursesListPage = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Ongoing Courses</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold text-black">Ongoing Courses</h1>
+          <p className="text-black">
             {courses.length} ongoing course{courses.length !== 1 ? 's' : ''}
           </p>
         </div>
       </div>
 
-      {/* Ongoing Courses List */}
+      {/* Courses List */}
       <div className="grid gap-4">
         {courses.length === 0 ? (
           <Card className="border-0 shadow-md">
             <CardContent className="p-6 text-center">
               <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Ongoing Courses Found</h3>
-              <p className="text-muted-foreground mb-4">
-                No courses are currently ongoing.
+              <h3 className="text-lg font-semibold mb-2 text-black">No Ongoing Courses Found</h3>
+              <p className="text-black mb-4">
+                No ongoing courses have been found in the system.
               </p>
               <Button onClick={() => navigate('/dashboard/add-course')}>
                 Add First Course
@@ -123,63 +149,76 @@ const OngoingCoursesListPage = () => {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="flex items-center gap-2 mb-2">
-                      <BookOpen className="h-5 w-5 text-green-600" />
-                      {course.ID}
-                    </CardTitle>
-                    <CardDescription className="text-base font-medium text-foreground">
+                    <CardTitle className="flex items-center gap-2 mb-2 text-black">
+                      <BookOpen className="h-5 w-5 text-blue-600" />
                       {course.courseName}
+                    </CardTitle>
+                    <CardDescription className="text-base font-medium text-black">
+                      {course.organization}
                     </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                    <Target className="h-3 w-3" />
+                    {course.completionStatus}
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Organization:</span>
-                    <span className="text-sm font-medium">{course.organization}</span>
+                    <Hash className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-black">Course ID:</span>
+                    <span className="text-sm font-medium text-black">{course.ID}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Field:</span>
-                    <span className="text-sm font-medium">{course.field}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Duration:</span>
-                    <span className="text-sm font-medium">{course.duration}</span>
+                    <span className="text-sm text-black">Field:</span>
+                    <span className="text-sm font-medium text-black">{course.field}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Start Date:</span>
-                    <span className="text-sm font-medium">{formatDate(course.startDate)}</span>
+                    <span className="text-sm text-black">Start Date:</span>
+                    <span className="text-sm font-medium text-black">{formatDate(course.startDate)}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Indoor Credits:</span>
-                    <span className="text-sm font-medium">{course.indoorCredits}</span>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-black">End Date:</span>
+                    <span className="text-sm font-medium text-black">{formatDate(course.endDate)}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Outdoor Credits:</span>
-                    <span className="text-sm font-medium">{course.outdoorCredits}</span>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-black">Duration:</span>
+                    <span className="text-sm font-medium text-black">{course.duration}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Award className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-black">Indoor Credits:</span>
+                    <span className="text-sm font-medium text-black">{course.indoorCredits}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Award className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-black">Outdoor Credits:</span>
+                    <span className="text-sm font-medium text-black">{course.outdoorCredits}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-black">MOU ID:</span>
+                    <span className="text-sm font-medium text-black">{course.mou_id}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-black">MOU Name:</span>
+                    <span className="text-sm font-medium text-black">{mouDetails?.ID || 'Loading...'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <School className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-black">MOU School:</span>
+                    <span className="text-sm font-medium text-black">{mouDetails?.school || 'Loading...'}</span>
                   </div>
                 </div>
-                
-                {/* Subjects */}
-                {course.subjects && course.subjects.length > 0 && (
-                  <div className="border-t pt-4">
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Subjects:</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {course.subjects.map((subject, index) => (
-                        <div key={index} className="text-xs bg-muted p-2 rounded">
-                          <div>Periods: {subject.noOfPeriods}</div>
-                          <div>Duration: {subject.periodsMin} min</div>
-                          <div>Credits: {subject.credits}</div>
-                        </div>
-                      ))}
-                    </div>
+                {course.description && (
+                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-black">{course.description}</p>
                   </div>
                 )}
               </CardContent>

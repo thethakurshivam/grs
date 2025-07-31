@@ -173,15 +173,41 @@ app.get('/api/mous', authenticateToken, asyncHandler(async (req, res) => {
   });
 }));
 
-// Route to add a single MOU
-app.post('/api/mous', authenticateToken, asyncHandler(async (req, res) => {
-  const { ID, nameOfPartnerInstitution, strategicAreas, dateOfSigning, validity, affiliationDate } = req.body;
-
-  // Validate required fields
-  if (!ID || !nameOfPartnerInstitution || !strategicAreas || !dateOfSigning || !validity || !affiliationDate) {
+// Route to get a single MOU by ID
+app.get('/api/mous/:mouId', authenticateToken, asyncHandler(async (req, res) => {
+  const mouId = sanitizeInput(req.params.mouId);
+  
+  // Validate MongoDB ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(mouId)) {
     return res.status(400).json({
       success: false,
-      error: 'Missing required fields (ID, nameOfPartnerInstitution, strategicAreas, dateOfSigning, validity, affiliationDate)'
+      error: 'Invalid MOU ID format'
+    });
+  }
+  
+  const mou = await MOU.findById(mouId);
+  if (!mou) {
+    return res.status(404).json({
+      success: false,
+      error: 'MOU not found'
+    });
+  }
+  
+  res.json({
+    success: true,
+    data: mou
+  });
+}));
+
+// Route to add a single MOU
+app.post('/api/mous', authenticateToken, asyncHandler(async (req, res) => {
+  const { ID, school, nameOfPartnerInstitution, strategicAreas, dateOfSigning, validity, affiliationDate } = req.body;
+
+  // Validate required fields
+  if (!ID || !school || !nameOfPartnerInstitution || !strategicAreas || !dateOfSigning || !validity || !affiliationDate) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required fields (ID, school, nameOfPartnerInstitution, strategicAreas, dateOfSigning, validity, affiliationDate)'
     });
   }
 
@@ -213,25 +239,11 @@ app.post('/api/mous', authenticateToken, asyncHandler(async (req, res) => {
       });
     }
 
-    // Check if school exists, create or update
-    const trimmedSchoolName = nameOfPartnerInstitution.trim();
-    let existingSchool = await School.findOne({ name: trimmedSchoolName });
-
-    if (!existingSchool) {
-      const newSchool = new School({
-        name: trimmedSchoolName,
-        count: 1
-      });
-      await newSchool.save();
-    } else {
-      existingSchool.count += 1;
-      await existingSchool.save();
-    }
-
     // Create new MOU
     const newMOU = new MOU({
       ID: ID.trim(),
-      nameOfPartnerInstitution: trimmedSchoolName,
+      school: school.trim(),
+      nameOfPartnerInstitution: nameOfPartnerInstitution.trim(),
       strategicAreas: strategicAreas.trim(),
       dateOfSigning: signingDate,
       validity: validity.trim(),
@@ -262,6 +274,7 @@ app.get('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
     organization, 
     startDateFrom, 
     startDateTo,
+    mou_id,
     sortBy = 'startDate',
     sortOrder = 'desc'
   } = req.query;
@@ -279,6 +292,17 @@ app.get('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
   
   if (organization) {
     filter.organization = { $regex: organization, $options: 'i' }; // Case-insensitive search
+  }
+  
+  if (mou_id) {
+    // Validate MOU ID format
+    if (!mongoose.Types.ObjectId.isValid(mou_id)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid MOU ID format'
+      });
+    }
+    filter.mou_id = mou_id;
   }
   
   // Date range filtering
@@ -328,7 +352,8 @@ app.get('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
         field,
         organization,
         startDateFrom,
-        startDateTo
+        startDateTo,
+        mou_id
       }
     });
   } catch (error) {
@@ -341,13 +366,30 @@ app.get('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
 
 // Route to add a single course
 app.post('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
-  const { ID, courseName, organization, duration, indoorCredits, outdoorCredits, field, startDate, completionStatus, subjects } = req.body;
+  const { ID, mou_id, courseName, organization, duration, indoorCredits, outdoorCredits, field, startDate, completionStatus, subjects } = req.body;
 
   // Validate required fields
-  if (!ID || !courseName || !organization || !duration || !field || !startDate) {
+  if (!ID || !mou_id || !courseName || !organization || !duration || !field || !startDate) {
     return res.status(400).json({
       success: false,
-      error: 'Missing required fields (ID, courseName, organization, duration, field, startDate)'
+      error: 'Missing required fields (ID, mou_id, courseName, organization, duration, field, startDate)'
+    });
+  }
+
+  // Validate MOU ID format
+  if (!mongoose.Types.ObjectId.isValid(mou_id)) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid MOU ID format'
+    });
+  }
+
+  // Check if MOU exists
+  const existingMOU = await MOU.findById(mou_id);
+  if (!existingMOU) {
+    return res.status(404).json({
+      success: false,
+      error: 'MOU not found with the provided ID'
     });
   }
 
@@ -479,6 +521,7 @@ app.post('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
     
     const newCourse = new Course({
       ID: ID.trim(),
+      mou_id: mou_id,
       courseName: courseName.trim(),
       organization: organization.trim(),
       duration: duration.trim(),
@@ -554,39 +597,50 @@ app.post('/api/courses/update-completion-status', authenticateToken, asyncHandle
   }
 }));
 
-// Route to get all schools with count > 0 as links
-app.get('/api/schools/active', authenticateToken, asyncHandler(async (req, res) => {
-  const activeSchools = await School.find({ count: { $gt: 0 } });
-  
-  // Transform schools into link format for frontend
-  const schoolLinks = activeSchools.map(school => ({
-    id: school._id,
-    name: school.name,
-    count: school.count,
-    link: `/api/schools/${school._id}` // Link that will hit another route when clicked
-  }));
 
-  res.json({
-    success: true,
-    count: schoolLinks.length,
-    data: schoolLinks
-  });
+
+  
+ 
+
+// Route to get all schools with their information and links
+app.get('/api/schools', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    const schools = await School.find();
+    
+    // Transform schools into format with links for frontend
+    const schoolsWithLinks = schools.map(school => ({
+      id: school._id,
+      name: school.name,
+      count: school.count,
+      link: `/api/schools/${encodeURIComponent(school.name)}` // Link that will hit another route when clicked
+    }));
+
+    res.json({
+      success: true,
+      count: schoolsWithLinks.length,
+      data: schoolsWithLinks
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Error fetching schools: ' + error.message
+    });
+  }
 }));
 
 // Route that will be hit when admin clicks on school link
-app.get('/api/schools/:schoolId', authenticateToken, asyncHandler(async (req, res) => {
-  const schoolId = sanitizeInput(req.params.schoolId);
+app.get('/api/schools/:schoolName', authenticateToken, asyncHandler(async (req, res) => {
+  const schoolName = decodeURIComponent(sanitizeInput(req.params.schoolName));
   
-  // Validate MongoDB ObjectId format
-  if (!mongoose.Types.ObjectId.isValid(schoolId)) {
+  if (!schoolName) {
     return res.status(400).json({
       success: false,
-      error: 'Invalid school ID format'
+      error: 'School name is required'
     });
   }
   
-  // First find the school to get its name
-  const school = await School.findById(schoolId);
+  // First find the school to get its information
+  const school = await School.findOne({ name: schoolName });
   if (!school) {
     return res.status(404).json({
       success: false,
@@ -594,14 +648,46 @@ app.get('/api/schools/:schoolId', authenticateToken, asyncHandler(async (req, re
     });
   }
   
-  // Find all MOUs that belong to this school by name
-  const schoolMOUs = await MOU.find({ nameOfPartnerInstitution: school.name });
+  // Find all MOUs that belong to this school
+  const schoolMOUs = await MOU.find({ school: schoolName });
   
   res.json({
     success: true,
     school: school,
     count: schoolMOUs.length,
     data: schoolMOUs
+  });
+}));
+
+// Route to get courses by MOU ID
+app.get('/api/mous/:mouId/courses', authenticateToken, asyncHandler(async (req, res) => {
+  const mouId = sanitizeInput(req.params.mouId);
+  
+  // Validate MongoDB ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(mouId)) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid MOU ID format'
+    });
+  }
+  
+  // First check if MOU exists
+  const mou = await MOU.findById(mouId);
+  if (!mou) {
+    return res.status(404).json({
+      success: false,
+      error: 'MOU not found'
+    });
+  }
+  
+  // Find all courses for this MOU
+  const courses = await Course.find({ mou_id: mouId });
+  
+  res.json({
+    success: true,
+    mou: mou,
+    count: courses.length,
+    data: courses
   });
 }));
 
@@ -704,6 +790,7 @@ app.post('/api/mous/import', authenticateToken, upload.single('excelFile'), asyn
       try {
         // Sanitize inputs
         const ID = sanitizeInput(row.ID || row.id || '');
+        const school = sanitizeInput(row.school || row.School || '');
         const nameOfPartnerInstitution = sanitizeInput(row.nameOfPartnerInstitution || row.NameOfPartnerInstitution || '');
         const strategicAreas = sanitizeInput(row.strategicAreas || row.StrategicAreas || '');
         const dateOfSigning = row.dateOfSigning || row.DateOfSigning || '';
@@ -711,11 +798,11 @@ app.post('/api/mous/import', authenticateToken, upload.single('excelFile'), asyn
         const affiliationDate = row.affiliationDate || row.AffiliationDate || '';
 
         // Validate required fields
-        if (!ID || !nameOfPartnerInstitution || !strategicAreas || !dateOfSigning || !validity || !affiliationDate) {
+        if (!ID || !school || !nameOfPartnerInstitution || !strategicAreas || !dateOfSigning || !validity || !affiliationDate) {
           results.errors.push({
             row: rowNumber,
             data: row,
-            error: 'Missing required fields (ID, nameOfPartnerInstitution, strategicAreas, dateOfSigning, validity, affiliationDate)'
+            error: 'Missing required fields (ID, school, nameOfPartnerInstitution, strategicAreas, dateOfSigning, validity, affiliationDate)'
           });
           continue;
         }
@@ -771,6 +858,7 @@ app.post('/api/mous/import', authenticateToken, upload.single('excelFile'), asyn
         // Create new MOU
         const newMOU = new MOU({
           ID: ID.trim(),
+          school: school.trim(),
           nameOfPartnerInstitution: trimmedSchoolName,
           strategicAreas: strategicAreas.trim(),
           dateOfSigning: signingDate,
@@ -1001,6 +1089,7 @@ app.post('/api/courses/import', authenticateToken, upload.single('excelFile'), a
 
       try {
         // Sanitize inputs
+        const mou_id = row.mou_id || row.mouId || row.MOU_ID || row.MOUId || '';
         const courseName = sanitizeInput(row.courseName || row.CourseName || '');
         const organization = sanitizeInput(row.organization || row.Organization || '');
         const duration = sanitizeInput(row.duration || row.Duration || '');
@@ -1030,11 +1119,32 @@ app.post('/api/courses/import', authenticateToken, upload.single('excelFile'), a
         }
 
         // Validate required fields
-        if (!courseName || !organization || !duration || isNaN(indoorCredits) || isNaN(outdoorCredits) || !field || !startDate || !subjects || subjects.length === 0) {
+        if (!mou_id || !courseName || !organization || !duration || isNaN(indoorCredits) || isNaN(outdoorCredits) || !field || !startDate || !subjects || subjects.length === 0) {
           results.errors.push({
             row: rowNumber,
             data: row,
-            error: 'Missing required fields (courseName, organization, duration, indoorCredits, outdoorCredits, field, startDate, subjects)'
+            error: 'Missing required fields (mou_id, courseName, organization, duration, indoorCredits, outdoorCredits, field, startDate, subjects)'
+          });
+          continue;
+        }
+
+        // Validate MOU ID format
+        if (!mongoose.Types.ObjectId.isValid(mou_id)) {
+          results.errors.push({
+            row: rowNumber,
+            data: row,
+            error: 'Invalid MOU ID format'
+          });
+          continue;
+        }
+
+        // Check if MOU exists
+        const existingMOU = await MOU.findById(mou_id);
+        if (!existingMOU) {
+          results.errors.push({
+            row: rowNumber,
+            data: row,
+            error: 'MOU not found with the provided ID'
           });
           continue;
         }
@@ -1127,6 +1237,7 @@ app.post('/api/courses/import', authenticateToken, upload.single('excelFile'), a
 
         // Create new course
         const newCourse = new Course({
+          mou_id: mou_id,
           courseName: courseName.trim(),
           organization: organization.trim(),
           duration: duration.trim(),
