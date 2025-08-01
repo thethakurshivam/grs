@@ -86,6 +86,12 @@ const studentSchema = new mongoose.Schema({
     trim: true,
     ref: 'MOU'
   },
+  course_id: {
+    type: String,
+    
+    trim: true,
+    ref: 'Course'
+  },
   files: [String], // array of file paths or identifiers
   courses: [String], // array of course names or identifiers
   previous_courses_certification: [previousCourseSchema], // array of previous course objects

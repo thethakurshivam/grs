@@ -96,3 +96,23 @@ app.post('/students/:id/previous-certifications', upload.single('certificate_pdf
   }
 });
 
+
+
+// Route to get all courses by MOU ID
+app.get('/mou/:mouId/courses', async (req, res) => {
+  try {
+    const { mouId } = req.params;
+
+    // Find all courses that match the provided MOU ID
+    const courses = await Course.find({ mou_id: mouId });
+
+    // Send the courses to the frontend
+    res.status(200).json(courses);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
