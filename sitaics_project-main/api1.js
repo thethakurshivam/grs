@@ -114,5 +114,27 @@ app.get('/mou/:mouId/courses', async (req, res) => {
   }
 });
 
+// Route to add course ID to student's course_id array
+app.put('/students/:studentId/courses/:courseId', async (req, res) => {
+    try {
+      const { studentId, courseId } = req.params;
+  
+      const updatedStudent = await Student.findByIdAndUpdate(
+        studentId,
+        { $push: { course_id: courseId } },
+        { new: true }
+      );
+  
+      if (!updatedStudent) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+  
+      res.status(200).json(updatedStudent);
+  
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
 
 

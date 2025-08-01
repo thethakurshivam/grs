@@ -97,6 +97,14 @@ const studentSchema = new mongoose.Schema({
   credits: {
     type: Number,
     default: 0
+  },
+  available_credit: {
+    type: Number,
+    default: 0
+  },
+  used_credit: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
