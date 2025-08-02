@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-interface Course {
+interface CompletedCourse {
   _id: string;
   ID: string;
   courseName: string;
@@ -21,20 +21,20 @@ interface Course {
   }>;
 }
 
-interface UseStudentCoursesReturn {
-  courses: Course[];
+interface UseStudentCompletedCoursesReturn {
+  completedCourses: CompletedCourse[];
   loading: boolean;
   error: string | null;
-  courseCount: number;
-  fetchCourses: (studentId: string) => Promise<void>;
+  completedCourseCount: number;
+  fetchCompletedCourses: (studentId: string) => Promise<void>;
 }
 
-export const useStudentCourses = (): UseStudentCoursesReturn => {
-  const [courses, setCourses] = useState<Course[]>([]);
+export const useStudentCompletedCourses = (): UseStudentCompletedCoursesReturn => {
+  const [completedCourses, setCompletedCourses] = useState<CompletedCourse[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCourses = useCallback(async (studentId: string) => {
+  const fetchCompletedCourses = useCallback(async (studentId: string) => {
     if (!studentId) {
       setError('Student ID is required');
       return;
@@ -52,7 +52,7 @@ export const useStudentCourses = (): UseStudentCoursesReturn => {
         return;
       }
 
-      const response = await fetch(`http://localhost:3001/student/${studentId}/courses`, {
+      const response = await fetch(`http://localhost:3001/students/${studentId}/completed-courses`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -65,22 +65,22 @@ export const useStudentCourses = (): UseStudentCoursesReturn => {
       }
 
       const data = await response.json();
-      setCourses(data);
+      setCompletedCourses(data);
     } catch (err) {
-      console.error('Error fetching student courses:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch courses');
+      console.error('Error fetching completed courses:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch completed courses');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const courseCount = courses.length;
+  const completedCourseCount = completedCourses.length;
 
   return {
-    courses,
+    completedCourses,
     loading,
     error,
-    courseCount,
-    fetchCourses
+    completedCourseCount,
+    fetchCompletedCourses
   };
 }; 

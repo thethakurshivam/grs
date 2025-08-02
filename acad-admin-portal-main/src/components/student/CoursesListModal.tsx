@@ -45,12 +45,12 @@ export const CoursesListModal: React.FC<CoursesListModalProps> = ({
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-foreground">
+            <DialogTitle className="text-2xl font-bold text-gray-900">
               Available Courses
             </DialogTitle>
           </DialogHeader>
           <div className="flex items-center justify-center py-8">
-            <div className="text-muted-foreground">Loading courses...</div>
+            <div className="text-gray-600">Loading courses...</div>
           </div>
         </DialogContent>
       </Dialog>
@@ -62,12 +62,12 @@ export const CoursesListModal: React.FC<CoursesListModalProps> = ({
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-foreground">
+            <DialogTitle className="text-2xl font-bold text-gray-900">
               Available Courses
             </DialogTitle>
           </DialogHeader>
           <div className="flex items-center justify-center py-8">
-            <div className="text-red-500">Error: {error}</div>
+            <div className="text-red-600">Error: {error}</div>
           </div>
         </DialogContent>
       </Dialog>
@@ -78,7 +78,7 @@ export const CoursesListModal: React.FC<CoursesListModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-blue-600" />
             Available Courses ({courses.length})
           </DialogTitle>
@@ -86,20 +86,20 @@ export const CoursesListModal: React.FC<CoursesListModalProps> = ({
         
         <div className="space-y-4">
           {courses.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-gray-600">
               No courses available at the moment.
             </div>
           ) : (
             courses.map((course) => (
               <Card key={course._id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
-                                  <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+                                  <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <BookOpen className="h-5 w-5 text-blue-600" />
                   {course.courseName}
                 </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-muted-foreground">
+                  <p className="text-gray-600">
                     <strong>Organization:</strong> {course.organization} | <strong>Field:</strong> {course.field}
                   </p>
                   <div className="flex flex-wrap gap-2">

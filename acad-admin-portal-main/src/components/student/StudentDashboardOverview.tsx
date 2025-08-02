@@ -6,20 +6,25 @@ import {
   GraduationCap, 
   CreditCard, 
   Coins, 
-  Award 
+  Award,
+  UserCircle
 } from 'lucide-react';
 import { useStudentCourses } from '../../hooks/useStudentCourses';
 import { useStudentAvailableCredits } from '../../hooks/useStudentAvailableCredits';
 import { useStudentUsedCredits } from '../../hooks/useStudentUsedCredits';
-import { CoursesListModal } from './CoursesListModal';
+import { useStudentCompletedCourses } from '../../hooks/useStudentCompletedCourses';
+
+import { useNavigate } from 'react-router-dom';
 
 export const StudentDashboardOverview: React.FC = () => {
-  const [isCoursesModalOpen, setIsCoursesModalOpen] = useState(false);
+  const navigate = useNavigate();
+
   const [studentId, setStudentId] = useState<string>('');
   
   const { courses, loading: coursesLoading, error: coursesError, courseCount, fetchCourses } = useStudentCourses();
   const { availableCredits, loading: availableCreditsLoading, error: availableCreditsError, fetchAvailableCredits } = useStudentAvailableCredits();
   const { usedCredits, loading: usedCreditsLoading, error: usedCreditsError, fetchUsedCredits } = useStudentUsedCredits();
+  const { completedCourses, loading: completedCoursesLoading, error: completedCoursesError, completedCourseCount, fetchCompletedCourses } = useStudentCompletedCourses();
 
   // Get student ID from localStorage or other source
   useEffect(() => {
@@ -36,14 +41,20 @@ export const StudentDashboardOverview: React.FC = () => {
       fetchCourses(studentId);
       fetchAvailableCredits(studentId);
       fetchUsedCredits(studentId);
+      fetchCompletedCourses(studentId);
     }
-  }, [studentId, fetchCourses, fetchAvailableCredits, fetchUsedCredits]);
+  }, [studentId, fetchCourses, fetchAvailableCredits, fetchUsedCredits, fetchCompletedCourses]);
 
   const handleCoursesCardClick = () => {
-    if (studentId) {
-      fetchCourses(studentId);
-      setIsCoursesModalOpen(true);
-    }
+    navigate('/student/available-courses');
+  };
+
+  const handleCompletedCoursesCardClick = () => {
+    navigate('/student/completed-courses');
+  };
+
+  const handleProfileCardClick = () => {
+    navigate('/student/profile');
   };
 
   const cards: Array<{
@@ -57,6 +68,16 @@ export const StudentDashboardOverview: React.FC = () => {
     clickable?: boolean;
   }> = [
     {
+      title: 'Profile',
+      value: 'View',
+      description: 'Manage your student profile',
+      icon: UserCircle,
+      color: 'text-teal-600',
+      bgColor: 'bg-teal-100',
+      onClick: handleProfileCardClick,
+      clickable: true
+    },
+    {
       title: 'Basic Info & Available Courses',
       value: coursesLoading ? '...' : courseCount.toString(),
       description: 'Available courses for enrollment',
@@ -68,11 +89,13 @@ export const StudentDashboardOverview: React.FC = () => {
     },
     {
       title: 'Completed Courses',
-      value: '8',
+      value: completedCoursesLoading ? '...' : completedCourseCount.toString(),
       description: 'Successfully completed courses',
       icon: GraduationCap,
       color: 'text-green-600',
-      bgColor: 'bg-green-100'
+      bgColor: 'bg-green-100',
+      onClick: handleCompletedCoursesCardClick,
+      clickable: true
     },
     {
       title: 'Credit Bank',
@@ -108,12 +131,28 @@ export const StudentDashboardOverview: React.FC = () => {
     }
   ];
 
+  // Show error messages if any
+  const hasErrors = coursesError || availableCreditsError || usedCreditsError || completedCoursesError;
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Student Dashboard</h1>
-        <p className="text-muted-foreground mt-2">Welcome back! Here's an overview of your academic progress.</p>
+        <h1 className="text-3xl font-bold text-gray-900">Student Dashboard</h1>
+        <p className="text-gray-700 mt-2">Welcome back! Here's an overview of your academic progress.</p>
       </div>
+
+      {/* Error Display */}
+      {hasErrors && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h3 className="text-red-900 font-semibold mb-2">Errors occurred while loading data:</h3>
+          {coursesError && <p className="text-red-700 text-sm">Courses: {coursesError}</p>}
+          {availableCreditsError && <p className="text-red-700 text-sm">Available Credits: {availableCreditsError}</p>}
+          {usedCreditsError && <p className="text-red-700 text-sm">Used Credits: {usedCreditsError}</p>}
+          {completedCoursesError && <p className="text-red-700 text-sm">Completed Courses: {completedCoursesError}</p>}
+        </div>
+      )}
+
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {cards.map((card, index) => {
@@ -125,30 +164,22 @@ export const StudentDashboardOverview: React.FC = () => {
               onClick={card.onClick}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {card.title}
-                </CardTitle>
+                              <CardTitle className="text-sm font-medium text-gray-700">
+                {card.title}
+              </CardTitle>
                 <div className={`p-2 rounded-lg ${card.bgColor}`}>
                   <Icon className={`w-4 h-4 ${card.color}`} />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-foreground">{card.value}</div>
-                <p className="text-xs text-muted-foreground mt-1">{card.description}</p>
+                <div className="text-2xl font-bold text-gray-900">{card.value}</div>
+                <p className="text-xs text-gray-600 mt-1">{card.description}</p>
               </CardContent>
             </Card>
           );
         })}
       </div>
 
-      {/* Courses List Modal */}
-      <CoursesListModal
-        isOpen={isCoursesModalOpen}
-        onClose={() => setIsCoursesModalOpen(false)}
-        courses={courses}
-        loading={loading}
-        error={error}
-      />
     </div>
   );
 }; 

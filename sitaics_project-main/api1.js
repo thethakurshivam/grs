@@ -368,6 +368,40 @@ app.get('/students/:id/available-credits', authenticateToken, async (req, res) =
     }
   });
 
+
+  // Route to get completed courses by student ID
+app.get('/students/:id/completed-courses', authenticateToken, async (req, res) => {
+    try {
+      const studentId = req.params.id;
+  
+      // Find the student by ID and select only the course_id field
+      const student = await Student.findById(studentId).select('course_id');
+  
+      if (!student) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+  
+      // Get all course IDs from the student
+      const courseIds = student.course_id;
+  
+      if (!courseIds || courseIds.length === 0) {
+        return res.status(200).json([]);
+      }
+  
+      // Find all courses with the matching IDs and completion status as 'completed'
+      const completedCourses = await Course.find({
+        _id: { $in: courseIds },
+        completionStatus: 'completed'
+      });
+  
+      // Send the completed courses to the frontend
+      res.status(200).json(completedCourses);
+  
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
 interface UseStudentUsedCreditsReturn {
   usedCredits: number;
@@ -12,7 +12,7 @@ export const useStudentUsedCredits = (): UseStudentUsedCreditsReturn => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUsedCredits = async (studentId: string) => {
+  const fetchUsedCredits = useCallback(async (studentId: string) => {
     if (!studentId) {
       setError('Student ID is required');
       return;
@@ -23,6 +23,7 @@ export const useStudentUsedCredits = (): UseStudentUsedCreditsReturn => {
 
     try {
       const token = localStorage.getItem('studentToken');
+      
       if (!token) {
         setError('Authentication token not found');
         setLoading(false);
@@ -49,7 +50,7 @@ export const useStudentUsedCredits = (): UseStudentUsedCreditsReturn => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return {
     usedCredits,
