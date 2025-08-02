@@ -17,6 +17,12 @@ import AddCourseForm from "./components/forms/AddCourseForm";
 import BulkImportForm from "./components/forms/BulkImportForm";
 import BulkImportStudentsForm from "./components/forms/BulkImportStudentsForm";
 import NotFound from "./pages/NotFound";
+import LandingPage from "./pages/LandingPage";
+import AdminLogin from "./pages/AdminLogin";
+import AdminSignup from "./pages/AdminSignup";
+import StudentLogin from "./pages/StudentLogin";
+import StudentSignup from "./pages/StudentSignup";
+import StudentDashboard from "./pages/StudentDashboard";
 
 const queryClient = new QueryClient();
 
@@ -27,9 +33,12 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
+          {/* Landing Page - Root Route */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/signup" element={<AdminSignup />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardOverview />} />
             <Route path="mous" element={<MOUListPage />} />
@@ -55,6 +64,16 @@ const App = () => (
             } />
             <Route path="bulk-import-students" element={<BulkImportStudentsForm />} />
           </Route>
+          
+          {/* Student Routes */}
+          <Route path="/student/login" element={<StudentLogin />} />
+          <Route path="/student/signup" element={<StudentSignup />} />
+          <Route path="/student/dashboard" element={<StudentDashboard />} />
+          
+          {/* Legacy Routes - Redirect to landing page */}
+          <Route path="/login" element={<LandingPage />} />
+          <Route path="/signup" element={<LandingPage />} />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

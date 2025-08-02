@@ -63,7 +63,7 @@ const SignupPage = () => {
     }
 
     try {
-      // API call to backend registration endpoint
+      // API call to backend registration endpoint (admin routes in api.js)
       const response = await fetch('http://localhost:3000/api/admin/register', {
         method: 'POST',
         headers: {
@@ -85,7 +85,7 @@ const SignupPage = () => {
           description: data.message || "Registration request submitted successfully. Please check your email for verification.",
         });
         // Navigate to login page after successful registration
-        navigate("/login");
+        navigate("/admin/login");
       } else {
         toast({
           title: "Error",
@@ -221,7 +221,7 @@ const SignupPage = () => {
               <Button
                 variant="link"
                 className="p-0 text-primary"
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/admin/login")}
               >
                 Sign in here
               </Button>
