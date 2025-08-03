@@ -50,10 +50,10 @@ export const CompletedCoursesList: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
               onClick={() => navigate('/student/dashboard')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-900 text-white border-gray-800"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard

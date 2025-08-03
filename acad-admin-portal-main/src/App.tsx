@@ -25,6 +25,7 @@ import StudentSignup from "./pages/StudentSignup";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentAvailableCourses from "./pages/StudentAvailableCourses";
 import StudentCreditBank from "./pages/StudentCreditBank";
+import StudentProfile from "./pages/StudentProfile";
 import { CompletedCoursesList } from "./pages/CompletedCoursesList";
 
 const queryClient = new QueryClient();
@@ -72,6 +73,7 @@ const App = () => (
           <Route path="/student/login" element={<StudentLogin />} />
           <Route path="/student/signup" element={<StudentSignup />} />
           <Route path="/student/dashboard" element={<StudentDashboard />} />
+          <Route path="/student/profile" element={<StudentProfile />} />
           <Route path="/student/available-courses" element={<StudentAvailableCourses />} />
           <Route path="/student/completed-courses" element={<CompletedCoursesList />} />
           <Route path="/student/credit-bank" element={<StudentCreditBank />} />
