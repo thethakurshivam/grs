@@ -21,29 +21,41 @@ export const useFields = (): UseFieldsReturn => {
   const fetchFields = useCallback(async () => {
     setLoading(true);
     setError(null);
+    console.log('Fetching fields...');
 
     try {
       const token = localStorage.getItem('authToken');
       
       if (!token) {
+        console.error('No auth token found');
         setError('Authentication token not found');
         setLoading(false);
         return;
       }
 
+      console.log('Making request to /api/fields with token:', token.substring(0, 15) + '...');
+      
       const response = await fetch('http://localhost:3000/api/fields', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        mode: 'cors'
       });
 
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('Fields data received:', data);
       
       if (data.success) {
         setFields(data.data || []);
@@ -64,4 +76,4 @@ export const useFields = (): UseFieldsReturn => {
     error,
     fetchFields
   };
-}; 
+};

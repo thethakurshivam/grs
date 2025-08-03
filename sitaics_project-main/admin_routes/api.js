@@ -36,8 +36,24 @@ const transporter = nodemailer.createTransport({
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080'], // Allow multiple frontend ports
-  credentials: true
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl requests)
+    if(!origin) return callback(null, true);
+    
+    const allowedOrigins = process.env.FRONTEND_URL ? 
+      [process.env.FRONTEND_URL] : 
+      ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080', 'http://localhost:8081'];
+    
+    if(allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked request from:', origin);
+      callback(null, true); // Allow all origins for now to debug
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '10mb' })); // Added size limit for security
 

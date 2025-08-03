@@ -47,10 +47,25 @@ const AddCourseForm = () => {
     }
   ]);
 
-  // Fetch fields when component mounts
+  // Debug logs
   useEffect(() => {
+    console.log("AddCourseForm mounted");
+    console.log("Auth token:", localStorage.getItem("authToken"));
     fetchFields();
+    return () => {
+      console.log("AddCourseForm unmounted");
+    };
   }, [fetchFields]);
+
+  // Debug logs for fields
+  useEffect(() => {
+    console.log("Fields state updated:", { fields, fieldsLoading, fieldsError });
+  }, [fields, fieldsLoading, fieldsError]);
+
+  // Debug logs for MOUs
+  useEffect(() => {
+    console.log("MOUs state updated:", { mous, mousLoading, mousError });
+  }, [mous, mousLoading, mousError]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -154,12 +169,16 @@ const AddCourseForm = () => {
       }
 
       // API call to backend add course endpoint
+      console.log('Making API request to create course');
       const response = await fetch('http://localhost:3000/api/courses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
         },
+        credentials: 'include',
+        mode: 'cors',
         body: JSON.stringify({
           ID: formData.ID.trim(),
           mou_id: formData.mou_id,
@@ -273,6 +292,73 @@ const AddCourseForm = () => {
       </Card>
     );
   }
+
+  // Show loading state while fields are being fetched
+  if (fieldsLoading) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            Add New Course
+          </CardTitle>
+          <CardDescription>
+            Create a new course with all required details
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+              <p>Loading Fields...</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show error state if fields failed to load
+  if (fieldsError) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            Add New Course
+          </CardTitle>
+          <CardDescription>
+            Create a new course with all required details
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">Error loading fields: {fieldsError}</p>
+              <Button onClick={() => fetchFields()}>Retry</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Debug component to show raw data
+  const DebugInfo = () => (
+    <div className="mt-8 p-4 bg-gray-100 rounded-lg">
+      <h3 className="font-bold mb-2">Debug Information</h3>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <h4 className="font-semibold">Fields ({fields.length}):</h4>
+          <pre className="text-xs overflow-auto max-h-40">{JSON.stringify(fields, null, 2)}</pre>
+        </div>
+        <div>
+          <h4 className="font-semibold">MOUs ({mous.length}):</h4>
+          <pre className="text-xs overflow-auto max-h-40">{JSON.stringify(mous, null, 2)}</pre>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -410,150 +496,32 @@ const AddCourseForm = () => {
                   className="text-black"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="endDate" className="text-black font-semibold">End Date *</Label>
-                <Input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  value={formData.endDate}
-                  onChange={handleInputChange}
-                  required
-                  className="text-black"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="completionStatus" className="text-black font-semibold">Status *</Label>
-                <Select onValueChange={(value) => handleSelectChange("completionStatus", value)} defaultValue={formData.completionStatus}>
-                  <SelectTrigger className="w-full text-black">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ongoing" className="text-black">Ongoing</SelectItem>
-                    <SelectItem value="completed" className="text-black">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="indoorCredits" className="text-black font-semibold">Indoor Credits *</Label>
+                <Label htmlFor="indoorCredits" className="text-black font-semibold">Indoor Credits</Label>
                 <Input
                   id="indoorCredits"
                   name="indoorCredits"
                   type="number"
-                  placeholder="Enter indoor credits"
+                  min="0"
                   value={formData.indoorCredits}
                   onChange={handleInputChange}
-                  required
-                  min="0"
                   className="text-black"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="outdoorCredits" className="text-black font-semibold">Outdoor Credits *</Label>
+                <Label htmlFor="outdoorCredits" className="text-black font-semibold">Outdoor Credits</Label>
                 <Input
                   id="outdoorCredits"
                   name="outdoorCredits"
                   type="number"
-                  placeholder="Enter outdoor credits"
+                  min="0"
                   value={formData.outdoorCredits}
                   onChange={handleInputChange}
-                  required
-                  min="0"
                   className="text-black"
                 />
               </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="text-black font-semibold">Subjects *</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addSubject}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Subject
-                </Button>
-              </div>
-
-              {subjects.map((subject, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-black">Subject {index + 1}</h4>
-                    {subjects.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeSubject(index)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm text-black">No. of Periods</Label>
-                      <Input
-                        type="number"
-                        value={subject.noOfPeriods}
-                        onChange={(e) => handleSubjectChange(index, 'noOfPeriods', e.target.value)}
-                        min="1"
-                        className="text-black"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm text-black">Periods (Min)</Label>
-                      <Input
-                        type="number"
-                        value={subject.periodsMin}
-                        onChange={(e) => handleSubjectChange(index, 'periodsMin', e.target.value)}
-                        min="1"
-                        className="text-black"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm text-black">Total Mins</Label>
-                      <Input
-                        type="number"
-                        value={subject.totalMins}
-                        onChange={(e) => handleSubjectChange(index, 'totalMins', e.target.value)}
-                        min="1"
-                        className="text-black"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm text-black">Total Hours</Label>
-                      <Input
-                        type="number"
-                        value={subject.totalHrs}
-                        onChange={(e) => handleSubjectChange(index, 'totalHrs', e.target.value)}
-                        min="1"
-                        className="text-black"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm text-black">Credits</Label>
-                      <Input
-                        type="number"
-                        value={subject.credits}
-                        onChange={(e) => handleSubjectChange(index, 'credits', e.target.value)}
-                        min="0"
-                        className="text-black"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
 
             <div className="space-y-2">
@@ -564,20 +532,105 @@ const AddCourseForm = () => {
                 placeholder="Enter course description"
                 value={formData.description}
                 onChange={handleInputChange}
-                rows={4}
-                className="text-black"
+                className="min-h-[100px] text-black"
               />
             </div>
 
-            <div className="flex gap-4 pt-4">
-              <Button type="submit" className="flex-1" disabled={isLoading}>
-                {isLoading ? "Creating Course..." : "Create Course"}
-              </Button>
-              <Button type="button" variant="outline" className="flex-1" disabled={isLoading}>
-                Save as Draft
-              </Button>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-black font-semibold">Subjects</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addSubject}>
+                  <Plus className="h-4 w-4 mr-1" /> Add Subject
+                </Button>
+              </div>
+
+              {subjects.map((subject, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border rounded-lg">
+                  <div className="space-y-2">
+                    <Label htmlFor={`noOfPeriods-${index}`} className="text-black font-semibold">No. of Periods</Label>
+                    <Input
+                      id={`noOfPeriods-${index}`}
+                      type="number"
+                      min="1"
+                      value={subject.noOfPeriods}
+                      onChange={(e) => handleSubjectChange(index, 'noOfPeriods', e.target.value)}
+                      className="text-black"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`periodsMin-${index}`} className="text-black font-semibold">Minutes per Period</Label>
+                    <Input
+                      id={`periodsMin-${index}`}
+                      type="number"
+                      min="1"
+                      value={subject.periodsMin}
+                      onChange={(e) => handleSubjectChange(index, 'periodsMin', e.target.value)}
+                      className="text-black"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`totalMins-${index}`} className="text-black font-semibold">Total Minutes</Label>
+                    <Input
+                      id={`totalMins-${index}`}
+                      type="number"
+                      min="1"
+                      value={subject.totalMins}
+                      onChange={(e) => handleSubjectChange(index, 'totalMins', e.target.value)}
+                      className="text-black"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`totalHrs-${index}`} className="text-black font-semibold">Total Hours</Label>
+                    <Input
+                      id={`totalHrs-${index}`}
+                      type="number"
+                      min="1"
+                      value={subject.totalHrs}
+                      onChange={(e) => handleSubjectChange(index, 'totalHrs', e.target.value)}
+                      className="text-black"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`credits-${index}`} className="text-black font-semibold">Credits</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id={`credits-${index}`}
+                        type="number"
+                        min="0"
+                        value={subject.credits}
+                        onChange={(e) => handleSubjectChange(index, 'credits', e.target.value)}
+                        className="text-black"
+                      />
+                      {subjects.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => removeSubject(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating Course...
+                </>
+              ) : (
+                'Create Course'
+              )}
+            </Button>
           </form>
+
+          {/* Debug information */}
+          <DebugInfo />
         </CardContent>
       </Card>
     </div>
