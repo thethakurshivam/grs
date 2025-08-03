@@ -10,6 +10,7 @@ import DashboardOverview from "./components/dashboard/DashboardOverview";
 import MOUListPage from "./components/dashboard/MOUListPage";
 import CompletedCoursesListPage from "./components/dashboard/CompletedCoursesListPage";
 import OngoingCoursesListPage from "./components/dashboard/OngoingCoursesListPage";
+import UpcomingCoursesListPage from "./components/dashboard/UpcomingCoursesListPage";
 import SchoolsListPage from "./components/dashboard/SchoolsListPage";
 import SchoolMOUsPage from "./components/dashboard/SchoolMOUsPage";
 import AddMOUForm from "./components/forms/AddMOUForm";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="mous" element={<MOUListPage />} />
             <Route path="completed-courses" element={<CompletedCoursesListPage />} />
             <Route path="ongoing-courses" element={<OngoingCoursesListPage />} />
+            <Route path="upcoming-courses" element={<UpcomingCoursesListPage />} />
             <Route path="schools" element={<SchoolsListPage />} />
             <Route path="schools/:schoolName" element={<SchoolMOUsPage />} />
             <Route path="add-mou" element={<AddMOUForm />} />

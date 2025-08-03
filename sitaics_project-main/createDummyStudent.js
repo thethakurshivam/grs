@@ -4,7 +4,7 @@ const Student = require('./models1/student');
 require('dotenv').config();
 
 // MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/sispa';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/sitaics';
 
 async function createDummyStudent() {
   try {

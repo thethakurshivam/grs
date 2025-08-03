@@ -27,7 +27,6 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.5.0",
     "multer": "^2.0.2",
-    "multer-gridfs-storage": "^5.0.2",
     "nodemailer": "^6.9.4",
     "validator": "^13.11.0",
     "xlsx": "^0.18.5"

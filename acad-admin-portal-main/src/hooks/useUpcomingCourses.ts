@@ -12,6 +12,9 @@ interface Course {
   startDate: string;
   completionStatus: string;
   mou_id: string;
+  description?: string;
+  level?: string;
+  courseType?: string;
   subjects: Array<{
     noOfPeriods: number;
     periodsMin: number;
@@ -40,10 +43,19 @@ export const useUpcomingCourses = (): UseUpcomingCoursesReturn => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:3001/courses/upcoming', {
+      const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        setError('Authentication token not found');
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('http://localhost:3000/api/courses?completionStatus=upcoming', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -54,7 +66,7 @@ export const useUpcomingCourses = (): UseUpcomingCoursesReturn => {
       const data = await response.json();
       
       if (data.success) {
-        setUpcomingCourses(data.courses || []);
+        setUpcomingCourses(data.data || []);
         setUpcomingCoursesCount(data.count || 0);
       } else {
         setError(data.error || 'Failed to fetch upcoming courses');
@@ -62,9 +74,9 @@ export const useUpcomingCourses = (): UseUpcomingCoursesReturn => {
     } catch (err) {
       console.error('Error fetching upcoming courses:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch upcoming courses');
-      // Set default values for demo purposes
+      // Set default values when there's an error
       setUpcomingCourses([]);
-      setUpcomingCoursesCount(8);
+      setUpcomingCoursesCount(0);
     } finally {
       setLoading(false);
     }
@@ -75,6 +87,7 @@ export const useUpcomingCourses = (): UseUpcomingCoursesReturn => {
     upcomingCoursesCount,
     loading,
     error,
-    fetchUpcomingCourses
+    fetchUpcomingCourses,
+    refetch: fetchUpcomingCourses
   };
 }; 

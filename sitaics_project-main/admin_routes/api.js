@@ -58,7 +58,7 @@ const upload = multer({
 });
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/sispa')
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/sitaics')
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
@@ -501,20 +501,20 @@ app.post('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
       });
     }
 
-    // Check if field exists, create or update (similar to MOU->School relationship)
+    // Check if field exists in field schema
     const trimmedFieldName = field.trim();
-    let existingField = await Field.findOne({ nameOfTheField: trimmedFieldName });
-
+    const existingField = await Field.findOne({ name: trimmedFieldName });
+    
     if (!existingField) {
-      const newField = new Field({
-        nameOfTheField: trimmedFieldName,
-        count: 1
+      return res.status(400).json({
+        success: false,
+        error: `Field "${trimmedFieldName}" does not exist. Please use one of the available fields.`
       });
-      await newField.save();
-    } else {
-      existingField.count += 1;
-      await existingField.save();
     }
+    
+    // Increment field count
+    existingField.count += 1;
+    await existingField.save();
 
     // Create new course with validated subjects
     console.log('Creating new course with name:', courseName.trim());
@@ -708,7 +708,7 @@ app.get('/api/fields', authenticateToken, asyncHandler(async (req, res) => {
   // Transform fields into link format for frontend
   const fieldLinks = allFields.map(field => ({
     id: field._id,
-    nameOfTheField: field.nameOfTheField,
+    name: field.name,
     count: field.count,
     link: `/api/fields/${field._id}` // Link that will hit another route when clicked
   }));
@@ -743,7 +743,7 @@ app.get('/api/fields/:fieldId', authenticateToken, asyncHandler(async (req, res)
   }
   
   // Then retrieve all courses of this field
-  const fieldCourses = await Course.find({ field: field.nameOfTheField });
+  const fieldCourses = await Course.find({ field: field.name });
   
   res.json({
     success: true,
@@ -1233,6 +1233,20 @@ app.post('/api/courses/import', authenticateToken, upload.single('excelFile'), a
             error: 'A course with this name already exists'
           });
           continue;
+        }
+
+        // Check if field exists, create if it doesn't
+        const trimmedFieldName = field.trim();
+        let existingField = await Field.findOne({ name: trimmedFieldName });
+        if (!existingField) {
+          const newField = new Field({
+            name: trimmedFieldName,
+            count: 1
+          });
+          await newField.save();
+        } else {
+          existingField.count += 1;
+          await existingField.save();
         }
 
         // Create new course

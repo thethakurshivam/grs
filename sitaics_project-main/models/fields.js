@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const fieldsSchema = new mongoose.Schema({
   // Name of the field
-  nameOfTheField: {
+  name: {
     type: String,
     required: true,
     trim: true
@@ -12,6 +12,7 @@ const fieldsSchema = new mongoose.Schema({
   count: {
     type: Number,
     required: true,
+    default: 0,
     min: 0
   }
 }, {

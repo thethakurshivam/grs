@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useMOU } from "@/hooks/useMOU";
+import { useFields } from "@/hooks/useFields";
 import { BookOpen, Plus, Trash2 } from "lucide-react";
 
 interface Subject {
@@ -20,6 +21,7 @@ interface Subject {
 const AddCourseForm = () => {
   const { toast } = useToast();
   const { mous, loading: mousLoading, error: mousError } = useMOU();
+  const { fields, loading: fieldsLoading, error: fieldsError, fetchFields } = useFields();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     ID: "",
@@ -31,7 +33,9 @@ const AddCourseForm = () => {
     outdoorCredits: 0,
     field: "",
     startDate: "",
-    completionStatus: "upcoming"
+    endDate: "",
+    completionStatus: "upcoming",
+    description: ""
   });
   const [subjects, setSubjects] = useState<Subject[]>([
     {
@@ -42,6 +46,11 @@ const AddCourseForm = () => {
       credits: 0
     }
   ]);
+
+  // Fetch fields when component mounts
+  useEffect(() => {
+    fetchFields();
+  }, [fetchFields]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -185,7 +194,9 @@ const AddCourseForm = () => {
           outdoorCredits: 0,
           field: "",
           startDate: "",
-          completionStatus: "upcoming"
+          endDate: "",
+          completionStatus: "upcoming",
+          description: ""
         });
         setSubjects([{
           noOfPeriods: 1,
@@ -286,6 +297,19 @@ const AddCourseForm = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
+                <Label htmlFor="ID" className="text-black font-semibold">Course ID *</Label>
+                <Input
+                  id="ID"
+                  name="ID"
+                  placeholder="Enter course ID"
+                  value={formData.ID}
+                  onChange={handleInputChange}
+                  required
+                  className="text-black"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="courseName" className="text-black font-semibold">Course Name *</Label>
                 <Input
                   id="courseName"
@@ -297,7 +321,9 @@ const AddCourseForm = () => {
                   className="text-black"
                 />
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="mou_id" className="text-black font-semibold">MOU *</Label>
                 <Select onValueChange={(value) => handleSelectChange("mou_id", value)} defaultValue={formData.mou_id}>
@@ -319,20 +345,42 @@ const AddCourseForm = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="duration" className="text-black font-semibold">Duration *</Label>
+                <Input
+                  id="duration"
+                  name="duration"
+                  placeholder="e.g., 12 weeks"
+                  value={formData.duration}
+                  onChange={handleInputChange}
+                  required
+                  className="text-black"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="field" className="text-black font-semibold">Field *</Label>
-                <Input
-                  id="field"
-                  name="field"
-                  placeholder="Enter field of study"
-                  value={formData.field}
-                  onChange={handleInputChange}
-                  required
-                  className="text-black"
-                />
+                <Select onValueChange={(value) => handleSelectChange("field", value)} defaultValue={formData.field}>
+                  <SelectTrigger className="w-full text-black">
+                    <SelectValue placeholder="Select field" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fieldsLoading ? (
+                      <SelectItem value="" disabled>Loading fields...</SelectItem>
+                    ) : fieldsError ? (
+                      <SelectItem value="" disabled>Error loading fields</SelectItem>
+                    ) : (
+                      fields.map((field) => (
+                        <SelectItem key={field._id} value={field.name} className="text-black">
+                          {field.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -386,6 +434,126 @@ const AddCourseForm = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="indoorCredits" className="text-black font-semibold">Indoor Credits *</Label>
+                <Input
+                  id="indoorCredits"
+                  name="indoorCredits"
+                  type="number"
+                  placeholder="Enter indoor credits"
+                  value={formData.indoorCredits}
+                  onChange={handleInputChange}
+                  required
+                  min="0"
+                  className="text-black"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="outdoorCredits" className="text-black font-semibold">Outdoor Credits *</Label>
+                <Input
+                  id="outdoorCredits"
+                  name="outdoorCredits"
+                  type="number"
+                  placeholder="Enter outdoor credits"
+                  value={formData.outdoorCredits}
+                  onChange={handleInputChange}
+                  required
+                  min="0"
+                  className="text-black"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-black font-semibold">Subjects *</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addSubject}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Subject
+                </Button>
+              </div>
+
+              {subjects.map((subject, index) => (
+                <div key={index} className="border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-black">Subject {index + 1}</h4>
+                    {subjects.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeSubject(index)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm text-black">No. of Periods</Label>
+                      <Input
+                        type="number"
+                        value={subject.noOfPeriods}
+                        onChange={(e) => handleSubjectChange(index, 'noOfPeriods', e.target.value)}
+                        min="1"
+                        className="text-black"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm text-black">Periods (Min)</Label>
+                      <Input
+                        type="number"
+                        value={subject.periodsMin}
+                        onChange={(e) => handleSubjectChange(index, 'periodsMin', e.target.value)}
+                        min="1"
+                        className="text-black"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm text-black">Total Mins</Label>
+                      <Input
+                        type="number"
+                        value={subject.totalMins}
+                        onChange={(e) => handleSubjectChange(index, 'totalMins', e.target.value)}
+                        min="1"
+                        className="text-black"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm text-black">Total Hours</Label>
+                      <Input
+                        type="number"
+                        value={subject.totalHrs}
+                        onChange={(e) => handleSubjectChange(index, 'totalHrs', e.target.value)}
+                        min="1"
+                        className="text-black"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm text-black">Credits</Label>
+                      <Input
+                        type="number"
+                        value={subject.credits}
+                        onChange={(e) => handleSubjectChange(index, 'credits', e.target.value)}
+                        min="0"
+                        className="text-black"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className="space-y-2">

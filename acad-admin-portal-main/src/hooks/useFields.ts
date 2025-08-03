@@ -1,98 +1,67 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
 interface Field {
-  id: string;
-  nameOfTheField: string;
+  _id: string;
+  name: string;
   count: number;
-  link: string;
 }
 
-interface FieldsResponse {
-  success: boolean;
-  count: number;
-  data: Field[];
+interface UseFieldsReturn {
+  fields: Field[];
+  loading: boolean;
+  error: string | null;
+  fetchFields: () => Promise<void>;
 }
 
-export const useFields = () => {
+export const useFields = (): UseFieldsReturn => {
   const [fields, setFields] = useState<Field[]>([]);
-  const [count, setCount] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchFields = async () => {
+  const fetchFields = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-      setError(null);
-      
       const token = localStorage.getItem('authToken');
-      console.log('Token found:', !!token);
       
       if (!token) {
-        console.log('No authentication token found');
+        setError('Authentication token not found');
         setLoading(false);
-        setFields([]);
-        setCount(0);
-        return; // Don't throw error, just return empty data
+        return;
       }
 
-      console.log('Making API request to:', 'http://localhost:3000/api/fields');
-      
       const response = await fetch('http://localhost:3000/api/fields', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-        },
+          'Authorization': `Bearer ${token}`
+        }
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.log('Error response:', errorText);
-        
-        // If it's an authentication error, don't break the component
-        if (response.status === 401 || response.status === 403) {
-          console.log('Authentication error - user may need to log in');
-          setLoading(false);
-          setFields([]);
-          setCount(0);
-          return; // Don't throw error, just return empty data
-        }
-        
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data: FieldsResponse = await response.json();
-      console.log('API response:', data);
+      const data = await response.json();
       
       if (data.success) {
-        setFields(data.data);
-        setCount(data.count);
-        console.log('Successfully fetched', data.count, 'fields');
+        setFields(data.data || []);
       } else {
-        throw new Error(data.error || 'Failed to fetch fields');
+        setError(data.error || 'Failed to fetch fields');
       }
     } catch (err) {
-      console.error('Error in fetchFields:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setFields([]);
-      setCount(0);
+      console.error('Error fetching fields:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch fields');
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchFields();
   }, []);
 
   return {
     fields,
-    count,
     loading,
     error,
-    refetch: fetchFields
+    fetchFields
   };
 }; 
