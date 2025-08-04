@@ -282,95 +282,18 @@ app.post('/api/mous', authenticateToken, asyncHandler(async (req, res) => {
   }
 }));
 
-// Route to get all courses with filtering
-app.get('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
-  const { 
-    completionStatus, 
-    field, 
-    organization, 
-    startDateFrom, 
-    startDateTo,
-    mou_id,
-    sortBy = 'startDate',
-    sortOrder = 'desc'
-  } = req.query;
 
-  // Build filter object
-  const filter = {};
-  
-  if (completionStatus) {
-    filter.completionStatus = completionStatus;
-  }
-  
-  if (field) {
-    filter.field = { $regex: field, $options: 'i' }; // Case-insensitive search
-  }
-  
-  if (organization) {
-    filter.organization = { $regex: organization, $options: 'i' }; // Case-insensitive search
-  }
-  
-  if (mou_id) {
-    // Validate MOU ID format
-    if (!mongoose.Types.ObjectId.isValid(mou_id)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid MOU ID format'
-      });
-    }
-    filter.mou_id = mou_id;
-  }
-  
-  // Date range filtering
-  if (startDateFrom || startDateTo) {
-    filter.startDate = {};
-    if (startDateFrom) {
-      filter.startDate.$gte = new Date(startDateFrom);
-    }
-    if (startDateTo) {
-      filter.startDate.$lte = new Date(startDateTo);
-    }
-  }
-
-  // Build sort object
-  const sort = {};
-  sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+// Route to get courses by completion status
+app.get('/api/courses/:status', authenticateToken, asyncHandler(async (req, res) => {
+  const { status } = req.params;
 
   try {
-    const courses = await Course.find(filter).sort(sort);
+    const courses = await Course.find({ completionStatus: status }).populate('field');
     
-    // Calculate completion status based on start date and duration if needed
-    const coursesWithCalculatedStatus = courses.map(course => {
-      const courseObj = course.toObject();
-      
-      // If completion status is not set, calculate it based on start date
-      if (!courseObj.completionStatus || courseObj.completionStatus === 'upcoming') {
-        const now = new Date();
-        const startDate = new Date(courseObj.startDate);
-        
-        if (startDate > now) {
-          courseObj.completionStatus = 'upcoming';
-        } else {
-          // For simplicity, assume ongoing if started but not explicitly completed
-          courseObj.completionStatus = 'ongoing';
-        }
-      }
-      
-      return courseObj;
-    });
-
     res.json({
       success: true,
-      count: coursesWithCalculatedStatus.length,
-      data: coursesWithCalculatedStatus,
-      filters: {
-        completionStatus,
-        field,
-        organization,
-        startDateFrom,
-        startDateTo,
-        mou_id
-      }
+      count: courses.length,
+      data: courses
     });
   } catch (error) {
     res.status(500).json({
@@ -543,7 +466,7 @@ app.post('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
       duration: duration.trim(),
       indoorCredits: parseInt(indoorCredits),
       outdoorCredits: parseInt(outdoorCredits),
-      field: trimmedFieldName,
+      field: existingField._id, // Use ObjectId reference instead of string
       startDate: startDateObj,
       completionStatus: completionStatus || 'upcoming',
       subjects: validatedSubjects // Use validated subjects instead of raw input
@@ -697,7 +620,7 @@ app.get('/api/mous/:mouId/courses', authenticateToken, asyncHandler(async (req, 
   }
   
   // Find all courses for this MOU
-  const courses = await Course.find({ mou_id: mouId });
+  const courses = await Course.find({ mou_id: mouId }).populate('field');
   
   res.json({
     success: true,
@@ -721,12 +644,18 @@ app.get('/api/participants', authenticateToken, asyncHandler(async (req, res) =>
 app.get('/api/fields', authenticateToken, asyncHandler(async (req, res) => {
   const allFields = await Field.find();
   
-  // Transform fields into link format for frontend
-  const fieldLinks = allFields.map(field => ({
-    id: field._id,
-    name: field.name,
-    count: field.count,
-    link: `/api/fields/${field._id}` // Link that will hit another route when clicked
+  // Transform fields into link format for frontend with actual course counts
+  const fieldLinks = await Promise.all(allFields.map(async (field) => {
+    // Count actual courses for this field
+    const courseCount = await Course.countDocuments({ field: field._id });
+    
+    return {
+      id: field._id,
+      _id: field._id, // Include both for compatibility
+      name: field.name,
+      count: courseCount, // Use actual course count instead of field.count
+      link: `/api/fields/${field._id}` // Link that will hit another route when clicked
+    };
   }));
 
   res.json({
@@ -759,7 +688,7 @@ app.get('/api/fields/:fieldId', authenticateToken, asyncHandler(async (req, res)
   }
   
   // Then retrieve all courses of this field
-  const fieldCourses = await Course.find({ field: field.name });
+  const fieldCourses = await Course.find({ field: field._id }).populate('field');
   
   res.json({
     success: true,
@@ -1260,6 +1189,7 @@ app.post('/api/courses/import', authenticateToken, upload.single('excelFile'), a
             count: 1
           });
           await newField.save();
+          existingField = newField;
         } else {
           existingField.count += 1;
           await existingField.save();
@@ -1273,7 +1203,7 @@ app.post('/api/courses/import', authenticateToken, upload.single('excelFile'), a
           duration: duration.trim(),
           indoorCredits: indoorCredits,
           outdoorCredits: outdoorCredits,
-          field: field.trim(),
+          field: existingField._id, // Use ObjectId reference instead of string
           startDate: startDateObj,
           completionStatus: completionStatus,
           subjects: validSubjects

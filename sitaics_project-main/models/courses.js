@@ -93,11 +93,11 @@ const courseSchema = new mongoose.Schema({
     min: 0
   },
   
-  // Field
+  // Field - reference to the fields schema
   field: {
-    type: String,
-    required: true,
-    trim: true
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Field',
+    required: true
   },
   
   // Start date of the course

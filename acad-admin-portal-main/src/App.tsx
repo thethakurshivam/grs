@@ -28,6 +28,8 @@ import StudentAvailableCourses from "./pages/StudentAvailableCourses";
 import StudentCreditBank from "./pages/StudentCreditBank";
 import StudentProfile from "./pages/StudentProfile";
 import { CompletedCoursesList } from "./pages/CompletedCoursesList";
+import SectorTrainingFields from "./pages/SectorTrainingFields";
+import FieldCourses from "./pages/FieldCourses";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +71,9 @@ const App = () => (
               />
             } />
             <Route path="bulk-import-students" element={<BulkImportStudentsForm />} />
+            <Route path="sector-training" element={<SectorTrainingFields />} />
+            <Route path="sector-training/:fieldId" element={<FieldCourses />} />
+            <Route path="field-courses/:fieldId" element={<FieldCourses />} />
           </Route>
           
           {/* Student Routes */}
