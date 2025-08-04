@@ -1,46 +1,62 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, ArrowLeft, Calendar, Building, Target, Clock, GraduationCap, FileText, Hash, Award, School } from "lucide-react";
-import { useOngoingCoursesCount } from "@/hooks/useOngoingCoursesCount";
+import { BookOpen, ArrowLeft, Building, Target, Clock, GraduationCap, FileText, Hash, Award, School } from "lucide-react";
+import { useOngoingCourses } from "@/hooks/useOngoingCourses";
 import { useMOU } from "@/hooks/useMOU";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 const OngoingCoursesListPage = () => {
-  const { courses, loading, error, refetch } = useOngoingCoursesCount();
+  const { ongoingCourses, loading, error, refetch } = useOngoingCourses();
   const { fetchMOUById } = useMOU();
   const navigate = useNavigate();
   const [mouDetails, setMouDetails] = useState<{[key: string]: any}>({});
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+      }
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return 'Invalid Date';
+    }
   };
 
   // Fetch MOU details for all courses
   useEffect(() => {
     const fetchMOUDetails = async () => {
-      const details: {[key: string]: any} = {};
-      
-      for (const course of courses) {
-        if (course.mou_id && !mouDetails[course.mou_id]) {
-          const mou = await fetchMOUById(course.mou_id);
-          if (mou) {
-            details[course.mou_id] = mou;
+      try {
+        const details: {[key: string]: any} = {};
+        
+        for (const course of ongoingCourses) {
+          if (course.mou_id && !mouDetails[course.mou_id]) {
+            try {
+              const mou = await fetchMOUById(course.mou_id);
+              if (mou) {
+                details[course.mou_id] = mou;
+              }
+            } catch (error) {
+              console.error(`Failed to fetch MOU for course ${course.ID}:`, error);
+            }
           }
         }
+        
+        setMouDetails(prev => ({ ...prev, ...details }));
+      } catch (error) {
+        console.error('Error fetching MOU details:', error);
       }
-      
-      setMouDetails(prev => ({ ...prev, ...details }));
     };
 
-    if (courses.length > 0) {
+    if (ongoingCourses.length > 0) {
       fetchMOUDetails();
     }
-  }, [courses, fetchMOUById]);
+  }, [ongoingCourses, fetchMOUById]);
 
   if (loading) {
     return (
@@ -123,14 +139,14 @@ const OngoingCoursesListPage = () => {
         <div>
           <h1 className="text-2xl font-bold text-black">Ongoing Courses</h1>
           <p className="text-black">
-            {courses.length} ongoing course{courses.length !== 1 ? 's' : ''}
+            {ongoingCourses.length} ongoing course{ongoingCourses.length !== 1 ? 's' : ''}
           </p>
         </div>
       </div>
 
       {/* Courses List */}
       <div className="grid gap-4">
-        {courses.length === 0 ? (
+        {ongoingCourses.length === 0 ? (
           <Card className="border-0 shadow-md">
             <CardContent className="p-6 text-center">
               <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -144,7 +160,7 @@ const OngoingCoursesListPage = () => {
             </CardContent>
           </Card>
         ) : (
-          courses.map((course) => (
+          ongoingCourses.map((course) => (
             <Card key={course._id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -173,17 +189,18 @@ const OngoingCoursesListPage = () => {
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-black">Field:</span>
-                    <span className="text-sm font-medium text-black">{course.field}</span>
+                    <span className="text-sm font-medium text-black">
+                      {typeof course.field === 'object' && course.field?.name 
+                        ? course.field.name 
+                        : typeof course.field === 'string' 
+                        ? course.field 
+                        : 'Unknown Field'}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <Clock className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-black">Start Date:</span>
                     <span className="text-sm font-medium text-black">{formatDate(course.startDate)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-black">End Date:</span>
-                    <span className="text-sm font-medium text-black">{formatDate(course.endDate)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
@@ -208,17 +225,30 @@ const OngoingCoursesListPage = () => {
                   <div className="flex items-center gap-2">
                     <Building className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-black">MOU Name:</span>
-                    <span className="text-sm font-medium text-black">{mouDetails?.ID || 'Loading...'}</span>
+                    <span className="text-sm font-medium text-black">
+                      {mouDetails[course.mou_id]?.nameOfPartnerInstitution || 'Loading...'}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <School className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-black">MOU School:</span>
-                    <span className="text-sm font-medium text-black">{mouDetails?.school || 'Loading...'}</span>
+                    <span className="text-sm font-medium text-black">
+                      {mouDetails[course.mou_id]?.school || 'Loading...'}
+                    </span>
                   </div>
                 </div>
-                {course.description && (
+                {course.subjects && Array.isArray(course.subjects) && course.subjects.length > 0 && (
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-black">{course.description}</p>
+                    <h4 className="text-sm font-medium text-black mb-2">Subjects:</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {course.subjects.map((subject, index) => (
+                        <div key={index} className="text-sm text-black">
+                          <p><strong>Periods:</strong> {subject.noOfPeriods || 'N/A'}</p>
+                          <p><strong>Duration:</strong> {subject.periodsMin || 'N/A'} mins ({subject.totalHrs || 'N/A'} hrs)</p>
+                          <p><strong>Credits:</strong> {subject.credits || 'N/A'}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </CardContent>

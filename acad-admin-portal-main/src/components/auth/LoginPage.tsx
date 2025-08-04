@@ -85,57 +85,57 @@ const LoginPage = () => {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-primary">University Admin</h1>
-          <p className="text-black mt-2">Sign in to your admin panel</p>
+          <p className="text-gray-800 mt-2 font-medium">Sign in to your admin panel</p>
         </div>
 
         <Card className="shadow-lg border-0">
           <CardHeader>
-            <CardTitle className="text-black">Welcome Back</CardTitle>
-            <CardDescription className="text-black">
+            <CardTitle className="text-gray-900 font-bold">Welcome Back</CardTitle>
+            <CardDescription className="text-gray-700 font-medium">
               Enter your credentials to access the admin panel
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-black font-semibold">Email</Label>
+                <Label htmlFor="email" className="text-gray-800 font-semibold">Email</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 text-black"
+                    className="pl-10 text-gray-900 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                     required
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-black font-semibold">Password</Label>
+                <Label htmlFor="password" className="text-gray-800 font-semibold">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                   <Input
                     id="password"
                     type="password"
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 text-black"
+                    className="pl-10 text-gray-900 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                     required
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <p className="text-sm text-black">
+            <p className="text-sm text-gray-700 font-medium">
               Don't have an account?{" "}
-              <a href="/admin/signup" className="text-primary hover:underline font-medium">
+              <a href="/admin/signup" className="text-indigo-600 hover:text-indigo-700 hover:underline font-semibold">
                 Sign up
               </a>
             </p>

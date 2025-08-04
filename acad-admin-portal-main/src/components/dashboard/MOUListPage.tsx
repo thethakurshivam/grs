@@ -30,7 +30,7 @@ const MOUListPage = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-black">All MOUs</h1>
-            <p className="text-black">Loading MOU data...</p>
+            <p className="text-gray-700">Loading MOU data...</p>
           </div>
         </div>
         
@@ -68,13 +68,13 @@ const MOUListPage = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-black">All MOUs</h1>
-            <p className="text-black">Error loading MOU data</p>
+            <p className="text-gray-700">Error loading MOU data</p>
           </div>
         </div>
         
         <Card className="border-0 shadow-md">
           <CardContent className="p-6 text-center">
-            <p className="text-black mb-4">{error}</p>
+            <p className="text-gray-800 mb-4">{error}</p>
             <Button onClick={refetch}>Retry</Button>
           </CardContent>
         </Card>
@@ -96,7 +96,7 @@ const MOUListPage = () => {
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-black">All MOUs</h1>
-          <p className="text-black">
+          <p className="text-gray-700">
             {mous.length} memorandum{mous.length !== 1 ? 's' : ''} of understanding
           </p>
         </div>
@@ -107,9 +107,9 @@ const MOUListPage = () => {
         {mous.length === 0 ? (
           <Card className="border-0 shadow-md">
             <CardContent className="p-6 text-center">
-              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No MOUs Found</h3>
-              <p className="text-muted-foreground mb-4">
+              <FileText className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-black mb-2">No MOUs Found</h3>
+              <p className="text-gray-600 mb-4">
                 No memorandums of understanding have been created yet.
               </p>
               <Button onClick={() => navigate('/dashboard/add-mou')}>
@@ -123,11 +123,11 @@ const MOUListPage = () => {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="flex items-center gap-2 mb-2">
+                    <CardTitle className="flex items-center gap-2 mb-2 text-black">
                       <FileText className="h-5 w-5 text-blue-600" />
                       {mou.ID}
                     </CardTitle>
-                    <CardDescription className="text-base font-medium text-foreground">
+                    <CardDescription className="text-base font-medium text-gray-800">
                       {mou.nameOfPartnerInstitution}
                     </CardDescription>
                   </div>
@@ -136,29 +136,29 @@ const MOUListPage = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
-                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">School:</span>
-                    <span className="text-sm font-medium">{mou.school}</span>
+                    <GraduationCap className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm text-gray-700">School:</span>
+                    <span className="text-sm font-medium text-black">{mou.school}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Target className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Strategic Areas:</span>
-                    <span className="text-sm font-medium">{mou.strategicAreas}</span>
+                    <Target className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm text-gray-700">Strategic Areas:</span>
+                    <span className="text-sm font-medium text-black">{mou.strategicAreas}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Date of Signing:</span>
-                    <span className="text-sm font-medium">{formatDate(mou.dateOfSigning)}</span>
+                    <Calendar className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm text-gray-700">Date of Signing:</span>
+                    <span className="text-sm font-medium text-black">{formatDate(mou.dateOfSigning)}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Validity:</span>
-                    <span className="text-sm font-medium">{mou.validity}</span>
+                    <Building className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm text-gray-700">Validity:</span>
+                    <span className="text-sm font-medium text-black">{mou.validity}</span>
                   </div>
                   <div className="flex items-center gap-2 md:col-span-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Affiliation Date:</span>
-                    <span className="text-sm font-medium">{formatDate(mou.affiliationDate)}</span>
+                    <Calendar className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm text-gray-700">Affiliation Date:</span>
+                    <span className="text-sm font-medium text-black">{formatDate(mou.affiliationDate)}</span>
                   </div>
                 </div>
               </CardContent>

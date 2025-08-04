@@ -36,8 +36,24 @@ const transporter = nodemailer.createTransport({
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080'], // Allow multiple frontend ports
-  credentials: true
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl requests)
+    if(!origin) return callback(null, true);
+    
+    const allowedOrigins = process.env.FRONTEND_URL ? 
+      [process.env.FRONTEND_URL] : 
+      ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080', 'http://localhost:8081'];
+    
+    if(allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked request from:', origin);
+      callback(null, true); // Allow all origins for now to debug
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '10mb' })); // Added size limit for security
 
@@ -58,7 +74,7 @@ const upload = multer({
 });
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/sispa')
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/sitaics')
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
@@ -70,6 +86,7 @@ const Field = require('../models/fields');
 const Admin = require('../models/admin');
 const PendingAdmin = require('../models/pendingAdmin');
 const Candidate = require('../models/students');
+const Student = require('../models/students'); // Fixed import path
 
 // Input sanitization helper
 const sanitizeInput = (input) => {
@@ -266,95 +283,18 @@ app.post('/api/mous', authenticateToken, asyncHandler(async (req, res) => {
   }
 }));
 
-// Route to get all courses with filtering
-app.get('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
-  const { 
-    completionStatus, 
-    field, 
-    organization, 
-    startDateFrom, 
-    startDateTo,
-    mou_id,
-    sortBy = 'startDate',
-    sortOrder = 'desc'
-  } = req.query;
 
-  // Build filter object
-  const filter = {};
-  
-  if (completionStatus) {
-    filter.completionStatus = completionStatus;
-  }
-  
-  if (field) {
-    filter.field = { $regex: field, $options: 'i' }; // Case-insensitive search
-  }
-  
-  if (organization) {
-    filter.organization = { $regex: organization, $options: 'i' }; // Case-insensitive search
-  }
-  
-  if (mou_id) {
-    // Validate MOU ID format
-    if (!mongoose.Types.ObjectId.isValid(mou_id)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid MOU ID format'
-      });
-    }
-    filter.mou_id = mou_id;
-  }
-  
-  // Date range filtering
-  if (startDateFrom || startDateTo) {
-    filter.startDate = {};
-    if (startDateFrom) {
-      filter.startDate.$gte = new Date(startDateFrom);
-    }
-    if (startDateTo) {
-      filter.startDate.$lte = new Date(startDateTo);
-    }
-  }
-
-  // Build sort object
-  const sort = {};
-  sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+// Route to get courses by completion status
+app.get('/api/courses/:status', authenticateToken, asyncHandler(async (req, res) => {
+  const { status } = req.params;
 
   try {
-    const courses = await Course.find(filter).sort(sort);
+    const courses = await Course.find({ completionStatus: status }).populate('field');
     
-    // Calculate completion status based on start date and duration if needed
-    const coursesWithCalculatedStatus = courses.map(course => {
-      const courseObj = course.toObject();
-      
-      // If completion status is not set, calculate it based on start date
-      if (!courseObj.completionStatus || courseObj.completionStatus === 'upcoming') {
-        const now = new Date();
-        const startDate = new Date(courseObj.startDate);
-        
-        if (startDate > now) {
-          courseObj.completionStatus = 'upcoming';
-        } else {
-          // For simplicity, assume ongoing if started but not explicitly completed
-          courseObj.completionStatus = 'ongoing';
-        }
-      }
-      
-      return courseObj;
-    });
-
     res.json({
       success: true,
-      count: coursesWithCalculatedStatus.length,
-      data: coursesWithCalculatedStatus,
-      filters: {
-        completionStatus,
-        field,
-        organization,
-        startDateFrom,
-        startDateTo,
-        mou_id
-      }
+      count: courses.length,
+      data: courses
     });
   } catch (error) {
     res.status(500).json({
@@ -501,20 +441,20 @@ app.post('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
       });
     }
 
-    // Check if field exists, create or update (similar to MOU->School relationship)
+    // Check if field exists in field schema
     const trimmedFieldName = field.trim();
-    let existingField = await Field.findOne({ nameOfTheField: trimmedFieldName });
-
+    const existingField = await Field.findOne({ name: trimmedFieldName });
+    
     if (!existingField) {
-      const newField = new Field({
-        nameOfTheField: trimmedFieldName,
-        count: 1
+      return res.status(400).json({
+        success: false,
+        error: `Field "${trimmedFieldName}" does not exist. Please use one of the available fields.`
       });
-      await newField.save();
-    } else {
-      existingField.count += 1;
-      await existingField.save();
     }
+    
+    // Increment field count
+    existingField.count += 1;
+    await existingField.save();
 
     // Create new course with validated subjects
     console.log('Creating new course with name:', courseName.trim());
@@ -527,7 +467,7 @@ app.post('/api/courses', authenticateToken, asyncHandler(async (req, res) => {
       duration: duration.trim(),
       indoorCredits: parseInt(indoorCredits),
       outdoorCredits: parseInt(outdoorCredits),
-      field: trimmedFieldName,
+      field: existingField._id, // Use ObjectId reference instead of string
       startDate: startDateObj,
       completionStatus: completionStatus || 'upcoming',
       subjects: validatedSubjects // Use validated subjects instead of raw input
@@ -681,7 +621,7 @@ app.get('/api/mous/:mouId/courses', authenticateToken, asyncHandler(async (req, 
   }
   
   // Find all courses for this MOU
-  const courses = await Course.find({ mou_id: mouId });
+  const courses = await Course.find({ mou_id: mouId }).populate('field');
   
   res.json({
     success: true,
@@ -705,12 +645,18 @@ app.get('/api/participants', authenticateToken, asyncHandler(async (req, res) =>
 app.get('/api/fields', authenticateToken, asyncHandler(async (req, res) => {
   const allFields = await Field.find();
   
-  // Transform fields into link format for frontend
-  const fieldLinks = allFields.map(field => ({
-    id: field._id,
-    nameOfTheField: field.nameOfTheField,
-    count: field.count,
-    link: `/api/fields/${field._id}` // Link that will hit another route when clicked
+  // Transform fields into link format for frontend with actual course counts
+  const fieldLinks = await Promise.all(allFields.map(async (field) => {
+    // Count actual courses for this field
+    const courseCount = await Course.countDocuments({ field: field._id });
+    
+    return {
+      id: field._id,
+      _id: field._id, // Include both for compatibility
+      name: field.name,
+      count: courseCount, // Use actual course count instead of field.count
+      link: `/api/fields/${field._id}` // Link that will hit another route when clicked
+    };
   }));
 
   res.json({
@@ -743,7 +689,7 @@ app.get('/api/fields/:fieldId', authenticateToken, asyncHandler(async (req, res)
   }
   
   // Then retrieve all courses of this field
-  const fieldCourses = await Course.find({ field: field.nameOfTheField });
+  const fieldCourses = await Course.find({ field: field._id }).populate('field');
   
   res.json({
     success: true,
@@ -1235,6 +1181,21 @@ app.post('/api/courses/import', authenticateToken, upload.single('excelFile'), a
           continue;
         }
 
+        // Check if field exists, create if it doesn't
+        const trimmedFieldName = field.trim();
+        let existingField = await Field.findOne({ name: trimmedFieldName });
+        if (!existingField) {
+          const newField = new Field({
+            name: trimmedFieldName,
+            count: 1
+          });
+          await newField.save();
+          existingField = newField;
+        } else {
+          existingField.count += 1;
+          await existingField.save();
+        }
+
         // Create new course
         const newCourse = new Course({
           mou_id: mou_id,
@@ -1243,7 +1204,7 @@ app.post('/api/courses/import', authenticateToken, upload.single('excelFile'), a
           duration: duration.trim(),
           indoorCredits: indoorCredits,
           outdoorCredits: outdoorCredits,
-          field: field.trim(),
+          field: existingField._id, // Use ObjectId reference instead of string
           startDate: startDateObj,
           completionStatus: completionStatus,
           subjects: validSubjects
@@ -1471,6 +1432,68 @@ app.get('/api/admin/verify/yes/:pendingAdminId', asyncHandler(async (req, res) =
       email: newAdmin.email
     }
   });
+}));
+
+// Route to save student previous courses
+app.post('/api/students/previous-courses', authenticateToken, asyncHandler(async (req, res) => {
+  const { previous_courses_certification } = req.body;
+  const studentId = req.user.studentId; // Assuming the token contains studentId
+
+  if (!studentId) {
+    return res.status(400).json({
+      success: false,
+      error: 'Student ID not found in token'
+    });
+  }
+
+  try {
+    // Validate the data
+    if (!Array.isArray(previous_courses_certification)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Previous courses data must be an array'
+      });
+    }
+
+    // Validate each course entry
+    for (const course of previous_courses_certification) {
+      if (!course.organization_name || !course.course_name) {
+        return res.status(400).json({
+          success: false,
+          error: 'Organization name and course name are required for each course'
+        });
+      }
+    }
+
+    // Find and update the student
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        error: 'Student not found'
+      });
+    }
+
+    // Update the previous courses
+    student.previous_courses_certification = previous_courses_certification;
+    await student.save();
+
+    res.json({
+      success: true,
+      message: 'Previous courses saved successfully',
+      data: {
+        studentId: student._id,
+        previousCoursesCount: previous_courses_certification.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error saving previous courses:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to save previous courses'
+    });
+  }
 }));
 
 // Start the server

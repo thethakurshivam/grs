@@ -17,11 +17,13 @@ interface MOUResponse {
   success: boolean;
   count: number;
   data: MOU[];
+  error?: string;
 }
 
 interface SingleMOUResponse {
   success: boolean;
   data: MOU;
+  error?: string;
 }
 
 export const useMOU = () => {
@@ -49,7 +51,10 @@ export const useMOU = () => {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
+        credentials: 'include',
+        mode: 'cors'
       });
 
       console.log('Response status:', response.status);
@@ -94,7 +99,10 @@ export const useMOU = () => {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
+        credentials: 'include',
+        mode: 'cors'
       });
 
       if (!response.ok) {
@@ -126,4 +134,4 @@ export const useMOU = () => {
     refetch: fetchMOU,
     fetchMOUById
   };
-}; 
+};

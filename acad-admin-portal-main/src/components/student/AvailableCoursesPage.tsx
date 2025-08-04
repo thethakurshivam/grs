@@ -88,8 +88,8 @@ export const AvailableCoursesPage: React.FC = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <strong>Organization:</strong>
+                    <p className="text-sm text-gray-700 mb-1 font-semibold">
+                      Organization:
                     </p>
                     <p className="text-gray-900 flex items-center gap-2">
                       <Building className="h-4 w-4 text-gray-500" />
@@ -97,23 +97,23 @@ export const AvailableCoursesPage: React.FC = () => {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <strong>Field:</strong>
+                    <p className="text-sm text-gray-700 mb-1 font-semibold">
+                      Field:
                     </p>
                     <p className="text-gray-900">{course.field}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <strong>Duration:</strong>
+                    <p className="text-sm text-gray-700 mb-1 font-semibold">
+                      Duration:
                     </p>
-                    <p className="text-gray-900 flex items-center gap-2">
+                    <p className="text-gray-900 flex items-center gap-2 font-medium">
                       <Clock className="h-4 w-4 text-gray-500" />
                       {course.duration}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <strong>Start Date:</strong>
+                    <p className="text-sm text-gray-700 mb-1 font-semibold">
+                      Start Date:
                     </p>
                     <p className="text-gray-900 flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-gray-500" />
@@ -122,13 +122,13 @@ export const AvailableCoursesPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary" className="flex items-center gap-1">
+                  <Badge variant="secondary" className="flex items-center gap-1 bg-blue-100 text-blue-800 border-blue-200">
                     <Award className="h-3 w-3" />
-                    {course.indoorCredits + course.outdoorCredits} Credits
+                    <span className="font-semibold">{course.indoorCredits + course.outdoorCredits} Credits</span>
                   </Badge>
-                  <Badge variant="outline" className="flex items-center gap-1">
+                  <Badge variant="outline" className="flex items-center gap-1 border-gray-300 text-gray-800 bg-gray-50">
                     <Clock className="h-3 w-3" />
-                    {course.duration}
+                    <span className="font-semibold">{course.duration}</span>
                   </Badge>
                 </div>
               </CardContent>

@@ -173,17 +173,12 @@ const CompletedCoursesListPage = () => {
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-black">Field:</span>
-                    <span className="text-sm font-medium text-black">{course.field}</span>
+                    <span className="text-sm font-medium text-black">{typeof course.field === 'object' ? course.field.name : course.field}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-black">Start Date:</span>
                     <span className="text-sm font-medium text-black">{formatDate(course.startDate)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-black">End Date:</span>
-                    <span className="text-sm font-medium text-black">{formatDate(course.endDate)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
@@ -208,17 +203,26 @@ const CompletedCoursesListPage = () => {
                   <div className="flex items-center gap-2">
                     <Building className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-black">MOU Name:</span>
-                    <span className="text-sm font-medium text-black">{mouDetails?.ID || 'Loading...'}</span>
+                    <span className="text-sm font-medium text-black">{mouDetails[course.mou_id]?.nameOfPartnerInstitution || 'Loading...'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <School className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-black">MOU School:</span>
-                    <span className="text-sm font-medium text-black">{mouDetails?.school || 'Loading...'}</span>
+                    <span className="text-sm font-medium text-black">{mouDetails[course.mou_id]?.school || 'Loading...'}</span>
                   </div>
                 </div>
-                {course.description && (
+                {course.subjects && course.subjects.length > 0 && (
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-black">{course.description}</p>
+                    <h4 className="text-sm font-medium text-black mb-2">Subjects:</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {course.subjects.map((subject, index) => (
+                        <div key={index} className="text-sm text-black">
+                          <p><strong>Periods:</strong> {subject.noOfPeriods}</p>
+                          <p><strong>Duration:</strong> {subject.periodsMin} mins ({subject.totalHrs} hrs)</p>
+                          <p><strong>Credits:</strong> {subject.credits}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </CardContent>

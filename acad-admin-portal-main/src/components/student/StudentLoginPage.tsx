@@ -86,56 +86,56 @@ const StudentLoginPage: React.FC = () => {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-primary">Student Portal</h1>
-          <p className="text-gray-800 mt-2">Sign in to your student account</p>
+          <p className="text-gray-800 mt-2 font-medium">Sign in to your student account</p>
         </div>
 
         <Card className="shadow-lg border-0">
           <CardHeader>
-            <CardTitle className="text-gray-900">Welcome Back</CardTitle>
+            <CardTitle className="text-gray-900 font-bold">Welcome Back</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-800 font-semibold">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                      <Input
-                      id="email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 text-gray-900"
-                      required
-                    />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 text-gray-900 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-gray-800 font-semibold">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                      <Input
-                      id="password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 text-gray-900"
-                      required
-                    />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 text-gray-900 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold" disabled={isLoading}>
                 {isLoading ? 'Signing In...' : 'Sign In'}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-gray-800">
+              <p className="text-gray-700 font-medium">
                 Don't have an account?{' '}
                 <button
                   onClick={() => navigate('/student/signup')}
-                  className="text-primary hover:underline font-medium"
+                  className="text-indigo-600 hover:text-indigo-700 hover:underline font-semibold"
                 >
                   Sign up here
                 </button>

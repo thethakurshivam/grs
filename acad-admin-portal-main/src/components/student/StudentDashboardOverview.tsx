@@ -57,6 +57,10 @@ export const StudentDashboardOverview: React.FC = () => {
     navigate('/student/profile');
   };
 
+  const handlePreviousCoursesCardClick = () => {
+    navigate('/student/previous-courses');
+  };
+
   const cards: Array<{
     title: string;
     value: string;
@@ -127,7 +131,9 @@ export const StudentDashboardOverview: React.FC = () => {
       description: 'External course completions',
       icon: User,
       color: 'text-indigo-600',
-      bgColor: 'bg-indigo-100'
+      bgColor: 'bg-indigo-100',
+      onClick: handlePreviousCoursesCardClick,
+      clickable: true
     }
   ];
 

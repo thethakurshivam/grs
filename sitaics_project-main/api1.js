@@ -1,7 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
-const { GridFsStorage } = require('multer-gridfs-storage');
+const path = require('path');
+const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const Student = require('./models1/student'); // Updated path to match project structure
@@ -17,7 +18,7 @@ const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/sispa';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/sitaics';
 
 // Connect to MongoDB
 mongoose.connect(MONGODB_URI)
@@ -87,18 +88,38 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// GridFS storage configuration
-const storage = new GridFsStorage({
-  url: MONGODB_URI, // Use the same MongoDB connection
-  file: (req, file) => {
-    return {
-      filename: file.originalname,
-      bucketName: 'certificates'
-    };
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir);
+  },
+  filename: function (req, file, cb) {
+    // Generate unique filename with timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
-const upload = multer({ storage });
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    // Allow only PDF files
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'), false);
+    }
+  }
+});
 
 // Health check route to verify database connection
 app.get('/health', (req, res) => {
@@ -323,6 +344,35 @@ app.put('/students/:studentId/courses/:courseId', authenticateToken, async (req,
       res.status(500).json({ error: error.message });
     }
   });
+
+// Route to get student profile by student ID
+app.get('/students/:id', authenticateToken, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+
+    // Find the student by ID
+    const student = await Student.findById(studentId);
+
+    if (!student) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Student not found' 
+      });
+    }
+
+    // Send the student profile to the frontend
+    res.status(200).json({
+      success: true,
+      student: student
+    });
+
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
 
 // Route to get student's available credits by student ID
 app.get('/students/:id/available-credits', authenticateToken, async (req, res) => {

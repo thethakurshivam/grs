@@ -156,8 +156,8 @@ const BulkImportForm = ({ type, title, description }: BulkImportFormProps) => {
           <Icon className="h-6 w-6 text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">{title}</h1>
-          <p className="text-muted-foreground">{description}</p>
+          <h1 className="text-2xl font-bold text-black">{title}</h1>
+          <p className="text-gray-700">{description}</p>
         </div>
       </div>
 
@@ -165,23 +165,23 @@ const BulkImportForm = ({ type, title, description }: BulkImportFormProps) => {
         {/* Upload Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-black">
               <Upload className="h-5 w-5" />
               Upload File
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-gray-700">
               Select and upload your {type} data file
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="file-upload">Choose File</Label>
+              <Label htmlFor="file-upload" className="text-gray-800">Choose File</Label>
               <input
                 id="file-upload"
                 type="file"
                 accept=".csv,.xlsx,.xls"
                 onChange={handleFileChange}
-                className="block w-full text-sm text-muted-foreground
+                className="block w-full text-sm text-gray-700
                   file:mr-4 file:py-2 file:px-4
                   file:rounded-md file:border-0
                   file:text-sm file:font-medium
@@ -193,9 +193,9 @@ const BulkImportForm = ({ type, title, description }: BulkImportFormProps) => {
 
             {selectedFile && (
               <div className="p-3 bg-muted rounded-md">
-                <p className="text-sm font-medium">Selected file:</p>
-                <p className="text-sm text-muted-foreground">{selectedFile.name}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm font-medium text-black">Selected file:</p>
+                <p className="text-sm text-gray-700">{selectedFile.name}</p>
+                <p className="text-xs text-gray-600">
                   Size: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
@@ -214,11 +214,11 @@ const BulkImportForm = ({ type, title, description }: BulkImportFormProps) => {
         {/* Instructions Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-black">
               <Download className="h-5 w-5" />
               Template & Instructions
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-gray-700">
               Download template and follow guidelines
             </CardDescription>
           </CardHeader>
@@ -236,16 +236,16 @@ const BulkImportForm = ({ type, title, description }: BulkImportFormProps) => {
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium">File Format</p>
-                  <p className="text-muted-foreground">Supported formats: CSV, XLSX</p>
+                  <p className="font-medium text-black">File Format</p>
+                  <p className="text-gray-700">Supported formats: CSV, XLSX</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium">Required Fields</p>
-                  <p className="text-muted-foreground">
+                  <p className="font-medium text-black">Required Fields</p>
+                  <p className="text-gray-700">
                     {type === "mou" ? "ID, school, nameOfPartnerInstitution, strategicAreas, dateOfSigning, validity, affiliationDate" :
                      type === "courses" ? "mou_id, courseName, organization, duration, indoorCredits, outdoorCredits, field, startDate, completionStatus, subjects" :
                      "All mandatory fields as per template"}
@@ -256,8 +256,8 @@ const BulkImportForm = ({ type, title, description }: BulkImportFormProps) => {
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium">Data Validation</p>
-                  <p className="text-muted-foreground">
+                  <p className="font-medium text-black">Data Validation</p>
+                  <p className="text-gray-700">
                     Data will be validated before import
                   </p>
                 </div>
@@ -266,34 +266,6 @@ const BulkImportForm = ({ type, title, description }: BulkImportFormProps) => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Recent Uploads */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Uploads</CardTitle>
-          <CardDescription>
-            Your recent bulk import activities
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 border rounded-md">
-              <div>
-                <p className="font-medium">sample_data.xlsx</p>
-                <p className="text-sm text-muted-foreground">Uploaded 2 hours ago • 150 records</p>
-              </div>
-              <div className="text-sm text-green-600 font-medium">Success</div>
-            </div>
-            <div className="flex items-center justify-between p-3 border rounded-md">
-              <div>
-                <p className="font-medium">bulk_import.csv</p>
-                <p className="text-sm text-muted-foreground">Uploaded yesterday • 75 records</p>
-              </div>
-              <div className="text-sm text-green-600 font-medium">Success</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

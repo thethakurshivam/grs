@@ -27,14 +27,6 @@ interface CompletedCoursesResponse {
   success: boolean;
   count: number;
   data: Course[];
-  filters: {
-    completionStatus: string;
-    field: string | null;
-    organization: string | null;
-    startDateFrom: string | null;
-    startDateTo: string | null;
-    mou_id: string | null;
-  };
 }
 
 export const useCompletedCourses = () => {
@@ -55,9 +47,9 @@ export const useCompletedCourses = () => {
         throw new Error('No authentication token found. Please log in again.');
       }
 
-      console.log('Making API request to:', 'http://localhost:3000/api/courses?completionStatus=completed');
+      console.log('Making API request to:', 'http://localhost:3000/api/courses/completed');
       
-      const response = await fetch('http://localhost:3000/api/courses?completionStatus=completed', {
+      const response = await fetch('http://localhost:3000/api/courses/completed', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

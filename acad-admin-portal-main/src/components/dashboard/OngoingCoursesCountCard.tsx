@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
-import { useOngoingCoursesCount } from "@/hooks/useOngoingCoursesCount";
+import { useOngoingCourses } from "@/hooks/useOngoingCourses";
 import { useNavigate } from "react-router-dom";
 
 const OngoingCoursesCountCard = () => {
-  const { count, loading, error } = useOngoingCoursesCount();
+  const { ongoingCoursesCount, loading, error } = useOngoingCourses();
   const navigate = useNavigate();
 
   const handleCardClick = () => {
@@ -21,8 +21,8 @@ const OngoingCoursesCountCard = () => {
           <CardTitle className="text-sm font-medium text-black">
             Ongoing Courses
           </CardTitle>
-          <div className="p-2 rounded-full bg-green-50">
-            <BookOpen className="h-5 w-5 text-green-600" />
+          <div className="p-2 rounded-full bg-blue-50">
+            <BookOpen className="h-5 w-5 text-blue-600" />
           </div>
         </CardHeader>
         <CardContent>
@@ -49,8 +49,8 @@ const OngoingCoursesCountCard = () => {
           <CardTitle className="text-sm font-medium text-black">
             Ongoing Courses
           </CardTitle>
-          <div className="p-2 rounded-full bg-green-50">
-            <BookOpen className="h-5 w-5 text-green-600" />
+          <div className="p-2 rounded-full bg-blue-50">
+            <BookOpen className="h-5 w-5 text-blue-600" />
           </div>
         </CardHeader>
         <CardContent>
@@ -76,14 +76,14 @@ const OngoingCoursesCountCard = () => {
         <CardTitle className="text-sm font-medium text-black">
           Ongoing Courses
         </CardTitle>
-        <div className="p-2 rounded-full bg-green-50">
-          <BookOpen className="h-5 w-5 text-green-600" />
+        <div className="p-2 rounded-full bg-blue-50">
+          <BookOpen className="h-5 w-5 text-blue-600" />
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
           <div className="text-3xl font-bold text-black">
-            {count}
+            {ongoingCoursesCount}
           </div>
           <p className="text-sm text-black">
             Currently active courses

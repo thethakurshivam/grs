@@ -17,6 +17,7 @@ import AddMOUForm from "./components/forms/AddMOUForm";
 import AddCourseForm from "./components/forms/AddCourseForm";
 import BulkImportForm from "./components/forms/BulkImportForm";
 import BulkImportStudentsForm from "./components/forms/BulkImportStudentsForm";
+import PreviousCoursesForm from "./components/student/PreviousCoursesForm";
 import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 import AdminLogin from "./pages/AdminLogin";
@@ -28,6 +29,8 @@ import StudentAvailableCourses from "./pages/StudentAvailableCourses";
 import StudentCreditBank from "./pages/StudentCreditBank";
 import StudentProfile from "./pages/StudentProfile";
 import { CompletedCoursesList } from "./pages/CompletedCoursesList";
+import SectorTrainingFields from "./pages/SectorTrainingFields";
+import FieldCourses from "./pages/FieldCourses";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +72,9 @@ const App = () => (
               />
             } />
             <Route path="bulk-import-students" element={<BulkImportStudentsForm />} />
+            <Route path="sector-training" element={<SectorTrainingFields />} />
+            <Route path="sector-training/:fieldId" element={<FieldCourses />} />
+            <Route path="field-courses/:fieldId" element={<FieldCourses />} />
           </Route>
           
           {/* Student Routes */}
@@ -79,6 +85,7 @@ const App = () => (
           <Route path="/student/available-courses" element={<StudentAvailableCourses />} />
           <Route path="/student/completed-courses" element={<CompletedCoursesList />} />
           <Route path="/student/credit-bank" element={<StudentCreditBank />} />
+          <Route path="/student/previous-courses" element={<PreviousCoursesForm />} />
           
           {/* Legacy Routes - Redirect to landing page */}
           <Route path="/login" element={<LandingPage />} />

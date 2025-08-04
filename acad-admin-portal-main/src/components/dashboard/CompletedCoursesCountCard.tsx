@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
-import { useCompletedCoursesCount } from "@/hooks/useCompletedCoursesCount";
+import { useCompletedCourses } from "@/hooks/useCompletedCourses";
 import { useNavigate } from "react-router-dom";
 
 const CompletedCoursesCountCard = () => {
-  const { count, loading, error } = useCompletedCoursesCount();
+  const { count, loading, error } = useCompletedCourses();
   const navigate = useNavigate();
 
   const handleCardClick = () => {
