@@ -402,6 +402,87 @@ app.get('/students/:id/completed-courses', authenticateToken, async (req, res) =
     }
   });
 
+  // Route to get all student information by student ID
+app.get('/students/:id', authenticateToken, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+
+    // Find the student by ID
+    const student = await Student.findById(studentId);
+
+    if (!student) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Student not found' 
+      });
+    }
+
+    // Send the student information to the frontend (excluding password)
+    const studentInfo = {
+      id: student._id,
+      sr_no: student.sr_no,
+      batch_no: student.batch_no,
+      rank: student.rank,
+      serial_number: student.serial_number,
+      enrollment_number: student.enrollment_number,
+      full_name: student.full_name,
+      gender: student.gender,
+      dob: student.dob,
+      birth_place: student.birth_place,
+      birth_state: student.birth_state,
+      country: student.country,
+      aadhar_no: student.aadhar_no,
+      mobile_no: student.mobile_no,
+      alternate_number: student.alternate_number,
+      email: student.email,
+      address: student.address,
+      mou_id: student.mou_id,
+      credits: student.credits,
+      available_credit: student.available_credit,
+      used_credit: student.used_credit,
+      course_id: student.course_id,
+      previous_courses_certification: student.previous_courses_certification
+    };
+
+    res.status(200).json({
+      success: true,
+      student: studentInfo
+    });
+
+  } catch (error) {
+    console.error('Get student information error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+  });
+
+// Route to get upcoming courses count
+app.get('/courses/upcoming', async (req, res) => {
+  try {
+    // Find courses that are scheduled to start in the future
+    const currentDate = new Date();
+    const upcomingCourses = await Course.find({
+      startDate: { $gt: currentDate },
+      completionStatus: { $ne: 'completed' }
+    });
+
+    res.status(200).json({
+      success: true,
+      count: upcomingCourses.length,
+      courses: upcomingCourses
+    });
+
+  } catch (error) {
+    console.error('Error fetching upcoming courses:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
