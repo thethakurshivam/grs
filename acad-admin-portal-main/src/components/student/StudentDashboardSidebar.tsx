@@ -5,7 +5,8 @@ import {
   GraduationCap, 
   CreditCard, 
   User,
-  LogOut 
+  LogOut,
+  Plus
 } from 'lucide-react';
 
 export const StudentDashboardSidebar: React.FC = () => {
@@ -24,7 +25,16 @@ export const StudentDashboardSidebar: React.FC = () => {
     navigate('/');
   };
 
-  const menuItems = [
+  const handleAddCourseOtherThanRRU = () => {
+    navigate('/student/previous-courses');
+  };
+
+  const menuItems: Array<{
+    name: string;
+    icon: React.ComponentType<{ className?: string }>;
+    path: string;
+    onClick?: () => void;
+  }> = [
     {
       name: 'Dashboard',
       icon: User,
@@ -34,6 +44,12 @@ export const StudentDashboardSidebar: React.FC = () => {
       name: 'Available Courses',
       icon: BookOpen,
       path: '/student/available-courses',
+    },
+    {
+      name: 'Add Course Other Than RRU',
+      icon: Plus,
+      path: '/student/add-course-other-than-rru',
+      onClick: handleAddCourseOtherThanRRU,
     },
     {
       name: 'Completed Courses',
@@ -58,6 +74,19 @@ export const StudentDashboardSidebar: React.FC = () => {
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
+            
+            if (item.onClick) {
+              return (
+                <button
+                  key={item.name}
+                  onClick={item.onClick}
+                  className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-sidebar-accent hover:text-gray-900 transition-colors"
+                >
+                  <Icon className="w-5 h-5 mr-3" />
+                  {item.name}
+                </button>
+              );
+            }
             
             return (
               <Link
