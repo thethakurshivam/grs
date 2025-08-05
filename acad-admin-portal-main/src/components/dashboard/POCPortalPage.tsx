@@ -87,11 +87,18 @@ const POCPortalPage = () => {
                 <span className="text-sm font-medium text-gray-700">POC Admin</span>
               </div>
               <button
-                onClick={() => navigate('/')}
+                onClick={() => {
+                  // Clear POC authentication data
+                  localStorage.removeItem('pocToken');
+                  localStorage.removeItem('pocUser');
+                  localStorage.removeItem('pocUserId');
+                  localStorage.removeItem('isPOCAuthenticated');
+                  navigate('/');
+                }}
                 className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900"
               >
                 <LogOut className="h-4 w-4" />
-                <span>Exit POC Portal</span>
+                <span>Logout</span>
               </button>
             </div>
           </div>

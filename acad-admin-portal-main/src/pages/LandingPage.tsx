@@ -16,7 +16,7 @@ const LandingPage: React.FC = () => {
   };
 
   const handlePOCClick = () => {
-    navigate('/poc-portal');
+    navigate('/poc/login');
   };
 
   return (

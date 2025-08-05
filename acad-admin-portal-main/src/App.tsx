@@ -39,6 +39,9 @@ import POCStudentsListPage from "./components/dashboard/POCStudentsListPage";
 import POCCoursesPage from "./components/dashboard/POCCoursesPage";
 import POCMOUsPage from "./components/dashboard/POCMOUsPage";
 import POCRequestsPage from "./components/dashboard/POCRequestsPage";
+import POCLogin from "./pages/POCLogin";
+import POCSignup from "./pages/POCSignup";
+import POCAuthGuard from "./components/auth/POCAuthGuard";
 
 const queryClient = new QueryClient();
 
@@ -85,13 +88,41 @@ const App = () => (
             <Route path="field-courses/:fieldId" element={<FieldCourses />} />
           </Route>
           
-          {/* POC Portal Routes (Separate from Admin Dashboard) */}
-          <Route path="/poc-portal" element={<POCPortalPage />} />
-          <Route path="/poc-portal/students" element={<POCStudentsPage />} />
-          <Route path="/poc-portal/students/list" element={<POCStudentsListPage />} />
-          <Route path="/poc-portal/courses" element={<POCCoursesPage />} />
-          <Route path="/poc-portal/mous" element={<POCMOUsPage />} />
-          <Route path="/poc-portal/requests" element={<POCRequestsPage />} />
+          {/* POC Authentication Routes */}
+          <Route path="/poc/login" element={<POCLogin />} />
+          <Route path="/poc/signup" element={<POCSignup />} />
+          
+          {/* POC Portal Routes (Protected with Authentication) */}
+          <Route path="/poc-portal" element={
+            <POCAuthGuard>
+              <POCPortalPage />
+            </POCAuthGuard>
+          } />
+          <Route path="/poc-portal/students" element={
+            <POCAuthGuard>
+              <POCStudentsPage />
+            </POCAuthGuard>
+          } />
+          <Route path="/poc-portal/students/list" element={
+            <POCAuthGuard>
+              <POCStudentsListPage />
+            </POCAuthGuard>
+          } />
+          <Route path="/poc-portal/courses" element={
+            <POCAuthGuard>
+              <POCCoursesPage />
+            </POCAuthGuard>
+          } />
+          <Route path="/poc-portal/mous" element={
+            <POCAuthGuard>
+              <POCMOUsPage />
+            </POCAuthGuard>
+          } />
+          <Route path="/poc-portal/requests" element={
+            <POCAuthGuard>
+              <POCRequestsPage />
+            </POCAuthGuard>
+          } />
           
           {/* Student Routes */}
           <Route path="/student/login" element={<StudentLogin />} />
