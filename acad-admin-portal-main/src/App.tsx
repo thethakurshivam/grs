@@ -83,15 +83,15 @@ const App = () => (
             <Route path="sector-training" element={<SectorTrainingFields />} />
             <Route path="sector-training/:fieldId" element={<FieldCourses />} />
             <Route path="field-courses/:fieldId" element={<FieldCourses />} />
-            
-            {/* POC Portal Routes within Admin Dashboard */}
-            <Route path="poc-portal" element={<POCPortalPage />} />
-            <Route path="poc-portal/students" element={<POCStudentsPage />} />
-            <Route path="poc-portal/students/list" element={<POCStudentsListPage />} />
-            <Route path="poc-portal/courses" element={<POCCoursesPage />} />
-            <Route path="poc-portal/mous" element={<POCMOUsPage />} />
-            <Route path="poc-portal/requests" element={<POCRequestsPage />} />
           </Route>
+          
+          {/* POC Portal Routes (Separate from Admin Dashboard) */}
+          <Route path="/poc-portal" element={<POCPortalPage />} />
+          <Route path="/poc-portal/students" element={<POCStudentsPage />} />
+          <Route path="/poc-portal/students/list" element={<POCStudentsListPage />} />
+          <Route path="/poc-portal/courses" element={<POCCoursesPage />} />
+          <Route path="/poc-portal/mous" element={<POCMOUsPage />} />
+          <Route path="/poc-portal/requests" element={<POCRequestsPage />} />
           
           {/* Student Routes */}
           <Route path="/student/login" element={<StudentLogin />} />

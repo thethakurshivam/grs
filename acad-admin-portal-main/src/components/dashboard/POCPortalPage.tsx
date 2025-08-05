@@ -28,7 +28,7 @@ const POCPortalPage = () => {
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
-      path: "/dashboard/poc-portal/students"
+      path: "/poc-portal/students"
     },
     {
       title: "Courses",
@@ -37,7 +37,7 @@ const POCPortalPage = () => {
       icon: BookOpen,
       color: "text-green-600",
       bgColor: "bg-green-50",
-      path: "/dashboard/poc-portal/courses"
+      path: "/poc-portal/courses"
     },
     {
       title: "MOUs",
@@ -46,7 +46,7 @@ const POCPortalPage = () => {
       icon: FileText,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
-      path: "/dashboard/poc-portal/mous"
+      path: "/poc-portal/mous"
     },
     {
       title: "Requests",
@@ -55,7 +55,7 @@ const POCPortalPage = () => {
       icon: MessageSquare,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
-      path: "/dashboard/poc-portal/requests"
+      path: "/poc-portal/requests"
     }
   ];
 
@@ -67,11 +67,11 @@ const POCPortalPage = () => {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/')}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="h-5 w-5" />
-                <span>Back to Admin Dashboard</span>
+                <span>Back to Portal Selection</span>
               </button>
             </div>
             <div className="flex items-center space-x-4">
@@ -82,7 +82,7 @@ const POCPortalPage = () => {
                 <span className="text-sm font-medium text-gray-700">POC Admin</span>
               </div>
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/')}
                 className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900"
               >
                 <LogOut className="h-4 w-4" />

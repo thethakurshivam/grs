@@ -17,7 +17,6 @@ import MOUCard from "./MOUCard";
 import CompletedCoursesCountCard from "./CompletedCoursesCountCard";
 import OngoingCoursesCountCard from "./OngoingCoursesCountCard";
 import UpcomingCoursesCard from "./UpcomingCoursesCard";
-import POCPortalCard from "./POCPortalCard";
 
 const DashboardOverview = () => {
   const navigate = useNavigate();
@@ -65,9 +64,6 @@ const DashboardOverview = () => {
         
         {/* Upcoming Courses Count Card - Dynamic from API */}
         <UpcomingCoursesCard />
-        
-        {/* POC Portal Card */}
-        <POCPortalCard />
         
         {dashboardCards.map((card, index) => (
           <Card 
@@ -134,11 +130,11 @@ const DashboardOverview = () => {
             </div>
             <div 
               className="p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => navigate('/dashboard/poc-portal')}
+              onClick={() => navigate('/dashboard/bulk-import-students')}
             >
-              <Activity className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold text-black">POC Portal</h3>
-              <p className="text-sm text-black">Access POC management system</p>
+              <Users className="h-8 w-8 text-primary mb-2" />
+              <h3 className="font-semibold text-black">Import Students</h3>
+              <p className="text-sm text-black">Bulk import student data</p>
             </div>
           </div>
         </CardContent>

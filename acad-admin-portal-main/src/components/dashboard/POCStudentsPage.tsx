@@ -37,7 +37,7 @@ const POCStudentsPage = () => {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate('/dashboard/poc-portal')}
+                onClick={() => navigate('/poc-portal')}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -120,7 +120,7 @@ const POCStudentsPage = () => {
               <Filter className="h-4 w-4" />
               <span>Filter</span>
             </Button>
-            <Button onClick={() => navigate('/dashboard/poc-portal/students/list')}>
+            <Button onClick={() => navigate('/poc-portal/students/list')}>
               View All Students
             </Button>
           </div>
