@@ -37,10 +37,10 @@ const LandingPage: React.FC = () => {
                   <GraduationCap className="h-8 w-8 text-primary-foreground" />
                 </div>
               </div>
-              <CardTitle className="text-2xl font-bold text-primary">Admin Portal</CardTitle>
+              <CardTitle className="text-xl font-bold text-primary">Admin Portal</CardTitle>
             </CardHeader>
             <CardContent className="text-center">
-              <p className="text-black mb-6">
+              <p className="text-black mb-6 text-sm">
                 Access the administrative dashboard to manage courses, students, and university data.
               </p>
               <Button className="w-full" onClick={handleAdminClick}>
@@ -57,10 +57,10 @@ const LandingPage: React.FC = () => {
                   <BookOpen className="h-8 w-8 text-primary-foreground" />
                 </div>
               </div>
-              <CardTitle className="text-2xl font-bold text-primary">Student Portal</CardTitle>
+              <CardTitle className="text-xl font-bold text-primary">Student Portal</CardTitle>
             </CardHeader>
             <CardContent className="text-center">
-              <p className="text-black mb-6">
+              <p className="text-black mb-6 text-sm">
                 Access your student dashboard to view courses, credits, and academic progress.
               </p>
               <Button className="w-full" onClick={handleStudentClick}>

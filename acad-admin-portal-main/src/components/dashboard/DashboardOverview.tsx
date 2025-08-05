@@ -17,6 +17,7 @@ import MOUCard from "./MOUCard";
 import CompletedCoursesCountCard from "./CompletedCoursesCountCard";
 import OngoingCoursesCountCard from "./OngoingCoursesCountCard";
 import UpcomingCoursesCard from "./UpcomingCoursesCard";
+import POCPortalCard from "./POCPortalCard";
 
 const DashboardOverview = () => {
   const navigate = useNavigate();
@@ -64,6 +65,9 @@ const DashboardOverview = () => {
         
         {/* Upcoming Courses Count Card - Dynamic from API */}
         <UpcomingCoursesCard />
+        
+        {/* POC Portal Card */}
+        <POCPortalCard />
         
         {dashboardCards.map((card, index) => (
           <Card 
@@ -117,8 +121,8 @@ const DashboardOverview = () => {
               onClick={() => navigate('/dashboard/add-mou')}
             >
               <FileText className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold text-black">New MOU</h3>
-              <p className="text-sm text-black">Create a new memorandum</p>
+              <h3 className="font-semibold text-black">Add MOU</h3>
+              <p className="text-sm text-black">Create new partnership agreements</p>
             </div>
             <div 
               className="p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
@@ -126,15 +130,15 @@ const DashboardOverview = () => {
             >
               <BookOpen className="h-8 w-8 text-primary mb-2" />
               <h3 className="font-semibold text-black">Add Course</h3>
-              <p className="text-sm text-black">Register new course</p>
+              <p className="text-sm text-black">Create new academic courses</p>
             </div>
             <div 
               className="p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => navigate('/dashboard/bulk-import-students')}
+              onClick={() => navigate('/dashboard/poc-portal')}
             >
-              <Users className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold text-black">Import Students</h3>
-              <p className="text-sm text-black">Bulk student registration</p>
+              <Activity className="h-8 w-8 text-primary mb-2" />
+              <h3 className="font-semibold text-black">POC Portal</h3>
+              <p className="text-sm text-black">Access POC management system</p>
             </div>
           </div>
         </CardContent>

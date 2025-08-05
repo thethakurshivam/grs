@@ -32,6 +32,14 @@ import { CompletedCoursesList } from "./pages/CompletedCoursesList";
 import SectorTrainingFields from "./pages/SectorTrainingFields";
 import FieldCourses from "./pages/FieldCourses";
 
+// POC Portal Components
+import POCPortalPage from "./components/dashboard/POCPortalPage";
+import POCStudentsPage from "./components/dashboard/POCStudentsPage";
+import POCStudentsListPage from "./components/dashboard/POCStudentsListPage";
+import POCCoursesPage from "./components/dashboard/POCCoursesPage";
+import POCMOUsPage from "./components/dashboard/POCMOUsPage";
+import POCRequestsPage from "./components/dashboard/POCRequestsPage";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -75,6 +83,14 @@ const App = () => (
             <Route path="sector-training" element={<SectorTrainingFields />} />
             <Route path="sector-training/:fieldId" element={<FieldCourses />} />
             <Route path="field-courses/:fieldId" element={<FieldCourses />} />
+            
+            {/* POC Portal Routes within Admin Dashboard */}
+            <Route path="poc-portal" element={<POCPortalPage />} />
+            <Route path="poc-portal/students" element={<POCStudentsPage />} />
+            <Route path="poc-portal/students/list" element={<POCStudentsListPage />} />
+            <Route path="poc-portal/courses" element={<POCCoursesPage />} />
+            <Route path="poc-portal/mous" element={<POCMOUsPage />} />
+            <Route path="poc-portal/requests" element={<POCRequestsPage />} />
           </Route>
           
           {/* Student Routes */}

@@ -1699,3 +1699,264 @@ MOU 5: {
   schoolName: 'School of Computer Science',
   schoolCount: 150
 }
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 5
+MOU 1: {
+  id: new ObjectId("689202a182e075560709d566"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d55c"),
+    name: 'School of Medical Sciences',
+    count: 80
+  },
+  schoolName: 'School of Medical Sciences',
+  schoolCount: 80
+}
+MOU 2: {
+  id: new ObjectId("689202a182e075560709d564"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d55a"),
+    name: 'School of Engineering',
+    count: 200
+  },
+  schoolName: 'School of Engineering',
+  schoolCount: 200
+}
+MOU 3: {
+  id: new ObjectId("689202a182e075560709d567"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d55d"),
+    name: 'School of Arts and Humanities',
+    count: 100
+  },
+  schoolName: 'School of Arts and Humanities',
+  schoolCount: 100
+}
+MOU 4: {
+  id: new ObjectId("689202a182e075560709d565"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d55b"),
+    name: 'School of Business',
+    count: 120
+  },
+  schoolName: 'School of Business',
+  schoolCount: 120
+}
+MOU 5: {
+  id: new ObjectId("689202a182e075560709d563"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d559"),
+    name: 'School of Computer Science',
+    count: 150
+  },
+  schoolName: 'School of Computer Science',
+  schoolCount: 150
+}
+Found courses: 27
+Sample course: {
+  _id: new ObjectId("689202a182e075560709d573"),
+  ID: 'CS102',
+  mou_id: new ObjectId("689202a182e075560709d563"),
+  courseName: 'Advanced Machine Learning',
+  organization: 'Tech University',
+  duration: '4 months',
+  indoorCredits: 20,
+  outdoorCredits: 8,
+  field: {
+    _id: new ObjectId("689202a182e075560709d54f"),
+    name: 'Computer Science'
+  },
+  startDate: 2024-07-01T00:00:00.000Z,
+  completionStatus: 'completed',
+  subjects: [
+    {
+      noOfPeriods: 25,
+      periodsMin: 50,
+      totalMins: 1250,
+      totalHrs: 20.8,
+      credits: 4
+    }
+  ],
+  createdAt: 2025-08-05T13:09:53.290Z,
+  updatedAt: 2025-08-05T13:09:53.290Z,
+  __v: 0
+}
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 5
+MOU 1: {
+  id: new ObjectId("689202a182e075560709d566"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d55c"),
+    name: 'School of Medical Sciences',
+    count: 80
+  },
+  schoolName: 'School of Medical Sciences',
+  schoolCount: 80
+}
+MOU 2: {
+  id: new ObjectId("689202a182e075560709d564"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d55a"),
+    name: 'School of Engineering',
+    count: 200
+  },
+  schoolName: 'School of Engineering',
+  schoolCount: 200
+}
+MOU 3: {
+  id: new ObjectId("689202a182e075560709d567"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d55d"),
+    name: 'School of Arts and Humanities',
+    count: 100
+  },
+  schoolName: 'School of Arts and Humanities',
+  schoolCount: 100
+}
+MOU 4: {
+  id: new ObjectId("689202a182e075560709d565"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d55b"),
+    name: 'School of Business',
+    count: 120
+  },
+  schoolName: 'School of Business',
+  schoolCount: 120
+}
+MOU 5: {
+  id: new ObjectId("689202a182e075560709d563"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d559"),
+    name: 'School of Computer Science',
+    count: 150
+  },
+  schoolName: 'School of Computer Science',
+  schoolCount: 150
+}
+Found courses: 27
+Sample course: {
+  _id: new ObjectId("689202a182e075560709d573"),
+  ID: 'CS102',
+  mou_id: new ObjectId("689202a182e075560709d563"),
+  courseName: 'Advanced Machine Learning',
+  organization: 'Tech University',
+  duration: '4 months',
+  indoorCredits: 20,
+  outdoorCredits: 8,
+  field: {
+    _id: new ObjectId("689202a182e075560709d54f"),
+    name: 'Computer Science'
+  },
+  startDate: 2024-07-01T00:00:00.000Z,
+  completionStatus: 'completed',
+  subjects: [
+    {
+      noOfPeriods: 25,
+      periodsMin: 50,
+      totalMins: 1250,
+      totalHrs: 20.8,
+      credits: 4
+    }
+  ],
+  createdAt: 2025-08-05T13:09:53.290Z,
+  updatedAt: 2025-08-05T13:09:53.290Z,
+  __v: 0
+}
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 5
+MOU 1: {
+  id: new ObjectId("689202a182e075560709d566"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d55c"),
+    name: 'School of Medical Sciences',
+    count: 80
+  },
+  schoolName: 'School of Medical Sciences',
+  schoolCount: 80
+}
+MOU 2: {
+  id: new ObjectId("689202a182e075560709d564"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d55a"),
+    name: 'School of Engineering',
+    count: 200
+  },
+  schoolName: 'School of Engineering',
+  schoolCount: 200
+}
+MOU 3: {
+  id: new ObjectId("689202a182e075560709d567"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d55d"),
+    name: 'School of Arts and Humanities',
+    count: 100
+  },
+  schoolName: 'School of Arts and Humanities',
+  schoolCount: 100
+}
+MOU 4: {
+  id: new ObjectId("689202a182e075560709d565"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d55b"),
+    name: 'School of Business',
+    count: 120
+  },
+  schoolName: 'School of Business',
+  schoolCount: 120
+}
+MOU 5: {
+  id: new ObjectId("689202a182e075560709d563"),
+  school: {
+    _id: new ObjectId("689202a182e075560709d559"),
+    name: 'School of Computer Science',
+    count: 150
+  },
+  schoolName: 'School of Computer Science',
+  schoolCount: 150
+}
+Found courses: 27
+Sample course: {
+  _id: new ObjectId("689202a182e075560709d573"),
+  ID: 'CS102',
+  mou_id: new ObjectId("689202a182e075560709d563"),
+  courseName: 'Advanced Machine Learning',
+  organization: 'Tech University',
+  duration: '4 months',
+  indoorCredits: 20,
+  outdoorCredits: 8,
+  field: {
+    _id: new ObjectId("689202a182e075560709d54f"),
+    name: 'Computer Science'
+  },
+  startDate: 2024-07-01T00:00:00.000Z,
+  completionStatus: 'completed',
+  subjects: [
+    {
+      noOfPeriods: 25,
+      periodsMin: 50,
+      totalMins: 1250,
+      totalHrs: 20.8,
+      credits: 4
+    }
+  ],
+  createdAt: 2025-08-05T13:09:53.290Z,
+  updatedAt: 2025-08-05T13:09:53.290Z,
+  __v: 0
+}
