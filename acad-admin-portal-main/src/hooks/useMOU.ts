@@ -3,7 +3,10 @@ import { useState, useEffect } from 'react';
 interface MOU {
   _id: string;
   ID: string;
-  school: string;
+  school: {
+    _id: string;
+    name: string;
+  } | string;
   nameOfPartnerInstitution: string;
   strategicAreas: string;
   dateOfSigning: string;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,10 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useSchools } from "@/hooks/useSchools";
 import { FileText, Calendar, Building } from "lucide-react";
 
 const AddMOUForm = () => {
   const { toast } = useToast();
+  const { schools, loading: schoolsLoading, error: schoolsError, fetchSchools } = useSchools();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     ID: "",
@@ -20,6 +22,11 @@ const AddMOUForm = () => {
     validity: "",
     affiliationDate: ""
   });
+
+  // Fetch schools on component mount
+  useEffect(() => {
+    fetchSchools();
+  }, [fetchSchools]);
 
   // Sample fields for the dropdown
   const sampleFields = [
@@ -190,15 +197,25 @@ const AddMOUForm = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="school" className="text-black font-semibold">School *</Label>
-                <Input
-                  id="school"
-                  name="school"
-                  placeholder="Enter school name"
-                  value={formData.school}
-                  onChange={handleInputChange}
-                  required
-                  className="text-black"
-                />
+                <Select 
+                  value={formData.school} 
+                  onValueChange={(value) => handleSelectChange("school", value)}
+                  disabled={schoolsLoading}
+                >
+                  <SelectTrigger className="w-full text-black">
+                    <SelectValue placeholder={schoolsLoading ? "Loading schools..." : "Select school"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {schools.map((school) => (
+                      <SelectItem key={school._id} value={school._id} className="text-black">
+                        {school.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {schoolsError && (
+                  <p className="text-red-600 text-sm">{schoolsError}</p>
+                )}
               </div>
             </div>
 

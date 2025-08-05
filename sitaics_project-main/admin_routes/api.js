@@ -182,10 +182,124 @@ app.post('/api/login', asyncHandler(async (req, res) => {
 
 // Route to get all MOUs information
 app.get('/api/mous', authenticateToken, asyncHandler(async (req, res) => {
-  const mous = await MOU.find();
+  try {
+    const mous = await MOU.find().populate('school', 'name count');
+    
+    // Log for debugging
+    console.log('MOUs found:', mous.length);
+    mous.forEach((mou, index) => {
+      console.log(`MOU ${index + 1}:`, {
+        id: mou._id,
+        school: mou.school,
+        schoolName: mou.school?.name,
+        schoolCount: mou.school?.count
+      });
+    });
+    
+    res.json({
+      success: true,
+      count: mous.length,
+      data: mous
+    });
+  } catch (error) {
+    console.error('Error fetching MOUs:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error fetching MOUs: ' + error.message
+    });
+  }
+}));
+
+// Route to get all unique organization names from MOUs
+app.get('/api/mous/organizations', authenticateToken, asyncHandler(async (req, res) => {
+  const organizations = await MOU.distinct('nameOfPartnerInstitution');
+  
+  res.json({
+    success: true,
+    count: organizations.length,
+    data: organizations
+  });
+}));
+
+// Route to get all schools (moved from api1.js)
+app.get('/api/schools-all', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    // Find all schools from the school collection
+    const schools = await School.find({}, 'name count'); // Only return name and count fields
+    
+    // Log for debugging
+    console.log('Schools found:', schools.length);
+    schools.forEach((school, index) => {
+      console.log(`School ${index + 1}:`, {
+        id: school._id,
+        name: school.name,
+        count: school.count
+      });
+    });
+    
+    res.json({
+      success: true,
+      count: schools.length,
+      data: schools
+    });
+
+  } catch (error) {
+    console.error('Error fetching schools:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+}));
+
+// Route to search MOUs by organization name
+app.get('/api/mous/search/:name', authenticateToken, asyncHandler(async (req, res) => {
+  const organizationName = sanitizeInput(req.params.name);
+  
+  if (!organizationName) {
+    return res.status(400).json({
+      success: false,
+      error: 'Organization name is required'
+    });
+  }
+  
+  const mous = await MOU.find({ 
+    nameOfPartnerInstitution: { $regex: organizationName, $options: 'i' } 
+  }).populate('school', 'name');
+  
   res.json({
     success: true,
     count: mous.length,
+    searchTerm: organizationName,
+    data: mous
+  });
+}));
+
+// Route to search MOUs by school ID
+app.get('/api/mous/school/:schoolId', authenticateToken, asyncHandler(async (req, res) => {
+  const schoolId = sanitizeInput(req.params.schoolId);
+  
+  if (!schoolId) {
+    return res.status(400).json({
+      success: false,
+      error: 'School ID is required'
+    });
+  }
+
+  // Validate MongoDB ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(schoolId)) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid school ID format'
+    });
+  }
+  
+  const mous = await MOU.find({ school: schoolId }).populate('school', 'name');
+  
+  res.json({
+    success: true,
+    count: mous.length,
+    searchTerm: schoolId,
     data: mous
   });
 }));
@@ -202,7 +316,7 @@ app.get('/api/mous/:mouId', authenticateToken, asyncHandler(async (req, res) => 
     });
   }
   
-  const mou = await MOU.findById(mouId);
+  const mou = await MOU.findById(mouId).populate('school', 'name');
   if (!mou) {
     return res.status(404).json({
       success: false,
@@ -256,10 +370,27 @@ app.post('/api/mous', authenticateToken, asyncHandler(async (req, res) => {
       });
     }
 
+    // Validate school ObjectId
+    if (!mongoose.Types.ObjectId.isValid(school)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid school ID format'
+      });
+    }
+
+    // Check if school exists
+    const schoolExists = await School.findById(school);
+    if (!schoolExists) {
+      return res.status(404).json({
+        success: false,
+        error: 'School not found'
+      });
+    }
+
     // Create new MOU
     const newMOU = new MOU({
       ID: ID.trim(),
-      school: school.trim(),
+      school: school,
       nameOfPartnerInstitution: nameOfPartnerInstitution.trim(),
       strategicAreas: strategicAreas.trim(),
       dateOfSigning: signingDate,
@@ -283,13 +414,33 @@ app.post('/api/mous', authenticateToken, asyncHandler(async (req, res) => {
   }
 }));
 
+// Route to get unique organizations from courses
+app.get('/api/courses/organizations', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    const organizations = await Course.distinct('organization');
+    res.json(organizations);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Error fetching organizations: ' + error.message
+    });
+  }
+}));
 
-// Route to get courses by completion status
-app.get('/api/courses/:status', authenticateToken, asyncHandler(async (req, res) => {
-  const { status } = req.params;
+// Route to search courses by organization
+app.get('/api/courses/organization/:organization', authenticateToken, asyncHandler(async (req, res) => {
+  const { organization } = req.params;
+  const { status } = req.query; // Optional status filter
 
   try {
-    const courses = await Course.find({ completionStatus: status }).populate('field');
+    let query = { organization: organization };
+    
+    // Add status filter if provided
+    if (status && ['ongoing', 'completed', 'upcoming'].includes(status)) {
+      query.completionStatus = status;
+    }
+
+    const courses = await Course.find(query).populate('field');
     
     res.json({
       success: true,
@@ -297,6 +448,68 @@ app.get('/api/courses/:status', authenticateToken, asyncHandler(async (req, res)
       data: courses
     });
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Error searching courses by organization: ' + error.message
+    });
+  }
+}));
+
+// Route to search courses by MOU ID
+app.get('/api/courses/mou/:mouId', authenticateToken, asyncHandler(async (req, res) => {
+  const { mouId } = req.params;
+  const { status } = req.query; // Optional status filter
+
+  try {
+    // Validate MOU ID format
+    if (!mongoose.Types.ObjectId.isValid(mouId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid MOU ID format'
+      });
+    }
+
+    let query = { mou_id: mouId };
+    
+    // Add status filter if provided
+    if (status && ['ongoing', 'completed', 'upcoming'].includes(status)) {
+      query.completionStatus = status;
+    }
+
+    const courses = await Course.find(query).populate('field');
+    
+    res.json({
+      success: true,
+      count: courses.length,
+      data: courses
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Error searching courses by MOU: ' + error.message
+    });
+  }
+}));
+
+// Route to get courses by completion status
+app.get('/api/courses/:status', authenticateToken, asyncHandler(async (req, res) => {
+  const { status } = req.params;
+
+  try {
+    console.log('Fetching courses with status:', status);
+    
+    const courses = await Course.find({ completionStatus: status }).populate('field', 'name description');
+    
+    console.log('Found courses:', courses.length);
+    console.log('Sample course:', courses[0]);
+    
+    res.json({
+      success: true,
+      count: courses.length,
+      data: courses
+    });
+  } catch (error) {
+    console.error('Error fetching courses by status:', error);
     res.status(500).json({
       success: false,
       error: 'Error fetching courses: ' + error.message
@@ -612,7 +825,7 @@ app.get('/api/mous/:mouId/courses', authenticateToken, asyncHandler(async (req, 
   }
   
   // First check if MOU exists
-  const mou = await MOU.findById(mouId);
+  const mou = await MOU.findById(mouId).populate('school', 'name');
   if (!mou) {
     return res.status(404).json({
       success: false,

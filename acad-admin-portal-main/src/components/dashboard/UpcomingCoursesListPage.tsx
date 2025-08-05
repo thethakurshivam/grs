@@ -1,16 +1,30 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, ArrowLeft, Building, Target, Clock, GraduationCap, FileText, Hash, Award, School } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, ArrowLeft, Building, Target, Clock, GraduationCap, FileText, Hash, Award, School, Filter } from "lucide-react";
 import { useUpcomingCourses } from "@/hooks/useUpcomingCourses";
 import { useMOU } from "@/hooks/useMOU";
+import { useCourseOrganizations } from "@/hooks/useCourseOrganizations";
+import { useCourseSearchByOrganization } from "@/hooks/useCourseSearchByOrganization";
+import { useCourseSearchByMOU } from "@/hooks/useCourseSearchByMOU";
+import { useMOU as useMOUList } from "@/hooks/useMOU";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 const UpcomingCoursesListPage = () => {
   const { upcomingCourses, loading, error, refetch } = useUpcomingCourses();
   const { fetchMOUById } = useMOU();
+  const { organizations, loading: orgLoading, error: orgError } = useCourseOrganizations();
+  const { courses: orgCourses, loading: orgSearchLoading, error: orgSearchError, searchByOrganization } = useCourseSearchByOrganization();
+  const { courses: mouCourses, loading: mouSearchLoading, error: mouSearchError, searchByMOU } = useCourseSearchByMOU();
+  const { mous, loading: mousLoading, error: mousError } = useMOUList();
   const navigate = useNavigate();
   const [mouDetails, setMouDetails] = useState<{[key: string]: any}>({});
+  const [showFilter, setShowFilter] = useState(false);
+  const [selectedFilterType, setSelectedFilterType] = useState<string>('');
+  const [selectedOrganization, setSelectedOrganization] = useState<string>('');
+  const [selectedMOU, setSelectedMOU] = useState<string>('');
+  const [displayedCourses, setDisplayedCourses] = useState<any[]>([]);
 
   const formatDate = (dateString: string) => {
     try {
@@ -34,7 +48,7 @@ const UpcomingCoursesListPage = () => {
       try {
         const details: {[key: string]: any} = {};
         
-        for (const course of upcomingCourses) {
+        for (const course of displayedCourses) {
           if (course.mou_id && !mouDetails[course.mou_id]) {
             try {
               const mou = await fetchMOUById(course.mou_id);
@@ -47,16 +61,58 @@ const UpcomingCoursesListPage = () => {
           }
         }
         
-        setMouDetails(prev => ({ ...prev, ...details }));
+        if (Object.keys(details).length > 0) {
+          setMouDetails(prev => ({ ...prev, ...details }));
+        }
       } catch (error) {
         console.error('Error fetching MOU details:', error);
       }
     };
 
-    if (upcomingCourses.length > 0) {
+    if (displayedCourses.length > 0) {
       fetchMOUDetails();
     }
-  }, [upcomingCourses, fetchMOUById]);
+  }, [displayedCourses, fetchMOUById]);
+
+  // Initialize displayed courses when upcomingCourses loads
+  useEffect(() => {
+    if (upcomingCourses && upcomingCourses.length > 0) {
+      setDisplayedCourses(upcomingCourses);
+    }
+  }, [upcomingCourses]);
+
+  // Update displayed courses based on filter
+  useEffect(() => {
+    if (selectedFilterType === 'organization' && selectedOrganization) {
+      setDisplayedCourses(orgCourses);
+    } else if (selectedFilterType === 'mou' && selectedMOU) {
+      setDisplayedCourses(mouCourses);
+    } else if (upcomingCourses) {
+      setDisplayedCourses(upcomingCourses);
+    }
+  }, [selectedFilterType, selectedOrganization, selectedMOU, orgCourses, mouCourses, upcomingCourses]);
+
+  // Handle organization selection
+  const handleOrganizationSelect = (organization: string) => {
+    setSelectedOrganization(organization);
+    setSelectedMOU('');
+    searchByOrganization(organization, 'upcoming');
+  };
+
+  // Handle MOU selection
+  const handleMOUSelect = (mouId: string) => {
+    setSelectedMOU(mouId);
+    setSelectedOrganization('');
+    searchByMOU(mouId, 'upcoming');
+  };
+
+  // Clear filter
+  const clearFilter = () => {
+    setSelectedFilterType('');
+    setSelectedOrganization('');
+    setSelectedMOU('');
+    setDisplayedCourses(upcomingCourses);
+  };
 
   if (loading) {
     return (
@@ -127,40 +183,169 @@ const UpcomingCoursesListPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate('/dashboard')}
-          className="hover:bg-accent"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-black">Upcoming Courses</h1>
-          <p className="text-black">
-            {upcomingCourses.length} upcoming course{upcomingCourses.length !== 1 ? 's' : ''}
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/dashboard')}
+            className="hover:bg-accent"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-black">Upcoming Courses</h1>
+            <p className="text-black">
+              {displayedCourses.length} upcoming course{displayedCourses.length !== 1 ? 's' : ''}
+            </p>
+          </div>
         </div>
-      </div>
+
+        {/* Filter Button */}
+        <Button
+          variant="outline"
+          onClick={() => setShowFilter(!showFilter)}
+          className="flex items-center gap-2 text-gray-900 font-semibold"
+        >
+          <Filter className="h-4 w-4" />
+          Filter
+        </Button>
+              </div>
+
+      {/* Filter Section */}
+      {showFilter && (
+        <Card className="border-0 shadow-md">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold text-gray-900">Filter Courses</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-900">Filter Type</label>
+                <Select
+                  value={selectedFilterType}
+                  onValueChange={(value) => setSelectedFilterType(value)}
+                >
+                  <SelectTrigger className="text-gray-900 font-medium">
+                    <SelectValue placeholder="Select filter type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="organization" className="text-gray-900 font-medium">Organization</SelectItem>
+                    <SelectItem value="mou" className="text-gray-900 font-medium">MOU</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedFilterType === 'organization' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-900">Organization</label>
+                  <Select
+                    value={selectedOrganization}
+                    onValueChange={handleOrganizationSelect}
+                    disabled={orgLoading}
+                  >
+                    <SelectTrigger className="text-gray-900 font-medium">
+                      <SelectValue placeholder={orgLoading ? "Loading..." : "Select organization"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {organizations.map((org) => (
+                        <SelectItem key={org} value={org} className="text-gray-900 font-medium">
+                          {org}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {selectedFilterType === 'mou' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-900">MOU</label>
+                  <Select
+                    value={selectedMOU}
+                    onValueChange={handleMOUSelect}
+                    disabled={mousLoading}
+                  >
+                    <SelectTrigger className="text-gray-900 font-medium">
+                      <SelectValue placeholder={mousLoading ? "Loading..." : "Select MOU"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {mous.map((mou) => (
+                        <SelectItem key={mou._id} value={mou._id} className="text-gray-900 font-medium">
+                          {mou.nameOfPartnerInstitution}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={clearFilter}
+                  disabled={!selectedFilterType}
+                  className="font-semibold text-gray-900"
+                >
+                  Clear Filter
+                </Button>
+                {(selectedOrganization || selectedMOU) && (
+                  <span className="text-sm text-gray-800 flex items-center font-medium">
+                    Filtered by: <span className="font-semibold ml-1 text-gray-900">
+                      {selectedOrganization ||
+                       (selectedMOU && mous.find(m => m._id === selectedMOU)?.nameOfPartnerInstitution)}
+                    </span>
+                  </span>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Loading and Error States for Filter */}
+      {(orgLoading || mousLoading || orgSearchLoading || mouSearchLoading) && (
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-6 text-center">
+            <p className="text-black">Loading filter options...</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {(orgError || mousError || orgSearchError || mouSearchError) && (
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-6 text-center">
+            <p className="text-red-600">
+              {orgError || mousError || orgSearchError || mouSearchError}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Courses List */}
       <div className="grid gap-4">
-        {upcomingCourses.length === 0 ? (
+        {displayedCourses.length === 0 ? (
           <Card className="border-0 shadow-md">
             <CardContent className="p-6 text-center">
               <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2 text-black">No Upcoming Courses Found</h3>
+              <h3 className="text-lg font-semibold mb-2 text-black">
+                {selectedFilterType ? 'No Filtered Courses Found' : 'No Upcoming Courses Found'}
+              </h3>
               <p className="text-black mb-4">
-                No upcoming courses have been found in the system.
+                {selectedFilterType 
+                  ? `No upcoming courses found for the selected ${selectedFilterType === 'organization' ? 'organization' : 'MOU'}.`
+                  : 'No upcoming courses have been found in the system.'
+                }
               </p>
-              <Button onClick={() => navigate('/dashboard/add-course')}>
-                Add First Course
-              </Button>
+              {!selectedFilterType && (
+                <Button onClick={() => navigate('/dashboard/add-course')}>
+                  Add First Course
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
-          upcomingCourses.map((course) => (
+          displayedCourses.map((course) => (
             <Card key={course._id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -233,7 +418,8 @@ const UpcomingCoursesListPage = () => {
                     <School className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-black">MOU School:</span>
                     <span className="text-sm font-medium text-black">
-                      {mouDetails[course.mou_id]?.school || 'Loading...'}
+                      {mouDetails[course.mou_id]?.school?.name || 
+                       (typeof mouDetails[course.mou_id]?.school === 'string' ? mouDetails[course.mou_id]?.school : 'Loading...')}
                     </span>
                   </div>
                 </div>

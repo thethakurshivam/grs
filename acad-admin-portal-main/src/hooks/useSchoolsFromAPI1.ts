@@ -6,14 +6,14 @@ interface School {
   count: number;
 }
 
-interface UseSchoolsReturn {
+interface UseSchoolsFromAdminAPIReturn {
   schools: School[];
   loading: boolean;
   error: string | null;
   fetchSchools: () => Promise<void>;
 }
 
-export const useSchools = (): UseSchoolsReturn => {
+export const useSchoolsFromAPI1 = (): UseSchoolsFromAdminAPIReturn => {
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export const useSchools = (): UseSchoolsReturn => {
         return;
       }
 
-      const response = await fetch('http://localhost:3000/api/schools', {
+      const response = await fetch('http://localhost:3000/api/schools-all', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -51,7 +51,7 @@ export const useSchools = (): UseSchoolsReturn => {
         setError(data.error || 'Failed to fetch schools');
       }
     } catch (err) {
-      console.error('Error fetching schools:', err);
+      console.error('Error fetching schools from admin API:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch schools');
     } finally {
       setLoading(false);

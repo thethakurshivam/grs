@@ -8,6 +8,7 @@ const cors = require('cors');
 const Student = require('./models1/student'); // Updated path to match project structure
 const Course = require('./models/courses');
 const MOU = require('./models/MOU');
+const School = require('./models/school');
 require('dotenv').config({ path: '.env.student' });
 
 // Initialize Express app
@@ -532,6 +533,8 @@ app.get('/courses/upcoming', async (req, res) => {
     });
   }
 });
+
+
 
 // Start the server
 app.listen(PORT, () => {

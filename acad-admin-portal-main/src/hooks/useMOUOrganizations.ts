@@ -1,24 +1,18 @@
 import { useState, useCallback } from 'react';
 
-interface School {
-  _id: string;
-  name: string;
-  count: number;
-}
-
-interface UseSchoolsReturn {
-  schools: School[];
+interface UseMOUOrganizationsReturn {
+  organizations: string[];
   loading: boolean;
   error: string | null;
-  fetchSchools: () => Promise<void>;
+  fetchOrganizations: () => Promise<void>;
 }
 
-export const useSchools = (): UseSchoolsReturn => {
-  const [schools, setSchools] = useState<School[]>([]);
+export const useMOUOrganizations = (): UseMOUOrganizationsReturn => {
+  const [organizations, setOrganizations] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSchools = useCallback(async () => {
+  const fetchOrganizations = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -31,7 +25,7 @@ export const useSchools = (): UseSchoolsReturn => {
         return;
       }
 
-      const response = await fetch('http://localhost:3000/api/schools', {
+      const response = await fetch('http://localhost:3000/api/mous/organizations', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -46,22 +40,22 @@ export const useSchools = (): UseSchoolsReturn => {
       const data = await response.json();
       
       if (data.success) {
-        setSchools(data.data);
+        setOrganizations(data.data);
       } else {
-        setError(data.error || 'Failed to fetch schools');
+        setError(data.error || 'Failed to fetch organizations');
       }
     } catch (err) {
-      console.error('Error fetching schools:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch schools');
+      console.error('Error fetching organizations:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch organizations');
     } finally {
       setLoading(false);
     }
   }, []);
 
   return {
-    schools,
+    organizations,
     loading,
     error,
-    fetchSchools
+    fetchOrganizations
   };
 }; 

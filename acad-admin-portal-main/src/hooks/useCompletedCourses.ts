@@ -9,7 +9,11 @@ interface Course {
   duration: string;
   indoorCredits: number;
   outdoorCredits: number;
-  field: string;
+  field: {
+    _id: string;
+    name: string;
+    description: string;
+  } | string;
   startDate: string;
   completionStatus: string;
   subjects: Array<{
