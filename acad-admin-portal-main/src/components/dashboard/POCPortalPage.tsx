@@ -10,11 +10,16 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import usePOCStudents from '@/hooks/usePOCStudents';
 
 const POCPortalPage = () => {
   const navigate = useNavigate();
+  
+  // Get POC ID from localStorage or use a demo ID
+  const pocId = localStorage.getItem('pocUserId') || 'demo-poc-user-id-123';
+  const { students, loading: studentsLoading } = usePOCStudents(pocId);
+  
   const [stats] = useState({
-    students: 1250,
     courses: 45,
     mous: 23,
     requests: 8
@@ -23,7 +28,7 @@ const POCPortalPage = () => {
   const dashboardCards = [
     {
       title: "Students",
-      value: stats.students.toLocaleString(),
+      value: studentsLoading ? "Loading..." : students.length.toLocaleString(),
       description: "Total registered students",
       icon: Users,
       color: "text-blue-600",
