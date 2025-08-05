@@ -1,13 +1,49 @@
-import React, { useState } from 'react';
-import { Upload, Download, FileText, Users } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Upload, Download, FileText, Users, ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { usePOCMOUs } from '@/hooks/usePOCMOUs';
+import usePOCCoursesForDropdown from '@/hooks/usePOCCoursesForDropdown';
 
 const POCBulkImportStudentsPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedMOU, setSelectedMOU] = useState<string>('');
+  const [selectedCourse, setSelectedCourse] = useState<string>('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isCourseDropdownOpen, setIsCourseDropdownOpen] = useState(false);
   const { toast } = useToast();
+  const { mous, loading: mousLoading, error: mousError } = usePOCMOUs();
+  const { courses, loading: coursesLoading, error: coursesError } = usePOCCoursesForDropdown();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const courseDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Debug logging
+  console.log('MOUs in dropdown:', mous);
+  console.log('MOUs loading:', mousLoading);
+  console.log('MOUs error:', mousError);
+  console.log('Courses in dropdown:', courses);
+  console.log('Courses loading:', coursesLoading);
+  console.log('Courses error:', coursesError);
+  console.log('Total courses available:', courses.length);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+      if (courseDropdownRef.current && !courseDropdownRef.current.contains(event.target as Node)) {
+        setIsCourseDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -26,12 +62,32 @@ const POCBulkImportStudentsPage = () => {
       return;
     }
 
+    if (!selectedMOU) {
+      toast({
+        title: "No MOU selected",
+        description: "Please select an MOU for the students",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedCourse) {
+      toast({
+        title: "No course selected",
+        description: "Please select a course for the students",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsUploading(true);
 
     try {
       // Create FormData for file upload
       const formData = new FormData();
       formData.append('file', selectedFile);
+      formData.append('mouId', selectedMOU);
+      formData.append('courseId', selectedCourse);
 
       const pocToken = localStorage.getItem('pocToken');
       const pocUserId = localStorage.getItem('pocUserId');
@@ -40,7 +96,6 @@ const POCBulkImportStudentsPage = () => {
         throw new Error('Authentication required');
       }
 
-      // TODO: Replace with actual POC bulk import endpoint
       const response = await fetch(`http://localhost:3002/api/poc/${pocUserId}/bulk-import-students`, {
         method: 'POST',
         headers: {
@@ -51,19 +106,32 @@ const POCBulkImportStudentsPage = () => {
 
       if (response.ok) {
         const data = await response.json();
-        toast({
-          title: "Upload Successful",
-          description: `Successfully imported ${data.importedCount || 0} students`,
-        });
-        setSelectedFile(null);
+        
+        if (data.success) {
+          const results = data.results;
+          toast({
+            title: "Upload Successful",
+            description: `Successfully imported ${results.successCount} students. ${results.errorCount} errors.`,
+          });
+          
+          // Log detailed results for debugging
+          console.log('Import Results:', results);
+          
+          setSelectedFile(null);
+          setSelectedMOU('');
+          setSelectedCourse('');
+        } else {
+          throw new Error(data.error || 'Upload failed');
+        }
       } else {
-        throw new Error('Upload failed');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
       }
     } catch (error) {
       console.error('Upload error:', error);
       toast({
         title: "Upload Failed",
-        description: "Failed to upload file. Please try again.",
+        description: error.message || "Failed to upload file. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -73,9 +141,9 @@ const POCBulkImportStudentsPage = () => {
 
   const downloadTemplate = () => {
     // Create a sample CSV template
-    const csvContent = `srNo,batchNo,rank,serialNumberRRU,enrollmentNumber,fullName,gender,dateOfBirth,birthPlace,birthState,country,aadharNo,mobileNumber,alternateNumber,email,address,mou_id
-1,BATCH2024-01,1,RRU001,ENR001,John Doe,Male,1995-03-15,Mumbai,Maharashtra,India,123456789012,9876543210,9876543211,john.doe@example.com,"123 Main Street, Mumbai, Maharashtra, India",MOU001
-2,BATCH2024-01,2,RRU002,ENR002,Jane Smith,Female,1996-07-22,Delhi,Delhi,India,123456789013,9876543212,9876543213,jane.smith@example.com,"456 Park Avenue, Delhi, Delhi, India",MOU001`;
+    const csvContent = `srNo,batchNo,rank,serialNumberRRU,enrollmentNumber,fullName,gender,dateOfBirth,birthPlace,birthState,country,aadharNo,mobileNumber,alternateNumber,email,address
+1,BATCH2024-01,1,RRU001,ENR001,John Doe,Male,1995-03-15,Mumbai,Maharashtra,India,123456789012,9876543210,9876543211,john.doe@example.com,"123 Main Street, Mumbai, Maharashtra, India"
+2,BATCH2024-01,2,RRU002,ENR002,Jane Smith,Female,1996-07-22,Delhi,Delhi,India,123456789013,9876543212,9876543213,jane.smith@example.com,"456 Park Avenue, Delhi, Delhi, India"`;
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -132,22 +200,21 @@ const POCBulkImportStudentsPage = () => {
                 <li>• aadharNo (12-digit Aadhar Number)</li>
                 <li>• mobileNumber (10-digit Mobile Number)</li>
                 <li>• alternateNumber (10-digit Alternate Number)</li>
-                <li>• email (Valid Email Address)</li>
-                <li>• address (Complete Address)</li>
-                <li>• mou_id (MOU ID - must exist in your MOUs)</li>
+                                 <li>• email (Valid Email Address)</li>
+                 <li>• address (Complete Address)</li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">Important Notes:</h4>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• All fields are required</li>
-                <li>• Email addresses must be unique</li>
-                <li>• Aadhar numbers must be 12 digits</li>
-                <li>• Mobile numbers must be 10 digits</li>
-                <li>• MOU ID must exist in your POC's MOUs</li>
-                <li>• Date format: YYYY-MM-DD</li>
-                <li>• Maximum file size: 5MB</li>
-                <li>• Supported formats: CSV, Excel (.xlsx, .xls)</li>
+                                 <li>• Email addresses must be unique</li>
+                 <li>• Aadhar numbers must be 12 digits</li>
+                 <li>• Mobile numbers must be 10 digits</li>
+                 <li>• MOU will be assigned from the dropdown selection</li>
+                 <li>• Date format: YYYY-MM-DD</li>
+                 <li>• Maximum file size: 5MB</li>
+                 <li>• Supported formats: CSV, Excel (.xlsx, .xls)</li>
               </ul>
             </div>
           </div>
@@ -200,15 +267,119 @@ const POCBulkImportStudentsPage = () => {
               </div>
             )}
 
+            {/* MOU Selection Dropdown */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Select MOU for Students * {mousLoading ? '(Loading...)' : `(${mous.length} available)`}
+              </label>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <span className={selectedMOU ? 'text-gray-900' : 'text-gray-500'}>
+                    {selectedMOU 
+                      ? mous.find(mou => mou._id === selectedMOU)?.nameOfPartnerInstitution || 'Select MOU'
+                      : 'Select MOU'
+                    }
+                  </span>
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isDropdownOpen && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                    {mousLoading ? (
+                      <div className="px-3 py-2 text-sm text-gray-500">Loading MOUs...</div>
+                    ) : mousError ? (
+                      <div className="px-3 py-2 text-sm text-red-500">Error loading MOUs: {mousError}</div>
+                    ) : mous.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-gray-500">No MOUs available</div>
+                    ) : (
+                      mous.map((mou) => (
+                        <button
+                          key={mou._id}
+                          onClick={() => {
+                            setSelectedMOU(mou._id);
+                            setIsDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                        >
+                          <div className="font-medium text-gray-900">{mou.nameOfPartnerInstitution}</div>
+                          <div className="text-xs text-gray-500">ID: {mou.ID}</div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              {!selectedMOU && (
+                <p className="text-xs text-red-500">Please select an MOU for the students</p>
+              )}
+            </div>
+
+            {/* Course Selection Dropdown */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Select Course for Students * {coursesLoading ? '(Loading...)' : `(${courses.length} available)`}
+              </label>
+              <div className="relative" ref={courseDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsCourseDropdownOpen(!isCourseDropdownOpen)}
+                  className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <span className={selectedCourse ? 'text-gray-900' : 'text-gray-500'}>
+                    {selectedCourse 
+                      ? courses.find(course => course._id === selectedCourse)?.courseName || 'Select Course'
+                      : 'Select Course'
+                    }
+                  </span>
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isCourseDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isCourseDropdownOpen && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                    {coursesLoading ? (
+                      <div className="px-3 py-2 text-sm text-gray-500">Loading courses...</div>
+                    ) : coursesError ? (
+                      <div className="px-3 py-2 text-sm text-red-500">Error loading courses: {coursesError}</div>
+                    ) : courses.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-gray-500">No courses available</div>
+                    ) : (
+                      courses.map((course) => (
+                        <button
+                          key={course._id}
+                          onClick={() => {
+                            setSelectedCourse(course._id);
+                            setIsCourseDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                        >
+                          <div className="font-medium text-gray-900">{course.courseName}</div>
+                          <div className="text-xs text-gray-500">
+                            ID: {course.ID} | Duration: {course.duration} | Credits: {course.indoorCredits + course.outdoorCredits}
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              {!selectedCourse && (
+                <p className="text-xs text-red-500">Please select a course for the students</p>
+              )}
+            </div>
+
             <Button
               onClick={handleUpload}
-              disabled={!selectedFile || isUploading}
+              disabled={!selectedFile || !selectedMOU || !selectedCourse || isUploading}
               className="w-full"
             >
               {isUploading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Uploading...
+                  Processing Import...
                 </>
               ) : (
                 <>
@@ -217,6 +388,12 @@ const POCBulkImportStudentsPage = () => {
                 </>
               )}
             </Button>
+            
+            {isUploading && (
+              <div className="text-center text-sm text-gray-500 mt-2">
+                Please wait while we process your file...
+              </div>
+            )}
           </CardContent>
         </Card>
 
