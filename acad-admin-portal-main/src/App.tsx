@@ -37,8 +37,12 @@ import POCPortalPage from "./components/dashboard/POCPortalPage";
 import POCStudentsPage from "./components/dashboard/POCStudentsPage";
 import POCStudentsListPage from "./components/dashboard/POCStudentsListPage";
 import POCCoursesPage from "./components/dashboard/POCCoursesPage";
+import POCCoursesListPage from "./components/dashboard/POCCoursesListPage";
 import POCMOUsPage from "./components/dashboard/POCMOUsPage";
+import POCMOUsListPage from "./components/dashboard/POCMOUsListPage";
 import POCRequestsPage from "./components/dashboard/POCRequestsPage";
+import POCLayout from "./components/dashboard/POCLayout";
+import POCBulkImportStudentsPage from "./components/dashboard/POCBulkImportStudentsPage";
 import POCLogin from "./pages/POCLogin";
 import POCSignup from "./pages/POCSignup";
 import POCAuthGuard from "./components/auth/POCAuthGuard";
@@ -95,34 +99,17 @@ const App = () => (
           {/* POC Portal Routes (Protected with Authentication) */}
           <Route path="/poc-portal" element={
             <POCAuthGuard>
-              <POCPortalPage />
+              <POCLayout />
             </POCAuthGuard>
-          } />
-          <Route path="/poc-portal/students" element={
-            <POCAuthGuard>
-              <POCStudentsPage />
-            </POCAuthGuard>
-          } />
-          <Route path="/poc-portal/students/list" element={
-            <POCAuthGuard>
-              <POCStudentsListPage />
-            </POCAuthGuard>
-          } />
-          <Route path="/poc-portal/courses" element={
-            <POCAuthGuard>
-              <POCCoursesPage />
-            </POCAuthGuard>
-          } />
-          <Route path="/poc-portal/mous" element={
-            <POCAuthGuard>
-              <POCMOUsPage />
-            </POCAuthGuard>
-          } />
-          <Route path="/poc-portal/requests" element={
-            <POCAuthGuard>
-              <POCRequestsPage />
-            </POCAuthGuard>
-          } />
+          }>
+            <Route index element={<POCPortalPage />} />
+            <Route path="students" element={<POCStudentsPage />} />
+            <Route path="students/list" element={<POCStudentsListPage />} />
+            <Route path="bulk-import-students" element={<POCBulkImportStudentsPage />} />
+            <Route path="courses" element={<POCCoursesListPage />} />
+            <Route path="mous" element={<POCMOUsListPage />} />
+            <Route path="requests" element={<POCRequestsPage />} />
+          </Route>
           
           {/* Student Routes */}
           <Route path="/student/login" element={<StudentLogin />} />
