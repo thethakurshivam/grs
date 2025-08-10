@@ -46,6 +46,7 @@ import POCBulkImportStudentsPage from "./components/dashboard/POCBulkImportStude
 import POCLogin from "./pages/POCLogin";
 import POCSignup from "./pages/POCSignup";
 import POCAuthGuard from "./components/auth/POCAuthGuard";
+import StudentAuthGuard from "./components/auth/StudentAuthGuard";
 
 const queryClient = new QueryClient();
 
