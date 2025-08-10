@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface Course {
   _id: string;
@@ -43,20 +43,19 @@ export const useStudentDashboardData = (studentId: string): StudentDashboardData
   const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Guard against concurrent/infinite fetches
+  const isFetchingRef = useRef<boolean>(false);
 
   const fetchData = useCallback(async () => {
     if (!studentId) {
       setError('Student ID is required');
       return;
     }
-
-    if (isLoading) {
-      console.log('Already loading data, skipping request');
+    if (isFetchingRef.current) {
       return;
     }
-
-    setIsLoading(true);
+    isFetchingRef.current = true;
     setLoading(true);
     setError(null);
 
@@ -69,88 +68,53 @@ export const useStudentDashboardData = (studentId: string): StudentDashboardData
       const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-      };
+      } as const;
 
-      // Fetch all data sequentially with delays
-      console.log('Fetching student courses...');
-      const coursesResponse = await fetch(`http://localhost:3001/student/${studentId}/courses`, {
-        method: 'GET',
-        headers,
-      });
-      if (coursesResponse.ok) {
-        const coursesData = await coursesResponse.json();
-        setCourses(coursesData);
-      } else {
-        console.warn('Failed to fetch courses:', coursesResponse.status);
-      }
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      console.log('Fetching available credits...');
-      const availableCreditsResponse = await fetch(`http://localhost:3001/students/${studentId}/available-credits`, {
-        method: 'GET',
-        headers,
-      });
-      if (availableCreditsResponse.ok) {
-        const availableCreditsData = await availableCreditsResponse.json();
-        setAvailableCredits(availableCreditsData.available_credit || 0);
-      } else {
-        console.warn('Failed to fetch available credits:', availableCreditsResponse.status);
-      }
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      console.log('Fetching used credits...');
-      const usedCreditsResponse = await fetch(`http://localhost:3001/students/${studentId}/used-credits`, {
-        method: 'GET',
-        headers,
-      });
-      if (usedCreditsResponse.ok) {
-        const usedCreditsData = await usedCreditsResponse.json();
-        setUsedCredits(usedCreditsData.used_credit || 0);
-      } else {
-        console.warn('Failed to fetch used credits:', usedCreditsResponse.status);
-      }
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      console.log('Fetching completed courses...');
-      const completedCoursesResponse = await fetch(`http://localhost:3001/students/${studentId}/completed-courses`, {
-        method: 'GET',
-        headers,
-      });
-      if (completedCoursesResponse.ok) {
-        const completedCoursesData = await completedCoursesResponse.json();
-        setCompletedCourses(completedCoursesData);
-      } else {
-        console.warn('Failed to fetch completed courses:', completedCoursesResponse.status);
-      }
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      console.log('Fetching enrolled courses...');
-      const enrolledCoursesResponse = await fetch(`http://localhost:3001/students/${studentId}/enrolled-courses`, {
-        method: 'GET',
-        headers,
-      });
-      if (enrolledCoursesResponse.ok) {
-        const enrolledCoursesData = await enrolledCoursesResponse.json();
-        setEnrolledCourses(enrolledCoursesData);
-      } else {
-        console.warn('Failed to fetch enrolled courses:', enrolledCoursesResponse.status);
+      // Courses
+      const coursesRes = await fetch(`http://localhost:3001/student/${studentId}/courses`, { headers });
+      if (coursesRes.ok) {
+        const data = await coursesRes.json();
+        setCourses(Array.isArray(data) ? data : []);
       }
 
-      console.log('All data fetched successfully');
+      // Available credits
+      const availRes = await fetch(`http://localhost:3001/students/${studentId}/available-credits`, { headers });
+      if (availRes.ok) {
+        const data = await availRes.json();
+        setAvailableCredits(Number(data?.available_credit ?? 0));
+      }
+
+      // Used credits
+      const usedRes = await fetch(`http://localhost:3001/students/${studentId}/used-credits`, { headers });
+      if (usedRes.ok) {
+        const data = await usedRes.json();
+        setUsedCredits(Number(data?.used_credit ?? 0));
+      }
+
+      // Completed courses
+      const completedRes = await fetch(`http://localhost:3001/students/${studentId}/completed-courses`, { headers });
+      if (completedRes.ok) {
+        const data = await completedRes.json();
+        setCompletedCourses(Array.isArray(data) ? data : []);
+      }
+
+      // Enrolled courses
+      const enrolledRes = await fetch(`http://localhost:3001/students/${studentId}/enrolled-courses`, { headers });
+      if (enrolledRes.ok) {
+        const data = await enrolledRes.json();
+        setEnrolledCourses(Array.isArray(data) ? data : []);
+      }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch dashboard data';
-      setError(errorMessage);
-      console.error('Error fetching dashboard data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data');
     } finally {
       setLoading(false);
-      setIsLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [studentId, isLoading]);
+  }, [studentId]);
 
   useEffect(() => {
-    if (studentId) {
-      fetchData();
-    }
+    fetchData();
+    // Only re-run when studentId changes; fetchData is stable due to dependency array
   }, [studentId, fetchData]);
 
   const refreshData = useCallback(async () => {

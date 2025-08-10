@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
@@ -10,6 +10,9 @@ import {
   Activity,
   Bell
 } from 'lucide-react';
+import { usePOCCourses } from '../hooks/usePOCCourses';
+import { usePOCMOUs } from '../hooks/usePOCMOUs';
+import { usePOCStudents } from '../hooks/usePOCStudents';
 
 interface DashboardProps {
   user: any;
@@ -18,17 +21,41 @@ interface DashboardProps {
 
 const Dashboard = ({ user, onLogout }: DashboardProps) => {
   const navigate = useNavigate();
-  const [stats] = useState({
-    students: 1250,
-    courses: 45,
-    mous: 23,
+  const { count: coursesCount, courses, loading: coursesLoading, error: coursesError, fetchCourses } = usePOCCourses();
+  const { count: mousCount, mous, loading: mousLoading, error: mousError, fetchMOUs } = usePOCMOUs();
+  const { count: studentsCount, students, loading: studentsLoading, error: studentsError, fetchStudents } = usePOCStudents();
+
+  const [stats, setStats] = useState({
+    students: 0,
+    courses: 0,
+    mous: 0,
     requests: 8
   });
+
+  useEffect(() => {
+    const pocUser = JSON.parse(localStorage.getItem('pocUser') || '{}');
+    const pocId = pocUser?.id || user?.id || '1';
+    fetchCourses(String(pocId));
+    fetchMOUs(String(pocId));
+    fetchStudents(String(pocId));
+  }, [fetchCourses, fetchMOUs, fetchStudents, user]);
+
+  useEffect(() => {
+    setStats((s) => ({ ...s, courses: coursesLoading ? 0 : coursesCount }));
+  }, [coursesCount, coursesLoading]);
+
+  useEffect(() => {
+    setStats((s) => ({ ...s, mous: mousLoading ? 0 : mousCount }));
+  }, [mousCount, mousLoading]);
+
+  useEffect(() => {
+    setStats((s) => ({ ...s, students: studentsLoading ? 0 : studentsCount }));
+  }, [studentsCount, studentsLoading]);
 
   const dashboardCards = [
     {
       title: "Students",
-      value: stats.students.toLocaleString(),
+      value: studentsLoading ? 'Loading...' : studentsError ? 'Error' : stats.students,
       description: "Total registered students",
       icon: Users,
       color: "text-blue-600",
@@ -37,7 +64,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
     },
     {
       title: "Courses",
-      value: stats.courses,
+      value: coursesLoading ? 'Loading...' : coursesError ? 'Error' : stats.courses,
       description: "Active courses available",
       icon: BookOpen,
       color: "text-green-600",
@@ -46,7 +73,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
     },
     {
       title: "MOUs",
-      value: stats.mous,
+      value: mousLoading ? 'Loading...' : mousError ? 'Error' : stats.mous,
       description: "Memorandum of Understanding",
       icon: FileText,
       color: "text-purple-600",
@@ -63,6 +90,18 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
       path: "/requests"
     }
   ];
+
+  const handleCardClick = (path: string) => {
+    if (path === '/courses') {
+      navigate('/courses', { state: { coursesFromBackend: courses } });
+    } else if (path === '/mous') {
+      navigate('/mous', { state: { mousFromBackend: mous } });
+    } else if (path === '/students') {
+      navigate('/students', { state: { studentsFromBackend: students } });
+    } else {
+      navigate(path);
+    }
+  };
 
   const recentActivities = [
     { id: 1, action: "New student registration", time: "2 minutes ago", type: "student" },
@@ -124,7 +163,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
             <div
               key={index}
               className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => navigate(card.path)}
+              onClick={() => handleCardClick(card.path)}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -156,7 +195,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
                   <div className="h-2 w-2 bg-primary-600 rounded-full"></div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-900">{activity.action}</p>
-                    <p className="text-xs text-gray-500">{activity.time}</p>
+                    <p className="text-xs text gray-500">{activity.time}</p>
                   </div>
                 </div>
               ))}

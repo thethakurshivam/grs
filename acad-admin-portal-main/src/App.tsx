@@ -29,6 +29,7 @@ import StudentAvailableCourses from "./pages/StudentAvailableCourses";
 import StudentCreditBank from "./pages/StudentCreditBank";
 import StudentProfile from "./pages/StudentProfile";
 import { CompletedCoursesList } from "./pages/CompletedCoursesList";
+import EnrolledCoursesList from "./pages/EnrolledCoursesList";
 import SectorTrainingFields from "./pages/SectorTrainingFields";
 import FieldCourses from "./pages/FieldCourses";
 
@@ -119,6 +120,7 @@ const App = () => (
           <Route path="/student/profile" element={<StudentProfile />} />
           <Route path="/student/available-courses" element={<StudentAvailableCourses />} />
           <Route path="/student/completed-courses" element={<CompletedCoursesList />} />
+          <Route path="/student/:studentId/enrolled-courses" element={<EnrolledCoursesList />} />
           <Route path="/student/credit-bank" element={<StudentCreditBank />} />
           <Route path="/student/previous-courses" element={<PreviousCoursesForm />} />
           

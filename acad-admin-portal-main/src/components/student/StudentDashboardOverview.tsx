@@ -33,6 +33,23 @@ export const StudentDashboardOverview: React.FC = () => {
     refreshData
   } = useStudentDashboardData(studentId);
 
+  // Debug logging
+  console.log('Dashboard data:', {
+    courseCount,
+    completedCourseCount,
+    enrolledCourseCount,
+    loading,
+    error,
+    studentId
+  });
+
+  // Log card values for debugging
+  console.log('Card values:', {
+    availableCourses: loading ? 'Loading...' : `${courseCount} courses`,
+    completedCourses: loading ? 'Loading...' : `${completedCourseCount} courses`,
+    enrolledCourses: loading ? 'Loading...' : `${enrolledCourseCount} courses`
+  });
+
   // Get student ID from localStorage or other source
   useEffect(() => {
     const storedStudentId = localStorage.getItem('studentId');
@@ -83,7 +100,7 @@ export const StudentDashboardOverview: React.FC = () => {
     },
     {
       title: 'Basic Info & Available Courses',
-      value: loading ? '...' : courseCount.toString(),
+      value: loading ? 'Loading...' : `${courseCount} courses`,
       description: 'Available courses for enrollment',
       icon: BookOpen,
       color: 'text-blue-600',
@@ -93,7 +110,7 @@ export const StudentDashboardOverview: React.FC = () => {
     },
     {
       title: 'Enrolled Courses',
-      value: loading ? '...' : enrolledCourseCount.toString(),
+      value: loading ? 'Loading...' : `${enrolledCourseCount} courses`,
       description: 'Courses you are currently enrolled in',
       icon: BookOpen,
       color: 'text-emerald-600',
@@ -103,7 +120,7 @@ export const StudentDashboardOverview: React.FC = () => {
     },
     {
       title: 'Completed Courses',
-      value: loading ? '...' : completedCourseCount.toString(),
+      value: loading ? 'Loading...' : `${completedCourseCount} courses`,
       description: 'Successfully completed courses',
       icon: GraduationCap,
       color: 'text-green-600',

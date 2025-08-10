@@ -10,22 +10,41 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    // Simulate API call
-    setTimeout(() => {
-      const userData = {
-        id: 1,
-        name: 'Admin User',
-        email: email,
-        role: 'admin'
+    try {
+      const res = await fetch('http://localhost:3002/api/poc/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || `Login failed (status ${res.status})`);
+      }
+
+      // Persist real token and user info expected by the dashboard hooks
+      localStorage.setItem('pocToken', data.token);
+      const pocUser = {
+        id: data.data?._id || data.data?.id || data.data?.pocId || '',
+        name: data.data?.name,
+        email: data.data?.email,
+        organization: data.data?.organization,
       };
-      onLogin(userData);
+      localStorage.setItem('pocUser', JSON.stringify(pocUser));
+
+      onLogin(pocUser);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -41,6 +60,9 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
           <p className="mt-2 text-sm text-gray-600">
             Sign in to access your dashboard
           </p>
+          {error && (
+            <p className="mt-3 text-sm text-red-600">{error}</p>
+          )}
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -117,7 +139,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
 
           <div className="text-center">
             <p className="text-xs text-gray-500">
-              Demo credentials: admin@example.com / password123
+              Enter your POC credentials
             </p>
           </div>
         </form>

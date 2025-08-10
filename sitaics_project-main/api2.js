@@ -323,6 +323,8 @@ app.get('/api/poc/:pocId/courses', authenticatePOC, async (req, res) => {
       mou_id: { $in: mouIds }
     });
 
+    console.log("hihi");
+
     res.json({
       success: true,
       data: {
@@ -347,6 +349,7 @@ app.get('/api/poc/:pocId/mous', authenticatePOC, async (req, res) => {
 
     // Verify that the authenticated POC is accessing their own data
     if (req.user.pocId !== pocId) {
+      console.log("hoho");
       return res.status(403).json({
         success: false,
         error: 'Access denied. You can only access your own data.'
@@ -395,6 +398,7 @@ app.get('/api/poc/:pocId/students', authenticatePOC, async (req, res) => {
 
     // Verify that the authenticated POC is accessing their own data
     if (req.user.pocId !== pocId) {
+      console.log("hehe");
       return res.status(403).json({
         success: false,
         error: 'Access denied. You can only access your own data.'

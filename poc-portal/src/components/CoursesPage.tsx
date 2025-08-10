@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   BookOpen, 
   ArrowLeft, 
@@ -12,6 +11,7 @@ import {
   Star,
   Play
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 interface CoursesPageProps {
   user: any;
@@ -20,11 +20,12 @@ interface CoursesPageProps {
 
 const CoursesPage = ({ user, onLogout }: CoursesPageProps) => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('all');
+  const location = useLocation();
 
-  // Mock data for courses
-  const [courses] = useState([
+  const backendCourses = (location.state as any)?.coursesFromBackend as Array<any> | undefined;
+
+  // Fallback mock data
+  const [mockCourses] = useState([
     {
       id: 1,
       title: 'Introduction to Computer Science',
@@ -49,48 +50,34 @@ const CoursesPage = ({ user, onLogout }: CoursesPageProps) => {
       startDate: '2024-02-01',
       image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=200&fit=crop'
     },
-    {
-      id: 3,
-      title: 'Advanced Mathematics',
-      instructor: 'Dr. Emily Davis',
-      duration: '16 weeks',
-      students: 28,
-      rating: 4.9,
-      status: 'upcoming',
-      category: 'Mathematics',
-      startDate: '2024-03-15',
-      image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=200&fit=crop'
-    },
-    {
-      id: 4,
-      title: 'Psychology and Human Behavior',
-      instructor: 'Prof. Robert Wilson',
-      duration: '10 weeks',
-      students: 38,
-      rating: 4.7,
-      status: 'active',
-      category: 'Psychology',
-      startDate: '2024-01-20',
-      image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=200&fit=crop'
-    },
-    {
-      id: 5,
-      title: 'Engineering Design Principles',
-      instructor: 'Dr. Lisa Thompson',
-      duration: '14 weeks',
-      students: 25,
-      rating: 4.5,
-      status: 'completed',
-      category: 'Engineering',
-      startDate: '2023-09-01',
-      image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=200&fit=crop'
-    }
   ]);
 
-  const filteredCourses = courses.filter(course => {
+  // Normalize backend list into UI shape
+  const normalizedCourses = useMemo(() => {
+    if (!backendCourses || backendCourses.length === 0) return null;
+    return backendCourses.map((c, idx) => ({
+      id: c._id || idx,
+      title: c.courseName || c.title || 'Course',
+      instructor: c.organization || '—',
+      duration: c.duration || '—',
+      students: c.students || 0,
+      rating: c.rating || 0,
+      status: c.completionStatus || 'active',
+      category: c.category || '—',
+      startDate: c.startDate || new Date().toISOString(),
+      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=200&fit=crop'
+    }));
+  }, [backendCourses]);
+
+  const effectiveCourses = normalizedCourses ?? mockCourses;
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+
+  const filteredCourses = effectiveCourses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.instructor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.category.toLowerCase().includes(searchTerm.toLowerCase());
+                         (course.instructor || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (course.category || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = selectedFilter === 'all' || course.status === selectedFilter;
     return matchesSearch && matchesFilter;
   });
@@ -139,7 +126,7 @@ const CoursesPage = ({ user, onLogout }: CoursesPageProps) => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Courses</h1>
               <p className="text-gray-600 mt-2">
-                Manage and view all available courses
+                {normalizedCourses ? `${effectiveCourses.length} course(s) from backend` : 'Manage and view all available courses'}
               </p>
             </div>
             <button className="btn-primary flex items-center space-x-2">
@@ -211,14 +198,14 @@ const CoursesPage = ({ user, onLogout }: CoursesPageProps) => {
                   </div>
                   <div className="flex items-center space-x-1 text-sm text-gray-500">
                     <Users className="h-4 w-4" />
-                    <span>{course.students} students</span>
+                    <span>{course.students || 0} students</span>
                   </div>
                 </div>
                 
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-1">
                     <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <span className="text-sm font-medium text-gray-900">{course.rating}</span>
+                    <span className="text-sm font-medium text-gray-900">{course.rating || 0}</span>
                   </div>
                   <span className="text-sm text-gray-500">{course.category}</span>
                 </div>

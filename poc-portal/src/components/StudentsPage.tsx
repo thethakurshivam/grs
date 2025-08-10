@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
 import { 
   Users, 
   ArrowLeft, 
@@ -19,11 +19,11 @@ interface StudentsPageProps {
 
 const StudentsPage = ({ user, onLogout }: StudentsPageProps) => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('all');
+  const location = useLocation();
+  const backendStudents = (location.state as any)?.studentsFromBackend as Array<any> | undefined;
 
-  // Mock data for students
-  const [students] = useState([
+  // Mock data fallback
+  const [mockStudents] = useState([
     {
       id: 1,
       name: 'John Doe',
@@ -43,42 +43,31 @@ const StudentsPage = ({ user, onLogout }: StudentsPageProps) => {
       status: 'active',
       course: 'Business Administration',
       avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 3,
-      name: 'Mike Johnson',
-      email: 'mike.johnson@example.com',
-      phone: '+1 (555) 345-6789',
-      enrollmentDate: '2024-03-10',
-      status: 'inactive',
-      course: 'Engineering',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 4,
-      name: 'Sarah Wilson',
-      email: 'sarah.wilson@example.com',
-      phone: '+1 (555) 456-7890',
-      enrollmentDate: '2024-01-05',
-      status: 'active',
-      course: 'Psychology',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 5,
-      name: 'David Brown',
-      email: 'david.brown@example.com',
-      phone: '+1 (555) 567-8901',
-      enrollmentDate: '2024-02-28',
-      status: 'active',
-      course: 'Mathematics',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face'
     }
   ]);
 
-  const filteredStudents = students.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const normalizedStudents = useMemo(() => {
+    if (!backendStudents || backendStudents.length === 0) return null;
+    return backendStudents.map((s, idx) => ({
+      id: s._id || idx,
+      name: s.full_name || s.name || 'Student',
+      email: s.email || '—',
+      phone: s.mobile_no || '—',
+      enrollmentDate: s.enrollment_number ? '—' : '—',
+      status: s.status || 'active',
+      course: (s.course_id && s.course_id.length) ? `${s.course_id.length} course(s)` : '—',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+    }));
+  }, [backendStudents]);
+
+  const effectiveStudents = normalizedStudents ?? mockStudents;
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+
+  const filteredStudents = effectiveStudents.filter(student => {
+    const matchesSearch = (student.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (student.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = selectedFilter === 'all' || student.status === selectedFilter;
     return matchesSearch && matchesFilter;
   });
@@ -122,7 +111,7 @@ const StudentsPage = ({ user, onLogout }: StudentsPageProps) => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Students</h1>
               <p className="text-gray-600 mt-2">
-                Manage and view all registered students
+                {normalizedStudents ? `${effectiveStudents.length} student(s) from backend` : 'Manage and view all registered students'}
               </p>
             </div>
             <button className="btn-primary flex items-center space-x-2">

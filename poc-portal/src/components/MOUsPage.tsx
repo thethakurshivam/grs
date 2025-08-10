@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   FileText, 
   ArrowLeft, 
@@ -13,6 +12,7 @@ import {
   Clock,
   AlertCircle
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 interface MOUsPageProps {
   user: any;
@@ -21,11 +21,11 @@ interface MOUsPageProps {
 
 const MOUsPage = ({ user, onLogout }: MOUsPageProps) => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('all');
+  const location = useLocation();
+  const backendMOUs = (location.state as any)?.mousFromBackend as Array<any> | undefined;
 
-  // Mock data for MOUs
-  const [mous] = useState([
+  // Mock data fallback
+  const [mockMOUs] = useState([
     {
       id: 1,
       title: 'Partnership with Tech University',
@@ -47,46 +47,33 @@ const MOUsPage = ({ user, onLogout }: MOUsPageProps) => {
       status: 'active',
       type: 'Industry Partnership',
       description: 'Collaboration for industry training programs and internship opportunities for students.'
-    },
-    {
-      id: 3,
-      title: 'Research Agreement with Science Institute',
-      organization: 'National Science Institute',
-      strategicAreas: 'Research Projects, Publications',
-      dateOfSigning: '2024-03-10',
-      validity: '2028-03-10',
-      status: 'pending',
-      type: 'Research Partnership',
-      description: 'Joint research initiatives and collaborative publications in scientific fields.'
-    },
-    {
-      id: 4,
-      title: 'International Exchange Program',
-      organization: 'Global University Network',
-      strategicAreas: 'Student Exchange, Faculty Development',
-      dateOfSigning: '2023-11-05',
-      validity: '2025-11-05',
-      status: 'expired',
-      type: 'International Partnership',
-      description: 'International student and faculty exchange program with global universities.'
-    },
-    {
-      id: 5,
-      title: 'Community Outreach Initiative',
-      organization: 'Local Community Foundation',
-      strategicAreas: 'Community Service, Outreach Programs',
-      dateOfSigning: '2024-01-30',
-      validity: '2026-01-30',
-      status: 'active',
-      type: 'Community Partnership',
-      description: 'Community service and outreach programs for social development.'
     }
   ]);
 
-  const filteredMOUs = mous.filter(mou => {
-    const matchesSearch = mou.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         mou.organization.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         mou.strategicAreas.toLowerCase().includes(searchTerm.toLowerCase());
+  const normalizedMOUs = useMemo(() => {
+    if (!backendMOUs || backendMOUs.length === 0) return null;
+    return backendMOUs.map((m, idx) => ({
+      id: m._id || idx,
+      title: m.title || m.name || 'MOU',
+      organization: m.organization || m.partner || '—',
+      strategicAreas: m.strategicAreas || m.areas || '—',
+      dateOfSigning: m.dateOfSigning || m.signedOn || new Date().toISOString(),
+      validity: m.validity || m.validTill || new Date().toISOString(),
+      status: m.status || 'active',
+      type: m.type || '—',
+      description: m.description || '—'
+    }));
+  }, [backendMOUs]);
+
+  const effectiveMOUs = normalizedMOUs ?? mockMOUs;
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+
+  const filteredMOUs = effectiveMOUs.filter(mou => {
+    const matchesSearch = (mou.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (mou.organization || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (mou.strategicAreas || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = selectedFilter === 'all' || mou.status === selectedFilter;
     return matchesSearch && matchesFilter;
   });
@@ -109,9 +96,7 @@ const MOUsPage = ({ user, onLogout }: MOUsPageProps) => {
     }
   };
 
-  const isExpired = (validityDate: string) => {
-    return new Date(validityDate) < new Date();
-  };
+  const isExpired = (validityDate: string) => new Date(validityDate) < new Date();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -148,7 +133,7 @@ const MOUsPage = ({ user, onLogout }: MOUsPageProps) => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Memorandum of Understanding</h1>
               <p className="text-gray-600 mt-2">
-                Manage and track all partnership agreements
+                {normalizedMOUs ? `${effectiveMOUs.length} MOU(s) from backend` : 'Manage and track all partnership agreements'}
               </p>
             </div>
             <button className="btn-primary flex items-center space-x-2">
@@ -238,11 +223,6 @@ const MOUsPage = ({ user, onLogout }: MOUsPageProps) => {
                     Edit
                   </button>
                 </div>
-              </div>
-              
-              <div className="border-t border-gray-200 pt-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Strategic Areas:</h4>
-                <p className="text-sm text-gray-600">{mou.strategicAreas}</p>
               </div>
             </div>
           ))}

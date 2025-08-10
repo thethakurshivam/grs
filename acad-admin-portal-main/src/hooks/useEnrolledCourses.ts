@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 
 interface Course {
   _id: string;
@@ -30,19 +30,28 @@ export const useEnrolledCourses = (): UseEnrolledCoursesReturn => {
   const [error, setError] = useState<string | null>(null);
   const [enrolledCourseCount, setEnrolledCourseCount] = useState(0);
 
-  const fetchEnrolledCourses = async (studentId: string) => {
+  // Guards to prevent refetch loops/concurrent calls
+  const isFetchingRef = useRef<boolean>(false);
+  const lastStudentIdRef = useRef<string | null>(null);
+
+  const fetchEnrolledCourses = useCallback(async (studentId: string) => {
     if (!studentId) {
       setError('Student ID is required');
       return;
     }
 
+    // Skip if we're already fetching, or if we already fetched for this studentId
+    if (isFetchingRef.current) return;
+    if (lastStudentIdRef.current === studentId && enrolledCourses.length > 0) return;
+
+    isFetchingRef.current = true;
     setLoading(true);
     setError(null);
 
-    const maxRetries = 3;
+    const maxRetries = 2;
     let retryCount = 0;
 
-    while (retryCount < maxRetries) {
+    while (retryCount <= maxRetries) {
       try {
         const token = localStorage.getItem('studentToken');
         if (!token) {
@@ -61,26 +70,28 @@ export const useEnrolledCourses = (): UseEnrolledCoursesReturn => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
-        setEnrolledCourses(data);
-        setEnrolledCourseCount(data.length);
-        break; // Success, exit retry loop
+        const data: Course[] = await response.json();
+        setEnrolledCourses(Array.isArray(data) ? data : []);
+        setEnrolledCourseCount(Array.isArray(data) ? data.length : 0);
+        lastStudentIdRef.current = studentId;
+        break; // success
       } catch (err) {
-        retryCount++;
-        console.error(`Error fetching enrolled courses (attempt ${retryCount}):`, err);
-        
-        if (retryCount >= maxRetries) {
+        retryCount += 1;
+        if (retryCount > maxRetries) {
           const errorMessage = err instanceof Error ? err.message : 'Failed to fetch enrolled courses';
           setError(errorMessage);
         } else {
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          await new Promise((r) => setTimeout(r, 600 * retryCount));
+        }
+      } finally {
+        // Only clear fetching once we exit loop or on failure after retries
+        if (retryCount > maxRetries || lastStudentIdRef.current === studentId) {
+          isFetchingRef.current = false;
+          setLoading(false);
         }
       }
     }
-    
-    setLoading(false);
-  };
+  }, [enrolledCourses.length]);
 
   return {
     enrolledCourses,
