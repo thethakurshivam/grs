@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   FileText, 
@@ -20,7 +21,12 @@ import UpcomingCoursesCard from "./UpcomingCoursesCard";
 
 const DashboardOverview = () => {
   const navigate = useNavigate();
-  const { schools, count, loading, error } = useSchools();
+  const { schools, count, loading, error, fetchSchools } = useSchools();
+  
+  // Fetch schools on component mount
+  React.useEffect(() => {
+    fetchSchools();
+  }, [fetchSchools]);
   
   const dashboardCards = [
     {

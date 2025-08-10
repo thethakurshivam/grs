@@ -301,50 +301,33 @@ app.post('/students/:id/previous-certifications', authenticateToken, upload.sing
 });
 
 
-
-// Route to get all courses by Student ID
+//route to get all courses by student ID
 app.get('/student/:studentId/courses', authenticateToken, async (req, res) => {
   try {
     const { studentId } = req.params;
 
-    // Find the student first to get their MOU ID
     const student = await Student.findById(studentId);
     if (!student) {
       return res.status(404).json({ error: 'Student not found' });
     }
 
-    // Find all courses that match the student's MOU ID
     const courses = await Course.find({ mou_id: student.mou_id });
 
-    // Send the courses to the frontend
-    res.status(200).json(courses);
+    const filteredCourses = courses.filter(course => 
+      !student.course_id.includes(course._id.toString())
+    );
+
+    const upcomingCourses = filteredCourses.filter(course => 
+      course.completionStatus === 'upcoming'
+    );
+
+    res.status(200).json(upcomingCourses);
 
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Route to add course ID to student's course_id array
-app.put('/students/:studentId/courses/:courseId', authenticateToken, async (req, res) => {
-    try {
-      const { studentId, courseId } = req.params;
-  
-      const updatedStudent = await Student.findByIdAndUpdate(
-        studentId,
-        { $push: { course_id: courseId } },
-        { new: true }
-      );
-  
-      if (!updatedStudent) {
-        return res.status(404).json({ error: 'Student not found' });
-      }
-  
-      res.status(200).json(updatedStudent);
-  
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  });
 
 // Route to get student profile by student ID
 app.get('/students/:id', authenticateToken, async (req, res) => {
@@ -533,6 +516,54 @@ app.get('/courses/upcoming', async (req, res) => {
     });
   }
 });
+
+// Route to add course ID to student's course_id array
+app.put('/students/:studentId/courses/:courseId', authenticateToken, async (req, res) => {
+  try {
+    const { studentId, courseId } = req.params;
+
+    // Retrieve student from student ID
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Student not found' 
+      });
+    }
+
+    // Retrieve course from course ID
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Course not found' 
+      });
+    }
+
+    // Push the course_id in the course_id list in the student schema
+    const updatedStudent = await Student.findByIdAndUpdate(
+      studentId,
+      { $push: { course_id: courseId } },
+      { new: true }
+    );
+    console.log("hehe");
+
+    res.status(200).json({
+      success: true,
+      message: 'Course added to student successfully',
+      student: updatedStudent
+    });
+
+  } catch (error) {
+    console.error('Error adding course to student:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
+
 
 
 

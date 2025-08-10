@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, ArrowLeft, Building } from "lucide-react";
@@ -7,6 +8,11 @@ import { useNavigate } from "react-router-dom";
 const SchoolsListPage = () => {
   const { schools, loading, error, refetch } = useSchools();
   const navigate = useNavigate();
+
+  // Fetch schools on component mount
+  React.useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   const handleSchoolClick = (schoolName: string) => {
     navigate(`/dashboard/schools/${encodeURIComponent(schoolName)}`);

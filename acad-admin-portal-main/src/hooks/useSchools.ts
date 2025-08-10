@@ -10,7 +10,9 @@ interface UseSchoolsReturn {
   schools: School[];
   loading: boolean;
   error: string | null;
+  count: number;
   fetchSchools: () => Promise<void>;
+  refetch: () => Promise<void>;
 }
 
 export const useSchools = (): UseSchoolsReturn => {
@@ -44,8 +46,10 @@ export const useSchools = (): UseSchoolsReturn => {
       }
 
       const data = await response.json();
+      console.log('Schools data received:', data);
       
       if (data.success) {
+        console.log('Setting schools:', data.data);
         setSchools(data.data);
       } else {
         setError(data.error || 'Failed to fetch schools');
@@ -58,10 +62,14 @@ export const useSchools = (): UseSchoolsReturn => {
     }
   }, []);
 
+  const count = schools.length;
+
   return {
     schools,
     loading,
     error,
-    fetchSchools
+    count,
+    fetchSchools,
+    refetch: fetchSchools
   };
 }; 

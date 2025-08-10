@@ -12,6 +12,9 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 const CompletedCoursesListPage = () => {
+  // Add error state for component-level errors
+  const [componentError, setComponentError] = useState<string | null>(null);
+  
   const { courses, loading, error, refetch } = useCompletedCourses();
   const { fetchMOUById } = useMOU();
   const { organizations, loading: orgLoading, error: orgError } = useCourseOrganizations();
@@ -25,6 +28,19 @@ const CompletedCoursesListPage = () => {
   const [selectedOrganization, setSelectedOrganization] = useState<string>('');
   const [selectedMOU, setSelectedMOU] = useState<string>('');
   const [displayedCourses, setDisplayedCourses] = useState<any[]>([]);
+
+  // Add error boundary and debugging
+  useEffect(() => {
+    console.log('CompletedCoursesListPage: Component mounted');
+    console.log('CompletedCoursesListPage: Auth token exists:', !!localStorage.getItem('authToken'));
+  }, []);
+
+  // Add error handling for courses data
+  useEffect(() => {
+    console.log('CompletedCoursesListPage: Courses data:', courses);
+    console.log('CompletedCoursesListPage: Loading state:', loading);
+    console.log('CompletedCoursesListPage: Error state:', error);
+  }, [courses, loading, error]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -58,8 +74,10 @@ const CompletedCoursesListPage = () => {
 
   // Initialize displayed courses when courses loads
   useEffect(() => {
-    if (courses && courses.length > 0) {
+    if (courses && Array.isArray(courses) && courses.length > 0) {
       setDisplayedCourses(courses);
+    } else if (courses && Array.isArray(courses)) {
+      setDisplayedCourses([]);
     }
   }, [courses]);
 
@@ -134,7 +152,9 @@ const CompletedCoursesListPage = () => {
     );
   }
 
-  if (error) {
+  // Add error boundary for unexpected errors
+  if (error || componentError) {
+    console.error('CompletedCoursesListPage: Error occurred:', error || componentError);
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
@@ -154,18 +174,32 @@ const CompletedCoursesListPage = () => {
         
         <Card className="border-0 shadow-md">
           <CardContent className="p-6 text-center">
-            <p className="text-black mb-4">{error}</p>
-            <Button onClick={refetch}>Retry</Button>
+            <p className="text-black mb-4">
+              {(error || componentError)?.includes('authentication') || (error || componentError)?.includes('token') 
+                ? 'Please log in again to access this page.' 
+                : error || componentError}
+            </p>
+            <div className="space-y-2">
+              <Button onClick={() => {
+                setComponentError(null);
+                refetch();
+              }}>Retry</Button>
+              <Button variant="outline" onClick={() => navigate('/dashboard')}>
+                Back to Dashboard
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+  // Wrap the main render in try-catch to prevent crashes
+  try {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -327,7 +361,14 @@ const CompletedCoursesListPage = () => {
             </CardContent>
           </Card>
         ) : (
-          displayedCourses.map((course) => (
+          displayedCourses.map((course) => {
+            // Add error handling for individual course rendering
+            if (!course || !course._id) {
+              console.warn('Invalid course data:', course);
+              return null;
+            }
+            
+            return (
             <Card key={course._id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -356,7 +397,12 @@ const CompletedCoursesListPage = () => {
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-black">Field:</span>
-                    <span className="text-sm font-medium text-black">{typeof course.field === 'object' ? course.field.name : course.field}</span>
+                    <span className="text-sm font-medium text-black">
+                      {typeof course.field === 'object' && course.field 
+                        ? course.field.name || 'N/A'
+                        : course.field || 'N/A'
+                      }
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -393,7 +439,7 @@ const CompletedCoursesListPage = () => {
                     <span className="text-sm text-black">MOU School:</span>
                     <span className="text-sm font-medium text-black">
                       {mouDetails[course.mou_id]?.school?.name || 
-                       (typeof mouDetails[course.mou_id]?.school === 'string' ? mouDetails[course.mou_id]?.school : 'Loading...')}
+                       (typeof mouDetails[course.mou_id]?.school === 'string' ? mouDetails[course.mou_id]?.school : 'Loading...') || 'N/A'}
                     </span>
                   </div>
                 </div>
@@ -413,11 +459,17 @@ const CompletedCoursesListPage = () => {
                 )}
               </CardContent>
             </Card>
-          ))
+          );
+          }).filter(Boolean) // Remove null entries
         )}
       </div>
     </div>
   );
+  } catch (renderError) {
+    console.error('CompletedCoursesListPage: Render error:', renderError);
+    setComponentError(renderError instanceof Error ? renderError.message : 'An unexpected error occurred while rendering');
+    return null; // This will trigger the error boundary above
+  }
 };
 
 export default CompletedCoursesListPage; 

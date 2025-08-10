@@ -86,7 +86,7 @@ const Field = require('../models/fields');
 const Admin = require('../models/admin');
 const PendingAdmin = require('../models/pendingAdmin');
 const Candidate = require('../models/students');
-const Student = require('../models/students'); // Fixed import path
+const Student = require('../models1/student'); // Import the correct Student model
 
 // Input sanitization helper
 const sanitizeInput = (input) => {
@@ -400,10 +400,23 @@ app.post('/api/mous', authenticateToken, asyncHandler(async (req, res) => {
 
     const savedMOU = await newMOU.save();
 
+    // Increment the school's count by 1
+    const updatedSchool = await School.findByIdAndUpdate(
+      school,
+      { $inc: { count: 1 } },
+      { new: true }
+    );
+
+    console.log(`✅ MOU created and school count updated: ${updatedSchool.name} (${updatedSchool.count} MOUs)`);
+
     res.status(201).json({
       success: true,
       message: 'MOU created successfully',
-      data: savedMOU
+      data: savedMOU,
+      schoolUpdated: {
+        name: updatedSchool.name,
+        newCount: updatedSchool.count
+      }
     });
 
   } catch (error) {
@@ -762,6 +775,7 @@ app.get('/api/schools', authenticateToken, asyncHandler(async (req, res) => {
     
     // Transform schools into format with links for frontend
     const schoolsWithLinks = schools.map(school => ({
+      _id: school._id,
       id: school._id,
       name: school.name,
       count: school.count,
@@ -801,8 +815,8 @@ app.get('/api/schools/:schoolName', authenticateToken, asyncHandler(async (req, 
     });
   }
   
-  // Find all MOUs that belong to this school
-  const schoolMOUs = await MOU.find({ school: schoolName });
+  // Find all MOUs that belong to this school using the school's ObjectId
+  const schoolMOUs = await MOU.find({ school: school._id });
   
   res.json({
     success: true,
@@ -846,11 +860,35 @@ app.get('/api/mous/:mouId/courses', authenticateToken, asyncHandler(async (req, 
 
 // Route to get total number of participants trained
 app.get('/api/participants', authenticateToken, asyncHandler(async (req, res) => {
-  const participants = await Candidate.find();
+  const participants = await Student.find();
+  
+  // Transform the data to match frontend expectations
+  const transformedParticipants = participants.map(participant => ({
+    _id: participant._id,
+    srNo: participant.sr_no,
+    batchNo: participant.batch_no,
+    rank: participant.rank,
+    serialNumberRRU: participant.serial_number,
+    enrollmentNumber: participant.enrollment_number,
+    fullName: participant.full_name,
+    gender: participant.gender,
+    dateOfBirth: participant.dob,
+    birthPlace: participant.birth_place,
+    birthState: participant.birth_state,
+    country: participant.country,
+    aadharNo: participant.aadhar_no,
+    mobileNumber: participant.mobile_no,
+    alternateNumber: participant.alternate_number,
+    email: participant.email,
+    address: participant.address,
+    createdAt: participant.createdAt,
+    updatedAt: participant.updatedAt
+  }));
+
   res.json({
     success: true,
     count: participants.length,
-    data: participants
+    data: transformedParticipants
   });
 }));
 
@@ -999,26 +1037,32 @@ app.post('/api/mous/import', authenticateToken, upload.single('excelFile'), asyn
           continue;
         }
 
-        // Check if school exists, create or update
-        const trimmedSchoolName = nameOfPartnerInstitution.trim();
-        let existingSchool = await School.findOne({ name: trimmedSchoolName });
-
-        if (!existingSchool) {
-          const newSchool = new School({
-            name: trimmedSchoolName,
-            count: 1
+        // Validate school ObjectId
+        if (!mongoose.Types.ObjectId.isValid(school)) {
+          results.errors.push({
+            row: rowNumber,
+            data: row,
+            error: 'Invalid school ID format'
           });
-          await newSchool.save();
-        } else {
-          existingSchool.count += 1;
-          await existingSchool.save();
+          continue;
+        }
+
+        // Check if school exists
+        const existingSchool = await School.findById(school);
+        if (!existingSchool) {
+          results.errors.push({
+            row: rowNumber,
+            data: row,
+            error: 'School not found'
+          });
+          continue;
         }
 
         // Create new MOU
         const newMOU = new MOU({
           ID: ID.trim(),
-          school: school.trim(),
-          nameOfPartnerInstitution: trimmedSchoolName,
+          school: school,
+          nameOfPartnerInstitution: nameOfPartnerInstitution.trim(),
           strategicAreas: strategicAreas.trim(),
           dateOfSigning: signingDate,
           validity: validity.trim(),
@@ -1026,6 +1070,13 @@ app.post('/api/mous/import', authenticateToken, upload.single('excelFile'), asyn
         });
 
         const savedMOU = await newMOU.save();
+
+        // Increment the school's count by 1
+        await School.findByIdAndUpdate(
+          school,
+          { $inc: { count: 1 } }
+        );
+
         results.success.push({
           row: rowNumber,
           data: savedMOU

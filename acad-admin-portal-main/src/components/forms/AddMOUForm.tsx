@@ -7,11 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useSchools } from "@/hooks/useSchools";
+import { useStrategicAreas } from "@/hooks/useStrategicAreas";
 import { FileText, Calendar, Building } from "lucide-react";
 
 const AddMOUForm = () => {
   const { toast } = useToast();
   const { schools, loading: schoolsLoading, error: schoolsError, fetchSchools } = useSchools();
+  const { strategicAreas, loading: strategicAreasLoading, error: strategicAreasError, fetchStrategicAreas } = useStrategicAreas();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     ID: "",
@@ -23,22 +25,19 @@ const AddMOUForm = () => {
     affiliationDate: ""
   });
 
-  // Fetch schools on component mount
+  // Fetch schools and strategic areas on component mount
   useEffect(() => {
+    console.log('AddMOUForm: Fetching schools and strategic areas...');
     fetchSchools();
-  }, [fetchSchools]);
+    fetchStrategicAreas();
+  }, [fetchSchools, fetchStrategicAreas]);
 
-  // Sample fields for the dropdown
-  const sampleFields = [
-    "Computer Science",
-    "Engineering",
-    "Business Administration",
-    "Medicine",
-    "Arts and Humanities",
-    "Social Sciences",
-    "Natural Sciences",
-    "Technology"
-  ];
+  // Debug logging
+  useEffect(() => {
+    console.log('AddMOUForm: Schools data:', schools);
+    console.log('AddMOUForm: Schools loading:', schoolsLoading);
+    console.log('AddMOUForm: Schools error:', schoolsError);
+  }, [schools, schoolsLoading, schoolsError]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -183,9 +182,9 @@ const AddMOUForm = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="ID" className="text-black font-semibold">MOU ID *</Label>
+                <Label htmlFor="mou-id" className="text-black font-semibold">MOU ID *</Label>
                 <Input
-                  id="ID"
+                  id="mou-id"
                   name="ID"
                   placeholder="Enter unique MOU ID"
                   value={formData.ID}
@@ -196,13 +195,13 @@ const AddMOUForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="school" className="text-black font-semibold">School *</Label>
+                <Label htmlFor="school-select" className="text-black font-semibold">School *</Label>
                 <Select 
                   value={formData.school} 
                   onValueChange={(value) => handleSelectChange("school", value)}
                   disabled={schoolsLoading}
                 >
-                  <SelectTrigger className="w-full text-black">
+                  <SelectTrigger id="school-select" className="w-full text-black">
                     <SelectValue placeholder={schoolsLoading ? "Loading schools..." : "Select school"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -220,9 +219,9 @@ const AddMOUForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="nameOfPartnerInstitution" className="text-black font-semibold">Partner Institution Name *</Label>
+              <Label htmlFor="partner-institution" className="text-black font-semibold">Partner Institution Name *</Label>
               <Input
-                id="nameOfPartnerInstitution"
+                id="partner-institution"
                 name="nameOfPartnerInstitution"
                 placeholder="Enter partner institution name"
                 value={formData.nameOfPartnerInstitution}
@@ -233,26 +232,33 @@ const AddMOUForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="strategicAreas" className="text-black font-semibold">Strategic Areas *</Label>
-              <Select onValueChange={(value) => handleSelectChange("strategicAreas", value)} defaultValue={formData.strategicAreas}>
-                <SelectTrigger className="w-full text-black">
-                  <SelectValue placeholder="Select strategic areas" />
+              <Label htmlFor="strategic-areas-select" className="text-black font-semibold">Strategic Areas *</Label>
+              <Select 
+                value={formData.strategicAreas} 
+                onValueChange={(value) => handleSelectChange("strategicAreas", value)}
+                disabled={strategicAreasLoading}
+              >
+                <SelectTrigger id="strategic-areas-select" className="w-full text-black">
+                  <SelectValue placeholder={strategicAreasLoading ? "Loading strategic areas..." : "Select strategic areas"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {sampleFields.map((field) => (
-                    <SelectItem key={field} value={field} className="text-black">
-                      {field}
+                  {strategicAreas.map((area) => (
+                    <SelectItem key={area._id} value={area.name} className="text-black">
+                      {area.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {strategicAreasError && (
+                <p className="text-red-600 text-sm">{strategicAreasError}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="dateOfSigning" className="text-black font-semibold">Date of Signing *</Label>
+                <Label htmlFor="date-of-signing" className="text-black font-semibold">Date of Signing *</Label>
                 <Input
-                  id="dateOfSigning"
+                  id="date-of-signing"
                   name="dateOfSigning"
                   type="date"
                   value={formData.dateOfSigning}
@@ -262,9 +268,9 @@ const AddMOUForm = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="validity" className="text-black font-semibold">Validity *</Label>
+                <Label htmlFor="validity-period" className="text-black font-semibold">Validity *</Label>
                 <Input
-                  id="validity"
+                  id="validity-period"
                   name="validity"
                   placeholder="e.g., 5 years, 2025-2030"
                   value={formData.validity}
@@ -274,9 +280,9 @@ const AddMOUForm = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="affiliationDate" className="text-black font-semibold">Affiliation Date *</Label>
+                <Label htmlFor="affiliation-date" className="text-black font-semibold">Affiliation Date *</Label>
                 <Input
-                  id="affiliationDate"
+                  id="affiliation-date"
                   name="affiliationDate"
                   type="date"
                   value={formData.affiliationDate}

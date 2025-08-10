@@ -4,6 +4,8 @@ const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
+const nodemailer = require('nodemailer');
+const XLSX = require('xlsx');
 require('dotenv').config();
 
 const app = express();
@@ -436,11 +438,18 @@ app.get('/api/poc/:pocId/students', authenticatePOC, async (req, res) => {
 
 
 /// Route for bulk importing students from Excel
+// Add nodemailer import at the top of the file with other imports
+
+
+
+
+
+// Route for bulk importing students from Excel
 app.post('/api/poc/:pocId/bulk-import-students', authenticatePOC, upload.single('file'), async (req, res) => {
   try {
     const { pocId } = req.params;
-    
-    // Verify that the authenticated POC is accessing their own data
+
+    // Verify POC
     if (req.user.pocId !== pocId) {
       return res.status(403).json({
         success: false,
@@ -457,9 +466,7 @@ app.post('/api/poc/:pocId/bulk-import-students', authenticatePOC, upload.single(
 
     const { mouId, courseId } = req.body;
 
-    const XLSX = require('xlsx');
-    
-    // Parse Excel file
+    // Parse Excel
     const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
@@ -477,17 +484,36 @@ app.post('/api/poc/:pocId/bulk-import-students', authenticatePOC, upload.single(
       errors: []
     };
 
-    // Process each row
+    // Configure email transporter
+    let transporter = null;
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      try {
+        transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+          }
+        });
+
+        await transporter.verify();
+        console.log('✅ Email transporter verified');
+
+      } catch (error) {
+        console.log('❌ Email transporter configuration failed:', error.message);
+        transporter = null;
+      }
+    }
+
+    // Process students
     for (let i = 0; i < jsonData.length; i++) {
       const row = jsonData[i];
       const rowNumber = i + 2;
 
       try {
-        // Hash the default password
         const defaultPassword = 'password123';
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
-        // Extract data from Excel row (only fields that come from Excel)
         const studentData = {
           srNo: parseInt(row.srNo || '0'),
           batchNo: (row.batchNo || '').toString().trim(),
@@ -504,6 +530,7 @@ app.post('/api/poc/:pocId/bulk-import-students', authenticatePOC, upload.single(
           mobileNumber: (row.mobileNumber || '').toString().trim(),
           alternateNumber: (row.alternateNumber || '').toString().trim(),
           email: (row.email || '').toString().trim().toLowerCase(),
+          password: hashedPassword,
           address: (row.address || '').toString().trim(),
           mou_id: mouId,
           course_id: [courseId],
@@ -512,50 +539,52 @@ app.post('/api/poc/:pocId/bulk-import-students', authenticatePOC, upload.single(
           used_credit: 0
         };
 
-        // Create new student
+        if (!studentData.email || !studentData.email.includes('@')) {
+          throw new Error('Invalid email address');
+        }
+
         const newStudent = new Student(studentData);
         const savedStudent = await newStudent.save();
+        console.log(`✅ Student created: ${studentData.email}`);
 
-        // Send email with credentials (optional - won't fail import if email fails)
-        try {
-          if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            const nodemailer = require('nodemailer');
-            const transporter = nodemailer.createTransporter({
-              service: 'gmail',
-              auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-              }
-            });
-
+        if (transporter) {
+          try {
             const mailOptions = {
               from: process.env.EMAIL_USER,
               to: studentData.email,
-              subject: 'Your Account Credentials',
-              text: `Your email is your registered email and password is password123`
+              subject: 'Your Account Credentials - SITAICS Portal',
+              html: `
+                <h2>Welcome to SITAICS Portal</h2>
+                <p>Dear ${studentData.fullName},</p>
+                <p>Your account has been created successfully. Here are your login credentials:</p>
+                <ul>
+                  <li><strong>Email:</strong> ${studentData.email}</li>
+                  <li><strong>Password:</strong> ${defaultPassword}</li>
+                </ul>
+                <p>Please login and change your password immediately for security reasons.</p>
+                <p>Best regards,<br>SITAICS Team</p>
+              `
             };
 
             await transporter.sendMail(mailOptions);
-            console.log(`✅ Email sent successfully to ${studentData.email}`);
-          } else {
-            console.log(`⚠️ Email not configured - skipping email for ${studentData.email}`);
+            console.log(`📧 Email sent to ${studentData.email}`);
+          } catch (emailError) {
+            console.warn(`⚠️ Email failed for ${studentData.email}: ${emailError.message}`);
           }
-        } catch (emailError) {
-          console.log(`❌ Email sending failed for ${studentData.email}:`, emailError.message);
-          // Don't fail the import for email errors
         }
 
         results.success.push({
           row: rowNumber,
-          data: savedStudent
+          data: {
+            id: savedStudent._id,
+            email: savedStudent.email,
+            fullName: savedStudent.fullName
+          }
         });
 
       } catch (error) {
-        results.errors.push({
-          row: rowNumber,
-          data: row,
-          error: error.message
-        });
+        console.error(`❌ Error at row ${rowNumber}:`, error.message);
+        results.errors.push({ row: rowNumber, data: row, error: error.message });
       }
     }
 
@@ -571,12 +600,71 @@ app.post('/api/poc/:pocId/bulk-import-students', authenticatePOC, upload.single(
     });
 
   } catch (error) {
+    console.error('❌ Bulk import error:', error.message);
     res.status(500).json({
       success: false,
       error: 'Error processing Excel file: ' + error.message
     });
   }
 });
+
+// Test email configuration route
+app.get('/api/test-email-config', authenticatePOC, async (req, res) => {
+  try {
+    console.log('🔍 Testing Email Configuration...');
+    
+    const emailUser = process.env.EMAIL_USER;
+    const emailPass = process.env.EMAIL_PASS;
+    
+    if (!emailUser || !emailPass) {
+      return res.status(400).json({
+        success: false,
+        error: 'EMAIL_USER or EMAIL_PASS is missing',
+        debug: {
+          EMAIL_USER: !!emailUser,
+          EMAIL_PASS: !!emailPass
+        }
+      });
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: emailUser,
+        pass: emailPass
+      }
+    });
+
+    await transporter.verify();
+    
+    const testEmail = req.query.email || emailUser;
+    
+    await transporter.sendMail({
+      from: emailUser,
+      to: testEmail,
+      subject: 'SITAICS Email Configuration Test',
+      html: `
+        <h2>Email Configuration Test Successful!</h2>
+        <p>This is a test email to verify that your email configuration is working correctly.</p>
+        <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
+      `
+    });
+
+    res.json({
+      success: true,
+      message: 'Email sent successfully',
+      to: testEmail
+    });
+
+  } catch (error) {
+    console.error('❌ Email test failed:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 
 // Explicitly set port to 3002
 const PORT = 3002;
