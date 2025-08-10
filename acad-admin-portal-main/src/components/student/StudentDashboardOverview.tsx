@@ -90,6 +90,15 @@ export const StudentDashboardOverview: React.FC = () => {
       clickable: true
     },
     {
+      title: 'Enrolled Courses',
+      value: '0',
+      description: 'Courses you are currently enrolled in',
+      icon: BookOpen,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-100',
+      clickable: false
+    },
+    {
       title: 'Completed Courses',
       value: completedCoursesLoading ? '...' : completedCourseCount.toString(),
       description: 'Successfully completed courses',
