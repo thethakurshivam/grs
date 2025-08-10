@@ -43,7 +43,7 @@ process.on('SIGINT', async () => {
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080', 'http://127.0.0.1:8080'],
+  origin: process.env.FRONTEND_URL || ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080', 'http://localhost:8082', 'http://127.0.0.1:8080', 'http://127.0.0.1:8082'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
@@ -562,6 +562,26 @@ app.put('/students/:studentId/courses/:courseId', authenticateToken, async (req,
     });
   }
 });
+
+//Route to get all enrolled courses by student ID
+app.get('/students/:studentId/enrolled-courses', authenticateToken, async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    const courses = await Course.find({ _id: { $in: student.course_id } });
+
+    res.status(200).json(courses);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 
 

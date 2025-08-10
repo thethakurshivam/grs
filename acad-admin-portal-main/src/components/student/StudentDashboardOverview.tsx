@@ -9,10 +9,8 @@ import {
   Award,
   UserCircle
 } from 'lucide-react';
-import { useStudentCourses } from '../../hooks/useStudentCourses';
-import { useStudentAvailableCredits } from '../../hooks/useStudentAvailableCredits';
-import { useStudentUsedCredits } from '../../hooks/useStudentUsedCredits';
-import { useStudentCompletedCourses } from '../../hooks/useStudentCompletedCourses';
+import { useStudentDashboardData } from '../../hooks/useStudentDashboardData';
+
 
 import { useNavigate } from 'react-router-dom';
 
@@ -21,49 +19,29 @@ export const StudentDashboardOverview: React.FC = () => {
 
   const [studentId, setStudentId] = useState<string>('');
   
-  const { courses, loading: coursesLoading, error: coursesError, courseCount, fetchCourses } = useStudentCourses();
-  const { availableCredits, loading: availableCreditsLoading, error: availableCreditsError, fetchAvailableCredits } = useStudentAvailableCredits();
-  const { usedCredits, loading: usedCreditsLoading, error: usedCreditsError, fetchUsedCredits } = useStudentUsedCredits();
-  const { completedCourses, loading: completedCoursesLoading, error: completedCoursesError, completedCourseCount, fetchCompletedCourses } = useStudentCompletedCourses();
+  const {
+    courses,
+    availableCredits,
+    usedCredits,
+    completedCourses,
+    enrolledCourses,
+    loading,
+    error,
+    courseCount,
+    completedCourseCount,
+    enrolledCourseCount,
+    refreshData
+  } = useStudentDashboardData(studentId);
 
   // Get student ID from localStorage or other source
   useEffect(() => {
-    // For now, we'll use a placeholder. In a real app, you'd get this from the student's profile
     const storedStudentId = localStorage.getItem('studentId');
     if (storedStudentId) {
       setStudentId(storedStudentId);
     }
   }, []);
 
-  // Listen for enrollment changes and refresh data
-  useEffect(() => {
-    const handleEnrollmentSuccess = (event: CustomEvent) => {
-      // Refresh all dashboard data when a course is enrolled
-      if (studentId) {
-        fetchCourses(studentId);
-        fetchAvailableCredits(studentId);
-        fetchUsedCredits(studentId);
-        fetchCompletedCourses(studentId);
-      }
-    };
 
-    // Listen for custom enrollment success event
-    window.addEventListener('courseEnrollmentSuccess', handleEnrollmentSuccess as EventListener);
-    
-    return () => {
-      window.removeEventListener('courseEnrollmentSuccess', handleEnrollmentSuccess as EventListener);
-    };
-  }, [studentId, fetchCourses, fetchAvailableCredits, fetchUsedCredits, fetchCompletedCourses]);
-
-  // Fetch data when student ID is available
-  useEffect(() => {
-    if (studentId) {
-      fetchCourses(studentId);
-      fetchAvailableCredits(studentId);
-      fetchUsedCredits(studentId);
-      fetchCompletedCourses(studentId);
-    }
-  }, [studentId, fetchCourses, fetchAvailableCredits, fetchUsedCredits, fetchCompletedCourses]);
 
   const handleCoursesCardClick = () => {
     navigate('/student/available-courses');
@@ -71,6 +49,10 @@ export const StudentDashboardOverview: React.FC = () => {
 
   const handleCompletedCoursesCardClick = () => {
     navigate('/student/completed-courses');
+  };
+
+  const handleEnrolledCoursesCardClick = () => {
+    navigate(`/student/${studentId}/enrolled-courses`);
   };
 
   const handleProfileCardClick = () => {
@@ -101,7 +83,7 @@ export const StudentDashboardOverview: React.FC = () => {
     },
     {
       title: 'Basic Info & Available Courses',
-      value: coursesLoading ? '...' : courseCount.toString(),
+      value: loading ? '...' : courseCount.toString(),
       description: 'Available courses for enrollment',
       icon: BookOpen,
       color: 'text-blue-600',
@@ -111,16 +93,17 @@ export const StudentDashboardOverview: React.FC = () => {
     },
     {
       title: 'Enrolled Courses',
-      value: '0',
+      value: loading ? '...' : enrolledCourseCount.toString(),
       description: 'Courses you are currently enrolled in',
       icon: BookOpen,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-100',
-      clickable: false
+      onClick: handleEnrolledCoursesCardClick,
+      clickable: true
     },
     {
       title: 'Completed Courses',
-      value: completedCoursesLoading ? '...' : completedCourseCount.toString(),
+      value: loading ? '...' : completedCourseCount.toString(),
       description: 'Successfully completed courses',
       icon: GraduationCap,
       color: 'text-green-600',
@@ -138,7 +121,7 @@ export const StudentDashboardOverview: React.FC = () => {
     },
     {
       title: 'Available Credit',
-      value: availableCreditsLoading ? '...' : availableCredits.toString(),
+      value: loading ? '...' : availableCredits.toString(),
       description: 'Credits available for use',
       icon: Coins,
       color: 'text-orange-600',
@@ -146,7 +129,7 @@ export const StudentDashboardOverview: React.FC = () => {
     },
     {
       title: 'Used Credit',
-      value: usedCreditsLoading ? '...' : usedCredits.toString(),
+      value: loading ? '...' : usedCredits.toString(),
       description: 'Credits already utilized',
       icon: Award,
       color: 'text-red-600',
@@ -162,9 +145,6 @@ export const StudentDashboardOverview: React.FC = () => {
     }
   ];
 
-  // Show error messages if any
-  const hasErrors = coursesError || availableCreditsError || usedCreditsError || completedCoursesError;
-
   return (
     <div className="space-y-6">
       <div>
@@ -173,13 +153,16 @@ export const StudentDashboardOverview: React.FC = () => {
       </div>
 
       {/* Error Display */}
-      {hasErrors && (
+      {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h3 className="text-red-900 font-semibold mb-2">Errors occurred while loading data:</h3>
-          {coursesError && <p className="text-red-700 text-sm">Courses: {coursesError}</p>}
-          {availableCreditsError && <p className="text-red-700 text-sm">Available Credits: {availableCreditsError}</p>}
-          {usedCreditsError && <p className="text-red-700 text-sm">Used Credits: {usedCreditsError}</p>}
-          {completedCoursesError && <p className="text-red-700 text-sm">Completed Courses: {completedCoursesError}</p>}
+          <h3 className="text-red-900 font-semibold mb-2">Error occurred while loading data:</h3>
+          <p className="text-red-700 text-sm">{error}</p>
+          <button 
+            onClick={refreshData}
+            className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm"
+          >
+            Retry
+          </button>
         </div>
       )}
 
@@ -210,6 +193,8 @@ export const StudentDashboardOverview: React.FC = () => {
           );
         })}
       </div>
+
+
 
     </div>
   );
