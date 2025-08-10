@@ -5,20 +5,21 @@ import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
 import { BookOpen, Clock, Award, Building, Calendar, UserPlus, CheckCircle, XCircle, CreditCard } from 'lucide-react';
 import { useStudentCourses } from '../../hooks/useStudentCourses';
+import { useStudentEnrollment } from '../../hooks/useStudentEnrollment';
 import { useToast } from '../../hooks/use-toast';
 
 export const AvailableCoursesPage: React.FC = () => {
   const [studentId, setStudentId] = useState<string>('');
-  const { courses, loading, error, fetchCourses } = useStudentCourses();
-  const { toast } = useToast();
-  
-  // Payment flow state
+  const [enrolledCourses, setEnrolledCourses] = useState<Set<string>>(new Set());
+  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
-  const [enrolledCourses, setEnrolledCourses] = useState<Set<string>>(new Set());
 
+  const { courses, loading, error, fetchCourses } = useStudentCourses();
+  const { enrollInCourse, loading: enrollmentLoading, error: enrollmentError, success: enrollmentSuccess } = useStudentEnrollment();
+  const { toast } = useToast();
+  
   useEffect(() => {
     const storedStudentId = localStorage.getItem('studentId');
     if (storedStudentId) {
@@ -33,18 +34,46 @@ export const AvailableCoursesPage: React.FC = () => {
   }, [studentId, fetchCourses]);
 
   const handleEnroll = (courseId: string) => {
-    // Dummy enrollment - just show a message
-    alert(`You clicked to enroll in course: ${courseId}\n\nThis is a dummy enrollment button for demonstration purposes.`);
-    
-    // Comment out the original payment dialog logic
-    // setSelectedCourseId(courseId);
-    // setPaymentDialogOpen(true);
+    setSelectedCourseId(courseId);
+    setPaymentDialogOpen(true);
   };
 
-  const handlePaymentAccept = () => {
+  const handlePaymentAccept = async () => {
     setPaymentDialogOpen(false);
-    setSuccessDialogOpen(true);
-    setEnrolledCourses(prev => new Set([...prev, selectedCourseId]));
+    
+    if (!studentId || !selectedCourseId) {
+      toast({
+        title: "Error",
+        description: "Student ID or Course ID not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const result = await enrollInCourse(studentId, selectedCourseId);
+      
+      if (result.success) {
+        setSuccessDialogOpen(true);
+        setEnrolledCourses(prev => new Set([...prev, selectedCourseId]));
+        toast({
+          title: "Success",
+          description: "Successfully enrolled in the course!",
+        });
+      } else {
+        toast({
+          title: "Enrollment Failed",
+          description: result.error || "Failed to enroll in the course",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred during enrollment",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePaymentDecline = () => {
@@ -101,6 +130,14 @@ export const AvailableCoursesPage: React.FC = () => {
         <h1 className="text-3xl font-bold text-gray-900">Available Courses</h1>
         <p className="text-gray-700 mt-2">Browse and enroll in available courses.</p>
       </div>
+
+      {/* Enrollment Error Display */}
+      {enrollmentError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h3 className="text-red-900 font-semibold mb-2">Enrollment Error:</h3>
+          <p className="text-red-700 text-sm">{enrollmentError}</p>
+        </div>
+      )}
 
       {courses.length === 0 ? (
         <Card>
@@ -181,10 +218,12 @@ export const AvailableCoursesPage: React.FC = () => {
                 <div className="flex justify-end pt-4 border-t border-gray-200">
                   <Button
                     onClick={() => handleEnroll(course._id)}
-                    disabled={isEnrolled(course._id)}
+                    disabled={isEnrolled(course._id) || enrollmentLoading}
                     className={`font-semibold px-6 py-2 rounded-lg flex items-center gap-2 transition-colors ${
                       isEnrolled(course._id)
                         ? 'bg-green-600 text-white cursor-not-allowed'
+                        : enrollmentLoading
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
                         : 'bg-green-600 hover:bg-green-700 text-white'
                     }`}
                   >
@@ -192,6 +231,11 @@ export const AvailableCoursesPage: React.FC = () => {
                       <>
                         <CheckCircle className="h-4 w-4" />
                         Enrolled
+                      </>
+                    ) : enrollmentLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Enrolling...
                       </>
                     ) : (
                       <>
