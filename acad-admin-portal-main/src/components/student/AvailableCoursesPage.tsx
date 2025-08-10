@@ -51,7 +51,19 @@ export const AvailableCoursesPage: React.FC = () => {
     }
 
     try {
-      const result = await enrollInCourse(studentId, selectedCourseId);
+      // Pass a callback function to refetch courses after successful enrollment
+      const result = await enrollInCourse(studentId, selectedCourseId, () => {
+        // Refetch the courses to update the available courses list
+        fetchCourses(studentId);
+        
+        // Set a timestamp in localStorage to trigger dashboard refresh
+        localStorage.setItem('lastEnrollment', Date.now().toString());
+        
+        // Dispatch a custom event to notify other components
+        window.dispatchEvent(new CustomEvent('courseEnrollmentSuccess', {
+          detail: { studentId, courseId: selectedCourseId }
+        }));
+      });
       
       if (result.success) {
         setSuccessDialogOpen(true);

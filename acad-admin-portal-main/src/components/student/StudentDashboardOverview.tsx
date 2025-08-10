@@ -35,6 +35,26 @@ export const StudentDashboardOverview: React.FC = () => {
     }
   }, []);
 
+  // Listen for enrollment changes and refresh data
+  useEffect(() => {
+    const handleEnrollmentSuccess = (event: CustomEvent) => {
+      // Refresh all dashboard data when a course is enrolled
+      if (studentId) {
+        fetchCourses(studentId);
+        fetchAvailableCredits(studentId);
+        fetchUsedCredits(studentId);
+        fetchCompletedCourses(studentId);
+      }
+    };
+
+    // Listen for custom enrollment success event
+    window.addEventListener('courseEnrollmentSuccess', handleEnrollmentSuccess as EventListener);
+    
+    return () => {
+      window.removeEventListener('courseEnrollmentSuccess', handleEnrollmentSuccess as EventListener);
+    };
+  }, [studentId, fetchCourses, fetchAvailableCredits, fetchUsedCredits, fetchCompletedCourses]);
+
   // Fetch data when student ID is available
   useEffect(() => {
     if (studentId) {

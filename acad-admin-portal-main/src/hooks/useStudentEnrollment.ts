@@ -8,7 +8,7 @@ interface EnrollmentResponse {
 }
 
 interface UseStudentEnrollmentReturn {
-  enrollInCourse: (studentId: string, courseId: string) => Promise<EnrollmentResponse>;
+  enrollInCourse: (studentId: string, courseId: string, onSuccess?: () => void) => Promise<EnrollmentResponse>;
   loading: boolean;
   error: string | null;
   success: boolean;
@@ -19,7 +19,7 @@ export const useStudentEnrollment = (): UseStudentEnrollmentReturn => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
 
-  const enrollInCourse = useCallback(async (studentId: string, courseId: string): Promise<EnrollmentResponse> => {
+  const enrollInCourse = useCallback(async (studentId: string, courseId: string, onSuccess?: () => void): Promise<EnrollmentResponse> => {
     if (!studentId || !courseId) {
       const errorMsg = 'Student ID and Course ID are required';
       setError(errorMsg);
@@ -57,6 +57,11 @@ export const useStudentEnrollment = (): UseStudentEnrollmentReturn => {
       if (data.success) {
         setSuccess(true);
         setError(null);
+        
+        // Call the onSuccess callback if provided (for refetching data)
+        if (onSuccess && typeof onSuccess === 'function') {
+          onSuccess();
+        }
       } else {
         setError(data.error || 'Enrollment failed');
         setSuccess(false);
