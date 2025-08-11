@@ -1,0 +1,187 @@
+import React from 'react';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import {
+  Users,
+  BookOpen,
+  FileText,
+  MessageSquare,
+  ArrowLeft,
+  LogOut,
+  Upload,
+  Home,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+  ArrowLeft,
+  LogOut,
+  Upload,
+  Home,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+interface POCLayoutProps {
+  type?: 'standard' | 'bprnd';
+}
+
+const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const basePath = type === 'bprnd' ? '/poc-portal/bprnd' : '/poc-portal';
+
+  const sidebarItems = [
+    {
+      title: 'Dashboard',
+      icon: Home,
+      path: basePath,
+      color: 'text-gray-600',
+    },
+    {
+      title: 'Students',
+      icon: Users,
+      path: `${basePath}/students`,
+      color: 'text-blue-600',
+    },
+    {
+      title: 'Bulk Import Students',
+      icon: Upload,
+      path: `${basePath}/bulk-import-students`,
+      color: 'text-indigo-600',
+    },
+    {
+      title: 'Courses',
+      icon: BookOpen,
+      path: `${basePath}/courses`,
+      color: 'text-green-600',
+    },
+    {
+      title: 'MOUs',
+      icon: FileText,
+      path: `${basePath}/mous`,
+      color: 'text-purple-600',
+    },
+    {
+      title: 'Requests',
+      icon: MessageSquare,
+      path: `${basePath}/requests`,
+      color: 'text-orange-600',
+    },
+  ];
+
+  const isActive = (path: string) => {
+    if (path === basePath) {
+      return location.pathname === basePath;
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  return (
+    <div className="min-h-screen flex w-full bg-background">
+      {/* Sidebar */}
+      <div className="w-64 bg-card shadow-lg border-r">
+        {/* Sidebar Header */}
+        <div className="p-6 border-b">
+          <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                {type === 'bprnd' ? 'BPRND POC Portal' : 'POC Portal'}
+              </h2>
+              <p className="text-sm text-muted-foreground">Management Dashboard</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar Navigation */}
+        <nav className="p-4 space-y-2">
+          {sidebarItems.map((item, index) => (
+            <button
+              key={index}
+              onClick={() => navigate(item.path)}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                isActive(item.path)
+                  ? 'bg-primary/10 text-primary border border-primary/20'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              }`}
+            >
+              <item.icon
+                className={`h-5 w-5 ${
+                  isActive(item.path) ? 'text-primary' : item.color
+                }`}
+              />
+              <span className="font-medium">{item.title}</span>
+            </button>
+          ))}
+        </nav>
+
+        {/* Sidebar Footer */}
+        <div className="absolute bottom-0 w-64 p-4 border-t">
+          <div className="space-y-2">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/')}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span className="font-medium">Back to Portal Selection</span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                // Clear POC authentication data
+                localStorage.removeItem('pocToken');
+                localStorage.removeItem('pocUser');
+                localStorage.removeItem('pocUserId');
+                localStorage.removeItem('isPOCAuthenticated');
+                navigate('/');
+              }}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-destructive hover:text-destructive"
+            >
+              <LogOut className="h-5 w-5" />
+              <span className="font-medium">Logout</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Header */}
+        <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {sidebarItems.find((item) => isActive(item.path))?.title ||
+                  'POC Portal'}
+              </h1>
+              <p className="text-gray-600">
+                {isActive(basePath) &&
+                  `Welcome to the ${
+                    type === 'bprnd' ? 'BPRND POC' : 'POC'
+                  } portal. Manage and monitor all activities from here.`}
+                {isActive('/poc-portal/students') &&
+                  'Manage and view all students associated with your POC account.'}
+                {isActive('/poc-portal/bulk-import-students') &&
+                  'Import multiple students from CSV or Excel files.'}
+                {isActive('/poc-portal/courses') &&
+                  'View and manage all courses associated with your POC account.'}
+                {isActive('/poc-portal/mous') &&
+                  'View and manage all Memorandum of Understanding agreements.'}
+                {isActive('/poc-portal/requests') &&
+                  'Manage pending approval requests.'}
+              </p>
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="flex-1 p-6 overflow-auto">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default POCLayout;
