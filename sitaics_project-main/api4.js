@@ -8,6 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const CreditCalculation = require('./model3/bprndstudents');
 const umbrella = require('./model3/umbrella');
+const Credit = require('./model3/credit');
 
 // Load environment variables from .env.api4 file
 require('dotenv').config({ path: '.env.api4' });
@@ -60,32 +61,10 @@ process.on('SIGINT', async () => {
   }
 });
 
-// CORS Configuration
+// CORS Configuration - Permissive for development
 app.use(
   cors({
-    origin: function (origin, callback) {
-      const allowedOrigins = [
-        'http://localhost:5173',
-        'http://localhost:3000',
-        'http://localhost:8080',
-        'http://localhost:8081',
-        'http://127.0.0.1:5173',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:8080',
-        'http://127.0.0.1:8081',
-      ];
-
-      if (!origin) return callback(null, true);
-
-      if (
-        allowedOrigins.indexOf(origin) !== -1 ||
-        process.env.NODE_ENV === 'development'
-      ) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: true, // Allow all origins for development
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -99,6 +78,15 @@ app.use(express.urlencoded({ extended: true }));
 // Login route for BPRND students
 router.post('/login', async (req, res) => {
   try {
+    console.log('🔐 BPRND Login attempt:', {
+      origin: req.get('Origin'),
+      userAgent: req.get('User-Agent'),
+      body: {
+        email: req.body?.email,
+        password: req.body?.password ? '[HIDDEN]' : 'undefined',
+      },
+    });
+
     const { email, password } = req.body;
 
     // Validate input
@@ -244,9 +232,10 @@ app.get('/health', (req, res) => {
 // Database test endpoint
 app.get('/test-db', async (req, res) => {
   try {
-    // Test database connection by counting students
+    // Test database connection by counting documents
     const studentCount = await CreditCalculation.countDocuments();
     const umbrellaCount = await umbrella.countDocuments();
+    const creditCount = await Credit.countDocuments();
 
     res.json({
       status: 'OK',
@@ -254,6 +243,7 @@ app.get('/test-db', async (req, res) => {
       data: {
         totalStudents: studentCount,
         totalUmbrellas: umbrellaCount,
+        totalCredits: creditCount,
         database: MONGODB_URI.split('/').pop(),
       },
     });

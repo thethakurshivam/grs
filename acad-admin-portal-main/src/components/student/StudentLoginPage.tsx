@@ -36,72 +36,33 @@ const StudentLoginPage: React.FC<StudentLoginPageProps> = ({
     }
 
     try {
-      // API call to backend login endpoint (student routes in api1.js)
-      const response = await fetch(
-        `http://localhost:3001/${isBPRND ? 'bprnd' : 'students'}/login`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: email,
-            password: password,
-          }),
-        }
-      );
+      // API call to backend login endpoint
+      const apiUrl = isBPRND
+        ? 'http://localhost:3004/login' // BPRND API (api4.js)
+        : 'http://localhost:3001/students/login'; // Regular student API (api1.js)
+
+      console.log('🔗 Login API URL:', apiUrl, 'isBPRND:', isBPRND);
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
 
       const data = await response.json();
 
       if (response.ok) {
         // Store authentication data
         localStorage.setItem('isStudentAuthenticated', 'true');
+        localStorage.setItem('studentEmail', data.student.email);
+        localStorage.setItem('studentName', data.student.full_name);
         localStorage.setItem('studentToken', data.token);
-
-        if (isBPRND) {
-          // BPRND student data structure from api4.js
-          localStorage.setItem('studentEmail', data.student.email);
-          localStorage.setItem('studentName', data.student.Name);
-          localStorage.setItem('studentId', data.student._id);
-          localStorage.setItem(
-            'studentDesignation',
-            data.student.Designation || ''
-          );
-          localStorage.setItem('studentState', data.student.State || '');
-          localStorage.setItem('studentUmbrella', data.student.Umbrella || '');
-          localStorage.setItem(
-            'studentDepartment',
-            data.student.Department || ''
-          );
-          localStorage.setItem(
-            'studentEmployeeId',
-            data.student.EmployeeId || ''
-          );
-          localStorage.setItem('studentPhone', data.student.Phone || '');
-          localStorage.setItem(
-            'studentJoiningDate',
-            data.student.JoiningDate || ''
-          );
-
-          // Store complete BPRND student data as JSON for easy access
-          localStorage.setItem(
-            'bprndStudentData',
-            JSON.stringify(data.student)
-          );
-
-          console.log('BPRND student data stored:', {
-            name: data.student.Name,
-            email: data.student.email,
-            designation: data.student.Designation,
-            state: data.student.State,
-            umbrella: data.student.Umbrella,
-          });
-        } else {
-          // Regular student data structure from api1.js
-          localStorage.setItem('studentEmail', data.student.email);
-          localStorage.setItem('studentName', data.student.full_name);
-          localStorage.setItem('studentId', data.student.id);
-        }
+        localStorage.setItem('studentId', data.student.id);
 
         toast({
           title: 'Success',
