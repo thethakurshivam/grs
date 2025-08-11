@@ -38,5 +38,6 @@ async function testLogin() {
     console.error('Error:', error);
   }
 }
+console.log('Running testLogin.js');
 
 testLogin();
