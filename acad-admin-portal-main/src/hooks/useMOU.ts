@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react';
 interface MOU {
   _id: string;
   ID: string;
-  school: {
-    _id: string;
-    name: string;
-  } | string;
+  school:
+    | {
+        _id: string;
+        name: string;
+      }
+    | string;
   nameOfPartnerInstitution: string;
   strategicAreas: string;
   dateOfSigning: string;
@@ -39,26 +41,34 @@ export const useMOU = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const token = localStorage.getItem('authToken');
+
+      const token = localStorage.getItem('pocToken');
+      const pocId = localStorage.getItem('pocUserId');
       console.log('Token found:', !!token);
-      
-      if (!token) {
-        throw new Error('No authentication token found. Please log in again.');
+      console.log('POC ID found:', !!pocId);
+
+      if (!token || !pocId) {
+        throw new Error('Authentication required. Please log in again.');
       }
 
-      console.log('Making API request to:', 'http://localhost:3000/api/mous');
-      
-      const response = await fetch('http://localhost:3000/api/mous', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        credentials: 'include',
-        mode: 'cors'
-      });
+      console.log(
+        'Making API request to:',
+        `http://localhost:3002/api/poc/${pocId}/mous`
+      );
+
+      const response = await fetch(
+        `http://localhost:3002/api/poc/${pocId}/mous`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          credentials: 'include',
+          mode: 'cors',
+        }
+      );
 
       console.log('Response status:', response.status);
       console.log('Response ok:', response.ok);
@@ -66,12 +76,14 @@ export const useMOU = () => {
       if (!response.ok) {
         const errorText = await response.text();
         console.log('Error response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`
+        );
       }
 
       const data: MOUResponse = await response.json();
       console.log('API response:', data);
-      
+
       if (data.success) {
         setMous(data.data);
         setCount(data.count);
@@ -91,29 +103,33 @@ export const useMOU = () => {
 
   const fetchMOUById = async (mouId: string): Promise<MOU | null> => {
     try {
-      const token = localStorage.getItem('authToken');
-      
-      if (!token) {
-        throw new Error('No authentication token found. Please log in again.');
+      const token = localStorage.getItem('pocToken');
+      const pocId = localStorage.getItem('pocUserId');
+
+      if (!token || !pocId) {
+        throw new Error('Authentication required. Please log in again.');
       }
 
-      const response = await fetch(`http://localhost:3000/api/mous/${mouId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        credentials: 'include',
-        mode: 'cors'
-      });
+      const response = await fetch(
+        `http://localhost:3002/api/poc/${pocId}/mous/${mouId}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          credentials: 'include',
+          mode: 'cors',
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data: SingleMOUResponse = await response.json();
-      
+
       if (data.success) {
         return data.data;
       } else {
@@ -135,6 +151,6 @@ export const useMOU = () => {
     loading,
     error,
     refetch: fetchMOU,
-    fetchMOUById
+    fetchMOUById,
   };
 };

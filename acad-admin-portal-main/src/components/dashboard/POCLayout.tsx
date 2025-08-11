@@ -8,56 +8,62 @@ import {
   ArrowLeft,
   LogOut,
   Upload,
-  Home
+  Home,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const POCLayout = () => {
+interface POCLayoutProps {
+  type?: 'standard' | 'bprnd';
+}
+
+const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const basePath = type === 'bprnd' ? '/poc-portal/bprnd' : '/poc-portal';
+
   const sidebarItems = [
     {
-      title: "Dashboard",
+      title: 'Dashboard',
       icon: Home,
-      path: "/poc-portal",
-      color: "text-gray-600"
+      path: basePath,
+      color: 'text-gray-600',
     },
     {
-      title: "Students",
+      title: 'Students',
       icon: Users,
-      path: "/poc-portal/students",
-      color: "text-blue-600"
+      path: `${basePath}/students`,
+      color: 'text-blue-600',
     },
     {
-      title: "Bulk Import Students",
+      title: 'Bulk Import Students',
       icon: Upload,
-      path: "/poc-portal/bulk-import-students",
-      color: "text-indigo-600"
+      path: `${basePath}/bulk-import-students`,
+      color: 'text-indigo-600',
     },
     {
-      title: "Courses",
+      title: 'Courses',
       icon: BookOpen,
-      path: "/poc-portal/courses",
-      color: "text-green-600"
+      path: `${basePath}/courses`,
+      color: 'text-green-600',
     },
     {
-      title: "MOUs",
+      title: 'MOUs',
       icon: FileText,
-      path: "/poc-portal/mous",
-      color: "text-purple-600"
+      path: `${basePath}/mous`,
+      color: 'text-purple-600',
     },
     {
-      title: "Requests",
+      title: 'Requests',
       icon: MessageSquare,
-      path: "/poc-portal/requests",
-      color: "text-orange-600"
-    }
+      path: `${basePath}/requests`,
+      color: 'text-orange-600',
+    },
   ];
 
   const isActive = (path: string) => {
-    if (path === "/poc-portal") {
-      return location.pathname === "/poc-portal";
+    if (path === basePath) {
+      return location.pathname === basePath;
     }
     return location.pathname.startsWith(path);
   };
@@ -73,7 +79,9 @@ const POCLayout = () => {
               <Users className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">POC Portal</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                {type === 'bprnd' ? 'BPRND POC Portal' : 'POC Portal'}
+              </h2>
               <p className="text-sm text-gray-500">Management Dashboard</p>
             </div>
           </div>
@@ -91,7 +99,11 @@ const POCLayout = () => {
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
-              <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-blue-600' : item.color}`} />
+              <item.icon
+                className={`h-5 w-5 ${
+                  isActive(item.path) ? 'text-blue-600' : item.color
+                }`}
+              />
               <span className="font-medium">{item.title}</span>
             </button>
           ))}
@@ -132,15 +144,24 @@ const POCLayout = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {sidebarItems.find(item => isActive(item.path))?.title || 'POC Portal'}
+                {sidebarItems.find((item) => isActive(item.path))?.title ||
+                  'POC Portal'}
               </h1>
               <p className="text-gray-600">
-                {isActive('/poc-portal') && 'Welcome to the POC (Proof of Concept) portal. Manage and monitor all POC activities from here.'}
-                {isActive('/poc-portal/students') && 'Manage and view all students associated with your POC account.'}
-                {isActive('/poc-portal/bulk-import-students') && 'Import multiple students from CSV or Excel files.'}
-                {isActive('/poc-portal/courses') && 'View and manage all courses associated with your POC account.'}
-                {isActive('/poc-portal/mous') && 'View and manage all Memorandum of Understanding agreements.'}
-                {isActive('/poc-portal/requests') && 'Manage pending approval requests.'}
+                {isActive(basePath) &&
+                  `Welcome to the ${
+                    type === 'bprnd' ? 'BPRND POC' : 'POC'
+                  } portal. Manage and monitor all activities from here.`}
+                {isActive('/poc-portal/students') &&
+                  'Manage and view all students associated with your POC account.'}
+                {isActive('/poc-portal/bulk-import-students') &&
+                  'Import multiple students from CSV or Excel files.'}
+                {isActive('/poc-portal/courses') &&
+                  'View and manage all courses associated with your POC account.'}
+                {isActive('/poc-portal/mous') &&
+                  'View and manage all Memorandum of Understanding agreements.'}
+                {isActive('/poc-portal/requests') &&
+                  'Manage pending approval requests.'}
               </p>
             </div>
           </div>
@@ -155,4 +176,4 @@ const POCLayout = () => {
   );
 };
 
-export default POCLayout; 
+export default POCLayout;

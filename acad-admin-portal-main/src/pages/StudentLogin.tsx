@@ -1,8 +1,12 @@
 import React from 'react';
 import StudentLoginPage from '../components/student/StudentLoginPage';
 
-const StudentLogin: React.FC = () => {
-  return <StudentLoginPage />;
+interface StudentLoginProps {
+  isBPRND?: boolean;
+}
+
+const StudentLogin: React.FC<StudentLoginProps> = ({ isBPRND = false }) => {
+  return <StudentLoginPage isBPRND={isBPRND} />;
 };
 
-export default StudentLogin; 
+export default StudentLogin;

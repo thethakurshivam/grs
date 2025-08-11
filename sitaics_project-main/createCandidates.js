@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
-const Candidate = require('./models/students');
+const Student = require('./models1/student');
 
 // MongoDB connection
-mongoose.connect('mongodb://localhost:27017/university_db')
+mongoose
+  .connect('mongodb://localhost:27017/university_db')
   .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .catch((err) => console.error('MongoDB connection error:', err));
 
 const createCandidates = async () => {
   try {
@@ -27,7 +28,7 @@ const createCandidates = async () => {
         mobileNumber: '9876543210',
         alternateNumber: '9876543211',
         email: 'john.doe@example.com',
-        address: '123 Main Street, Mumbai, Maharashtra, India'
+        address: '123 Main Street, Mumbai, Maharashtra, India',
       },
       {
         srNo: 2,
@@ -45,7 +46,7 @@ const createCandidates = async () => {
         mobileNumber: '9876543212',
         alternateNumber: '9876543213',
         email: 'jane.smith@example.com',
-        address: '456 Park Avenue, Delhi, Delhi, India'
+        address: '456 Park Avenue, Delhi, Delhi, India',
       },
       {
         srNo: 3,
@@ -63,7 +64,7 @@ const createCandidates = async () => {
         mobileNumber: '9876543214',
         alternateNumber: '9876543215',
         email: 'mike.johnson@example.com',
-        address: '789 Tech Street, Bangalore, Karnataka, India'
+        address: '789 Tech Street, Bangalore, Karnataka, India',
       },
       {
         srNo: 4,
@@ -81,7 +82,7 @@ const createCandidates = async () => {
         mobileNumber: '9876543216',
         alternateNumber: '9876543217',
         email: 'sarah.wilson@example.com',
-        address: '321 Marina Road, Chennai, Tamil Nadu, India'
+        address: '321 Marina Road, Chennai, Tamil Nadu, India',
       },
       {
         srNo: 5,
@@ -99,7 +100,7 @@ const createCandidates = async () => {
         mobileNumber: '9876543218',
         alternateNumber: '9876543219',
         email: 'david.brown@example.com',
-        address: '654 Charminar Road, Hyderabad, Telangana, India'
+        address: '654 Charminar Road, Hyderabad, Telangana, India',
       },
       {
         srNo: 6,
@@ -117,14 +118,39 @@ const createCandidates = async () => {
         mobileNumber: '9876543220',
         alternateNumber: '9876543221',
         email: 'emily.davis@example.com',
-        address: '987 Hinjewadi Road, Pune, Maharashtra, India'
-      }
+        address: '987 Hinjewadi Road, Pune, Maharashtra, India',
+      },
     ];
 
     for (const candidateData of dummyCandidates) {
-      const candidate = new Candidate(candidateData);
-      await candidate.save();
-      console.log(`Created Candidate: ${candidate.fullName} (Enrollment: ${candidate.enrollmentNumber})`);
+      const studentData = {
+        sr_no: candidateData.srNo,
+        batch_no: candidateData.batchNo,
+        rank: candidateData.rank,
+        serial_number: candidateData.serialNumberRRU,
+        enrollment_number: candidateData.enrollmentNumber,
+        full_name: candidateData.fullName,
+        gender: candidateData.gender.toLowerCase().charAt(0),
+        dob: candidateData.dateOfBirth,
+        birth_place: candidateData.birthPlace,
+        birth_state: candidateData.birthState,
+        country: candidateData.country.toLowerCase(),
+        aadhar_no: candidateData.aadharNo,
+        mobile_no: candidateData.mobileNumber,
+        alternate_number: candidateData.alternateNumber,
+        email: candidateData.email,
+        password: 'student123', // You should hash this in production
+        address: candidateData.address,
+        mou_id: '6892b987b5d0206c73fa3893', // You'll need to update this with a valid MOU ID
+        credits: 0,
+        available_credit: 0,
+        used_credit: 0,
+      };
+      const student = new Student(studentData);
+      await student.save();
+      console.log(
+        `Created Student: ${student.full_name} (Email: ${student.email})`
+      );
     }
 
     console.log('\n✅ Candidates created successfully!');
@@ -137,4 +163,4 @@ const createCandidates = async () => {
   }
 };
 
-createCandidates(); 
+createCandidates();

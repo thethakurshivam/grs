@@ -1,13 +1,14 @@
 const mongoose = require('mongoose');
 const poc = require('./models2/poc');
 const MOU = require('./models/MOU');
-const Candidate = require('./models/students');
+const Student = require('./models1/student');
 const School = require('./models/school');
 
 // MongoDB connection to sitaics database
-mongoose.connect('mongodb://localhost:27017/sitaics')
+mongoose
+  .connect('mongodb://localhost:27017/sitaics')
   .then(() => console.log('Connected to sitaics MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .catch((err) => console.error('MongoDB connection error:', err));
 
 const createPOCDummyData = async () => {
   try {
@@ -17,16 +18,16 @@ const createPOCDummyData = async () => {
     const dummySchools = [
       {
         name: 'School of Technology',
-        count: 150
+        count: 150,
       },
       {
         name: 'School of Business',
-        count: 120
+        count: 120,
       },
       {
         name: 'School of Engineering',
-        count: 200
-      }
+        count: 200,
+      },
     ];
 
     console.log('Creating Schools...');
@@ -47,7 +48,7 @@ const createPOCDummyData = async () => {
         strategicAreas: 'Technology Training, Research Collaboration',
         dateOfSigning: new Date('2024-01-15'),
         validity: '2027-01-15',
-        affiliationDate: new Date('2024-01-15')
+        affiliationDate: new Date('2024-01-15'),
       },
       {
         ID: 'MOU002',
@@ -56,7 +57,7 @@ const createPOCDummyData = async () => {
         strategicAreas: 'Online Learning, Student Exchange',
         dateOfSigning: new Date('2024-02-20'),
         validity: '2026-02-20',
-        affiliationDate: new Date('2024-02-20')
+        affiliationDate: new Date('2024-02-20'),
       },
       {
         ID: 'MOU003',
@@ -65,8 +66,8 @@ const createPOCDummyData = async () => {
         strategicAreas: 'Innovation Projects, Startup Support',
         dateOfSigning: new Date('2024-03-10'),
         validity: '2028-03-10',
-        affiliationDate: new Date('2024-03-10')
-      }
+        affiliationDate: new Date('2024-03-10'),
+      },
     ];
 
     console.log('Creating MOUs...');
@@ -75,7 +76,9 @@ const createPOCDummyData = async () => {
       const mou = new MOU(mouData);
       await mou.save();
       createdMOUs.push(mou);
-      console.log(`Created MOU: ${mou.ID} - ${mou.nameOfPartnerInstitution} (ID: ${mou._id})`);
+      console.log(
+        `Created MOU: ${mou.ID} - ${mou.nameOfPartnerInstitution} (ID: ${mou._id})`
+      );
     }
 
     // Step 3: Create dummy candidates (students) with correct schema
@@ -96,7 +99,7 @@ const createPOCDummyData = async () => {
         mobileNumber: '9876543210',
         alternateNumber: '9876543211',
         email: 'john.doe@example.com',
-        address: '123 Main Street, Mumbai, Maharashtra, India'
+        address: '123 Main Street, Mumbai, Maharashtra, India',
       },
       {
         srNo: 2,
@@ -114,7 +117,7 @@ const createPOCDummyData = async () => {
         mobileNumber: '9876543212',
         alternateNumber: '9876543213',
         email: 'jane.smith@example.com',
-        address: '456 Park Avenue, Delhi, Delhi, India'
+        address: '456 Park Avenue, Delhi, Delhi, India',
       },
       {
         srNo: 3,
@@ -132,7 +135,7 @@ const createPOCDummyData = async () => {
         mobileNumber: '9876543214',
         alternateNumber: '9876543215',
         email: 'mike.johnson@example.com',
-        address: '789 Tech Street, Bangalore, Karnataka, India'
+        address: '789 Tech Street, Bangalore, Karnataka, India',
       },
       {
         srNo: 4,
@@ -150,7 +153,7 @@ const createPOCDummyData = async () => {
         mobileNumber: '9876543216',
         alternateNumber: '9876543217',
         email: 'sarah.wilson@example.com',
-        address: '321 Marina Road, Chennai, Tamil Nadu, India'
+        address: '321 Marina Road, Chennai, Tamil Nadu, India',
       },
       {
         srNo: 5,
@@ -168,7 +171,7 @@ const createPOCDummyData = async () => {
         mobileNumber: '9876543218',
         alternateNumber: '9876543219',
         email: 'david.brown@example.com',
-        address: '654 Charminar Road, Hyderabad, Telangana, India'
+        address: '654 Charminar Road, Hyderabad, Telangana, India',
       },
       {
         srNo: 6,
@@ -186,15 +189,40 @@ const createPOCDummyData = async () => {
         mobileNumber: '9876543220',
         alternateNumber: '9876543221',
         email: 'emily.davis@example.com',
-        address: '987 Hinjewadi Road, Pune, Maharashtra, India'
-      }
+        address: '987 Hinjewadi Road, Pune, Maharashtra, India',
+      },
     ];
 
-    console.log('Creating Candidates...');
+    console.log('Creating Students...');
     for (const candidateData of dummyCandidates) {
-      const candidate = new Candidate(candidateData);
-      await candidate.save();
-      console.log(`Created Candidate: ${candidate.fullName} (Enrollment: ${candidate.enrollmentNumber})`);
+      const studentData = {
+        sr_no: candidateData.srNo,
+        batch_no: candidateData.batchNo,
+        rank: candidateData.rank,
+        serial_number: candidateData.serialNumberRRU,
+        enrollment_number: candidateData.enrollmentNumber,
+        full_name: candidateData.fullName,
+        gender: candidateData.gender.toLowerCase().charAt(0),
+        dob: candidateData.dateOfBirth,
+        birth_place: candidateData.birthPlace,
+        birth_state: candidateData.birthState,
+        country: candidateData.country.toLowerCase(),
+        aadhar_no: candidateData.aadharNo,
+        mobile_no: candidateData.mobileNumber,
+        alternate_number: candidateData.alternateNumber,
+        email: candidateData.email,
+        password: 'student123', // You should hash this in production
+        address: candidateData.address,
+        mou_id: createdMOUs[0]._id.toString(), // Assigning to first MOU, adjust as needed
+        credits: 0,
+        available_credit: 0,
+        used_credit: 0,
+      };
+      const student = new Student(studentData);
+      await student.save();
+      console.log(
+        `Created Student: ${student.full_name} (Email: ${student.email})`
+      );
     }
 
     // Step 4: Create POC user with the MOU IDs
@@ -204,7 +232,7 @@ const createPOCDummyData = async () => {
       password: 'poc123',
       mobileNumber: '+91 98765 43210',
       organization: 'Demo Organization',
-      mous: createdMOUs.map(mou => mou._id)
+      mous: createdMOUs.map((mou) => mou._id),
     });
 
     await pocUser.save();
@@ -215,7 +243,9 @@ const createPOCDummyData = async () => {
     console.log('  Organization:', pocUser.organization);
     console.log('  MOUs:', pocUser.mous.length);
 
-    console.log('\n✅ POC dummy data created successfully in sitaics database!');
+    console.log(
+      '\n✅ POC dummy data created successfully in sitaics database!'
+    );
     console.log(`📊 Summary:`);
     console.log(`   - Created ${createdSchools.length} Schools`);
     console.log(`   - Created ${createdMOUs.length} MOUs`);
@@ -232,4 +262,4 @@ const createPOCDummyData = async () => {
   }
 };
 
-createPOCDummyData(); 
+createPOCDummyData();

@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Activity, ArrowLeft } from 'lucide-react';
 
-const POCLogin = () => {
+interface POCLoginProps {
+  isBPRND?: boolean;
+}
+
+const POCLogin: React.FC<POCLoginProps> = ({ isBPRND = false }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -19,13 +29,16 @@ const POCLogin = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3002/api/poc/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        `http://localhost:3002/api/${isBPRND ? 'bprnd/poc' : 'poc'}/login`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await response.json();
 
@@ -37,27 +50,27 @@ const POCLogin = () => {
         localStorage.setItem('isPOCAuthenticated', 'true');
 
         toast({
-          title: "Login Successful",
+          title: 'Login Successful',
           description: `Welcome back, ${data.data.name}!`,
         });
 
         // Navigate to POC portal after a short delay
         setTimeout(() => {
-          navigate('/poc-portal');
+          navigate(isBPRND ? '/poc-portal/bprnd' : '/poc-portal');
         }, 1000);
       } else {
         toast({
-          title: "Login Failed",
+          title: 'Login Failed',
           description: data.error || 'Invalid credentials',
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Login error:', error);
       toast({
-        title: "Login Error",
-        description: "Network error. Please try again.",
-        variant: "destructive",
+        title: 'Login Error',
+        description: 'Network error. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -74,15 +87,20 @@ const POCLogin = () => {
                 <Activity className="h-8 w-8 text-white" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">POC Portal Login</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              {isBPRND ? 'BPRND POC Portal Login' : 'POC Portal Login'}
+            </CardTitle>
             <CardDescription className="text-gray-600">
-              Access your POC management dashboard
+              Access your {isBPRND ? 'BPRND POC' : 'POC'} management dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Email Address
                 </Label>
                 <Input
@@ -96,7 +114,10 @@ const POCLogin = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Password
                 </Label>
                 <Input
@@ -114,18 +135,16 @@ const POCLogin = () => {
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
-            
-
 
             {/* Back to Portal Selection */}
             <div className="mt-4 pt-4 border-t border-gray-200">
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full" 
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
                 onClick={() => navigate('/')}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -139,4 +158,4 @@ const POCLogin = () => {
   );
 };
 
-export default POCLogin; 
+export default POCLogin;
