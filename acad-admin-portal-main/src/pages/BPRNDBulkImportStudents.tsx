@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Upload, FileUp, AlertCircle } from 'lucide-react';
 import {
   Card,
@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import useBPRNDUmbrellas from '@/hooks/useBPRNDUmbrellas';
 
 const BPRNDBulkImportStudents: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -24,24 +25,13 @@ const BPRNDBulkImportStudents: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [umbrella, setUmbrella] = useState<string>('');
-  const [umbrellaOptions, setUmbrellaOptions] = useState<string[]>([]);
 
-  // Fetch umbrella options when component mounts
-  useEffect(() => {
-    const fetchUmbrellaOptions = async () => {
-      try {
-        const response = await fetch(`${process.env.VITE_API_URL}/api/umbrellas`);
-        if (!response.ok) throw new Error('Failed to fetch umbrella options');
-        const data = await response.json();
-        setUmbrellaOptions(data.map((u: { name: string }) => u.name));
-      } catch (err) {
-        console.error('Error fetching umbrella options:', err);
-        setError('Failed to load umbrella options');
-      }
-    };
-
-    fetchUmbrellaOptions();
-  }, []);
+  // Use custom hook for umbrellas
+  const {
+    umbrellas,
+    loading: umbrellasLoading,
+    error: umbrellasError,
+  } = useBPRNDUmbrellas();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -76,13 +66,10 @@ const BPRNDBulkImportStudents: React.FC = () => {
 
     try {
       const response = await fetch(
-        `${process.env.VITE_API_URL}/api/bprnd/students/upload`,
+        'http://localhost:3003/api/bprnd/students/upload',
         {
           method: 'POST',
           body: formData,
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('pocToken')}`,
-          },
         }
       );
 
@@ -126,12 +113,20 @@ const BPRNDBulkImportStudents: React.FC = () => {
               onValueChange={(value) => setUmbrella(value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select an umbrella" />
+                <SelectValue
+                  placeholder={
+                    umbrellasLoading
+                      ? 'Loading umbrellas...'
+                      : umbrellas.length === 0
+                      ? 'No umbrellas available'
+                      : 'Select an umbrella'
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                {umbrellaOptions.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
+                {umbrellas.map((u) => (
+                  <SelectItem key={u._id} value={u.name}>
+                    {u.name}
                   </SelectItem>
                 ))}
               </SelectContent>

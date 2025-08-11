@@ -8,6 +8,7 @@ const multer = require('multer');
 const xlsx = require('xlsx');
 const nodemailer = require('nodemailer');
 const bprndStudents = require('./model3/bprndstudents');
+const umbrella = require('./model3/umbrella');
 require('dotenv').config();
 
 const app = express();
@@ -273,6 +274,28 @@ app.post('/api/bprnd/poc/login', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Internal server error',
+    });
+  }
+});
+
+// Get all umbrellas route
+app.get('/api/bprnd/umbrellas', async (req, res) => {
+  try {
+    // Retrieve all umbrellas from the database
+    const umbrellas = await umbrella.find({}).sort({ name: 1 }); // Sort by name alphabetically
+
+    res.status(200).json({
+      success: true,
+      message: 'Umbrellas retrieved successfully',
+      data: umbrellas,
+      count: umbrellas.length,
+    });
+  } catch (error) {
+    console.error('Error retrieving umbrellas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving umbrellas',
+      error: error.message,
     });
   }
 });
