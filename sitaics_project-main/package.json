@@ -6,6 +6,9 @@
   "scripts": {
     "start": "node admin_routes/api.js",
     "dev": "nodemon admin_routes/api.js",
+    "api4": "node api4.js",
+    "api4:dev": "nodemon api4.js",
+    "start:bprnd": "./start-api4.sh",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

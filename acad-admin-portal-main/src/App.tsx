@@ -28,6 +28,8 @@ import StudentDashboard from './pages/StudentDashboard';
 import StudentAvailableCourses from './pages/StudentAvailableCourses';
 import StudentCreditBank from './pages/StudentCreditBank';
 import StudentProfile from './pages/StudentProfile';
+import BPRNDStudentProfile from './pages/BPRNDStudentProfile';
+import BPRNDStudentProfileAPI from './pages/BPRNDStudentProfileAPI';
 import { CompletedCoursesList } from './pages/CompletedCoursesList';
 import EnrolledCoursesList from './pages/EnrolledCoursesList';
 import SectorTrainingFields from './pages/SectorTrainingFields';
@@ -199,6 +201,10 @@ const App = () => (
           <Route
             path="/student/bprnd/signup"
             element={<StudentSignup isBPRND />}
+          />
+          <Route
+            path="/student/bprnd/profile-api"
+            element={<BPRNDStudentProfileAPI />}
           />
           <Route
             path="/student/bprnd/dashboard"
