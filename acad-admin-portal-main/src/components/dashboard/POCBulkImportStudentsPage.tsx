@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -16,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { usePOCMOUs } from '@/hooks/usePOCMOUs';
 import usePOCCoursesForDropdown from '@/hooks/usePOCCoursesForDropdown';
@@ -136,10 +136,9 @@ const POCBulkImportStudentsPage: React.FC<POCBulkImportStudentsPageProps> = ({
     setIsUploading(true);
 
     try {
-      // Create FormData for file upload
-      const formData = new FormData();
-
       if (isBPRND) {
+        // BPRND POC upload logic
+        const formData = new FormData();
         formData.append('excelFile', selectedFile);
         formData.append('umbrella', umbrella.trim());
 
@@ -157,6 +156,10 @@ const POCBulkImportStudentsPage: React.FC<POCBulkImportStudentsPageProps> = ({
         }
 
         const data = await response.json();
+
+        // Show popup with full response
+        alert(`BPRND Upload Response:\n\n${JSON.stringify(data, null, 2)}`);
+
         toast({
           title: 'Upload Successful',
           description: `Successfully processed ${
@@ -167,6 +170,8 @@ const POCBulkImportStudentsPage: React.FC<POCBulkImportStudentsPageProps> = ({
         setSelectedFile(null);
         setUmbrella('');
       } else {
+        // Normal POC upload logic
+        const formData = new FormData();
         formData.append('file', selectedFile);
         formData.append('mouId', selectedMOU);
         formData.append('courseId', selectedCourse);
