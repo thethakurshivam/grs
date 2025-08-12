@@ -33,7 +33,7 @@ const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black flex items-center justify-center p-6">
+    <div className="min-h-screen bg-blue-50 text-black flex items-center justify-center p-6">
       <div className="w-full max-w-6xl">
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-6">
@@ -50,7 +50,7 @@ const LandingPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {/* Admin Card */}
           <Card
-            className="hover:shadow-lg transition-shadow cursor-pointer border-[#0b2e63]"
+            className="bg-white hover:shadow-lg transition-shadow cursor-pointer border-[#0b2e63]"
             onClick={handleAdminClick}
           >
             <CardHeader className="text-center">
@@ -79,7 +79,7 @@ const LandingPage: React.FC = () => {
 
           {/* Student Card */}
           <Card
-            className="hover:shadow-lg transition-shadow cursor-pointer border-[#0b2e63]"
+            className="bg-white hover:shadow-lg transition-shadow cursor-pointer border-[#0b2e63]"
             onClick={handleStudentClick}
           >
             <CardHeader className="text-center">
@@ -108,7 +108,7 @@ const LandingPage: React.FC = () => {
 
           {/* POC Card */}
           <Card
-            className="hover:shadow-lg transition-shadow cursor-pointer border-[#0b2e63]"
+            className="bg-white hover:shadow-lg transition-shadow cursor-pointer border-[#0b2e63]"
             onClick={handlePOCClick}
           >
             <CardHeader className="text-center">
@@ -137,7 +137,7 @@ const LandingPage: React.FC = () => {
 
           {/* BPRND Student Card */}
           <Card
-            className="hover:shadow-lg transition-shadow cursor-pointer border-[#0b2e63]"
+            className="bg-white hover:shadow-lg transition-shadow cursor-pointer border-[#0b2e63]"
             onClick={handleBPRNDClick}
           >
             <CardHeader className="text-center">
@@ -166,7 +166,7 @@ const LandingPage: React.FC = () => {
 
           {/* BPRND POC Card */}
           <Card
-            className="hover:shadow-lg transition-shadow cursor-pointer border-[#0b2e63]"
+            className="bg-white hover:shadow-lg transition-shadow cursor-pointer border-[#0b2e63]"
             onClick={handleBPRNDPOCClick}
           >
             <CardHeader className="text-center">

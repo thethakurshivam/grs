@@ -66,6 +66,7 @@ const StudentLoginPage: React.FC<StudentLoginPageProps> = ({
           localStorage.setItem('studentEmail', data.student.email);
           localStorage.setItem('studentName', data.student.Name);
           localStorage.setItem('studentId', data.student._id);
+          localStorage.setItem('bprndStudentId', data.student._id);
           
           // Store professional information
           localStorage.setItem('studentDesignation', data.student.Designation || '');
@@ -161,7 +162,7 @@ const StudentLoginPage: React.FC<StudentLoginPageProps> = ({
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 text-gray-900 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="pl-10 text-black placeholder:text-gray-500 border-gray-300 focus:border-[#0b2e63] focus:ring-[#0b2e63]"
                     required
                   />
                 </div>
@@ -181,7 +182,7 @@ const StudentLoginPage: React.FC<StudentLoginPageProps> = ({
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 text-gray-900 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="pl-10 text-black placeholder:text-gray-500 border-gray-300 focus:border-[#0b2e63] focus:ring-[#0b2e63]"
                     required
                   />
                 </div>

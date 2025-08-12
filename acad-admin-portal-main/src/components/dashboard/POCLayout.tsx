@@ -69,20 +69,50 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div
+      className={
+        type === 'bprnd' ? 'min-h-screen bg-blue-50 flex' : 'min-h-screen bg-gray-50 flex'
+      }
+    >
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg border-r border-gray-200">
+      <div
+        className={
+          type === 'bprnd'
+            ? 'w-64 bg-white shadow-lg border-r border-[#0b2e63]/20'
+            : 'w-64 bg-white shadow-lg border-r border-gray-200'
+        }
+      >
         {/* Sidebar Header */}
-        <div className="p-6 border-b border-gray-200">
+        <div
+          className={
+            type === 'bprnd'
+              ? 'p-6 border-b border-[#0b2e63]/20'
+              : 'p-6 border-b border-gray-200'
+          }
+        >
           <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <Users className="h-5 w-5 text-blue-600" />
-            </div>
+            {type === 'bprnd' ? (
+              <div className="h-10 w-10 bg-[#0b2e63] rounded-full flex items-center justify-center">
+                <Users className="h-5 w-5 text-white" />
+              </div>
+            ) : (
+              <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <Users className="h-5 w-5 text-blue-600" />
+              </div>
+            )}
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2
+                className={
+                  type === 'bprnd'
+                    ? 'text-lg font-semibold text-[#0b2e63]'
+                    : 'text-lg font-semibold text-gray-900'
+                }
+              >
                 {type === 'bprnd' ? 'BPRND POC Portal' : 'POC Portal'}
               </h2>
-              <p className="text-sm text-gray-500">Management Dashboard</p>
+              <p className={type === 'bprnd' ? 'text-sm text-black/60' : 'text-sm text-gray-500'}>
+                Management Dashboard
+              </p>
             </div>
           </div>
         </div>
@@ -95,13 +125,23 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
               onClick={() => navigate(item.path)}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
                 isActive(item.path)
-                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                  ? type === 'bprnd'
+                    ? 'bg-[#0b2e63]/10 text-[#0b2e63] border border-[#0b2e63]/30'
+                    : 'bg-blue-50 text-blue-700 border border-blue-200'
+                  : type === 'bprnd'
+                  ? 'text-black hover:bg-blue-50 hover:text-[#0b2e63]'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
               <item.icon
                 className={`h-5 w-5 ${
-                  isActive(item.path) ? 'text-blue-600' : item.color
+                  isActive(item.path)
+                    ? type === 'bprnd'
+                      ? 'text-[#0b2e63]'
+                      : 'text-blue-600'
+                    : type === 'bprnd'
+                    ? 'text-[#0b2e63]'
+                    : item.color
                 }`}
               />
               <span className="font-medium">{item.title}</span>
@@ -110,11 +150,21 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="absolute bottom-0 w-64 p-4 border-t border-gray-200">
+        <div
+          className={
+            type === 'bprnd'
+              ? 'absolute bottom-0 w-64 p-4 border-t border-[#0b2e63]/20'
+              : 'absolute bottom-0 w-64 p-4 border-t border-gray-200'
+          }
+        >
           <div className="space-y-2">
             <button
               onClick={() => navigate('/')}
-              className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+              className={
+                type === 'bprnd'
+                  ? 'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-black hover:bg-blue-50 hover:text-[#0b2e63] transition-colors'
+                  : 'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors'
+              }
             >
               <ArrowLeft className="h-5 w-5" />
               <span className="font-medium">Back to Portal Selection</span>
@@ -128,7 +178,11 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
                 localStorage.removeItem('isPOCAuthenticated');
                 navigate('/');
               }}
-              className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+              className={
+                type === 'bprnd'
+                  ? 'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-black hover:bg-blue-50 hover:text-[#0b2e63] transition-colors'
+                  : 'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors'
+              }
             >
               <LogOut className="h-5 w-5" />
               <span className="font-medium">Logout</span>
@@ -140,14 +194,26 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Top Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+        <header
+          className={
+            type === 'bprnd'
+              ? 'bg-white shadow-sm border-b border-[#0b2e63]/20 px-6 py-4'
+              : 'bg-white shadow-sm border-b border-gray-200 px-6 py-4'
+          }
+        >
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1
+                className={
+                  type === 'bprnd'
+                    ? 'text-2xl font-bold text-[#0b2e63]'
+                    : 'text-2xl font-bold text-gray-900'
+                }
+              >
                 {sidebarItems.find((item) => isActive(item.path))?.title ||
                   'POC Portal'}
               </h1>
-              <p className="text-gray-600">
+              <p className={type === 'bprnd' ? 'text-black/70' : 'text-gray-600'}>
                 {isActive(basePath) &&
                   `Welcome to the ${
                     type === 'bprnd' ? 'BPRND POC' : 'POC'

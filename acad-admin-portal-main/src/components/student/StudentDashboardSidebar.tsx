@@ -1,10 +1,6 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
-  BookOpen, 
-  GraduationCap, 
-  CreditCard, 
-  User,
   LogOut,
   Plus
 } from 'lucide-react';
@@ -36,30 +32,10 @@ export const StudentDashboardSidebar: React.FC = () => {
     onClick?: () => void;
   }> = [
     {
-      name: 'Dashboard',
-      icon: User,
-      path: '/student/dashboard',
-    },
-    {
-      name: 'Available Courses',
-      icon: BookOpen,
-      path: '/student/available-courses',
-    },
-    {
       name: 'Add Course Other Than RRU',
       icon: Plus,
       path: '/student/add-course-other-than-rru',
       onClick: handleAddCourseOtherThanRRU,
-    },
-    {
-      name: 'Completed Courses',
-      icon: GraduationCap,
-      path: '/student/completed-courses',
-    },
-    {
-      name: 'Credit Bank',
-      icon: CreditCard,
-      path: '/student/credit-bank',
     },
   ];
 
@@ -75,32 +51,15 @@ export const StudentDashboardSidebar: React.FC = () => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             
-            if (item.onClick) {
-              return (
-                <button
-                  key={item.name}
-                  onClick={item.onClick}
-                  className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-sidebar-accent hover:text-gray-900 transition-colors"
-                >
-                  <Icon className="w-5 h-5 mr-3" />
-                  {item.name}
-                </button>
-              );
-            }
-            
             return (
-              <Link
+              <button
                 key={item.name}
-                to={item.path}
-                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-sidebar-accent text-gray-900'
-                    : 'text-gray-700 hover:bg-sidebar-accent hover:text-gray-900'
-                }`}
+                onClick={item.onClick}
+                className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-sidebar-accent hover:text-gray-900 transition-colors"
               >
                 <Icon className="w-5 h-5 mr-3" />
                 {item.name}
-              </Link>
+              </button>
             );
           })}
         </div>

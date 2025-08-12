@@ -80,19 +80,43 @@ const POCLogin: React.FC<POCLoginProps> = ({ isBPRND = false }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div
+      className={
+        isBPRND
+          ? 'min-h-screen bg-blue-50 text-black flex items-center justify-center p-6'
+          : 'min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4'
+      }
+    >
       <div className="w-full max-w-md">
-        <Card className="shadow-xl border-0">
+        <Card
+          className={
+            isBPRND
+              ? 'bg-white shadow-xl border border-[#0b2e63]'
+              : 'shadow-xl border-0'
+          }
+        >
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="bg-blue-600 p-3 rounded-full">
+              <div
+                className={
+                  isBPRND
+                    ? 'bg-[#0b2e63] p-3 rounded-full'
+                    : 'bg-blue-600 p-3 rounded-full'
+                }
+              >
                 <Activity className="h-8 w-8 text-white" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">
+            <CardTitle
+              className={
+                isBPRND
+                  ? 'text-2xl font-bold text-[#0b2e63]'
+                  : 'text-2xl font-bold text-gray-900'
+              }
+            >
               {isBPRND ? 'BPRND POC Portal Login' : 'POC Portal Login'}
             </CardTitle>
-            <CardDescription className="text-gray-600">
+            <CardDescription className={isBPRND ? 'text-black/70' : 'text-gray-600'}>
               Access your {isBPRND ? 'BPRND POC' : 'POC'} management dashboard
             </CardDescription>
           </CardHeader>
@@ -101,7 +125,7 @@ const POCLogin: React.FC<POCLoginProps> = ({ isBPRND = false }) => {
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
-                  className="text-sm font-medium text-gray-700"
+                  className={isBPRND ? 'text-sm font-medium text-black' : 'text-sm font-medium text-gray-700'}
                 >
                   Email Address
                 </Label>
@@ -112,13 +136,17 @@ const POCLogin: React.FC<POCLoginProps> = ({ isBPRND = false }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full"
+                  className={
+                    isBPRND
+                      ? 'w-full focus-visible:ring-[#0b2e63] text-black placeholder:text-gray-500'
+                      : 'w-full text-black placeholder:text-gray-500'
+                  }
                 />
               </div>
               <div className="space-y-2">
                 <Label
                   htmlFor="password"
-                  className="text-sm font-medium text-gray-700"
+                  className={isBPRND ? 'text-sm font-medium text-black' : 'text-sm font-medium text-gray-700'}
                 >
                   Password
                 </Label>
@@ -129,12 +157,20 @@ const POCLogin: React.FC<POCLoginProps> = ({ isBPRND = false }) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full"
+                  className={
+                    isBPRND
+                      ? 'w-full focus-visible:ring-[#0b2e63] text-black placeholder:text-gray-500'
+                      : 'w-full text-black placeholder:text-gray-500'
+                  }
                 />
               </div>
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className={
+                  isBPRND
+                    ? 'w-full bg-[#0b2e63] hover:bg-[#09264f] text-white'
+                    : 'w-full bg-blue-600 hover:bg-blue-700'
+                }
                 disabled={isLoading}
               >
                 {isLoading ? 'Signing in...' : 'Sign In'}
@@ -146,7 +182,11 @@ const POCLogin: React.FC<POCLoginProps> = ({ isBPRND = false }) => {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className={
+                  isBPRND
+                    ? 'w-full border-[#0b2e63] text-[#0b2e63] hover:bg-blue-50'
+                    : 'w-full'
+                }
                 onClick={() => navigate('/')}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />

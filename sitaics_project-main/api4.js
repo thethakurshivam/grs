@@ -261,6 +261,122 @@ router.get('/student/:id', async (req, res) => {
   }
 });
 
+// Get BPRND student's total credits by ID
+router.get('/student/:id/credits', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Student ID is required',
+      });
+    }
+
+    // Fetch only the Total_Credits field for efficiency
+    const student = await CreditCalculation.findById(id).select('Total_Credits');
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Total credits retrieved successfully',
+      data: {
+        id: student._id,
+        totalCredits: student.Total_Credits,
+      },
+    });
+  } catch (error) {
+    // Handle invalid ObjectId
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid student ID format',
+      });
+    }
+
+    console.error('Error fetching total credits:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+});
+
+// Get BPRND student's umbrella credits breakdown by ID
+router.get('/student/:id/credits/breakdown', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Student ID is required',
+      });
+    }
+
+    // Project only the umbrella credit fields for efficiency
+    const projection = {
+      Cyber_Security: 1,
+      Criminology: 1,
+      Military_Law: 1,
+      Police_Administration: 1,
+      Forensic_Science: 1,
+      National_Security: 1,
+      International_Security: 1,
+      Counter_Terrorism: 1,
+      Intelligence_Studies: 1,
+      Emergency_Management: 1,
+    };
+
+    const student = await CreditCalculation.findById(id).select(projection);
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found',
+      });
+    }
+
+    // Ensure all fields are numbers (fallback to 0 if undefined)
+    const data = {
+      Cyber_Security: Number(student.Cyber_Security || 0),
+      Criminology: Number(student.Criminology || 0),
+      Military_Law: Number(student.Military_Law || 0),
+      Police_Administration: Number(student.Police_Administration || 0),
+      Forensic_Science: Number(student.Forensic_Science || 0),
+      National_Security: Number(student.National_Security || 0),
+      International_Security: Number(student.International_Security || 0),
+      Counter_Terrorism: Number(student.Counter_Terrorism || 0),
+      Intelligence_Studies: Number(student.Intelligence_Studies || 0),
+      Emergency_Management: Number(student.Emergency_Management || 0),
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: 'Credits breakdown retrieved successfully',
+      data,
+    });
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid student ID format',
+      });
+    }
+    console.error('Error fetching credits breakdown:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+});
+
 // Pending credits upload (PDF)
 router.post('/pending-credits', upload.single('pdf'), async (req, res) => {
   try {

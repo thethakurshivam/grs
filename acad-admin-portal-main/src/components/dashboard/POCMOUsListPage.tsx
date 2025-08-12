@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,8 @@ import { usePOCMOUs } from '@/hooks/usePOCMOUs';
 
 const POCMOUsListPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/poc-portal/bprnd') ? '/poc-portal/bprnd' : '/poc-portal';
   const { mous, loading, error } = usePOCMOUs();
 
 
@@ -48,7 +50,7 @@ const POCMOUsListPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={() => navigate('/poc-portal')}>
+          <Button onClick={() => navigate(basePath)}>
             Back to Dashboard
           </Button>
         </div>
@@ -64,7 +66,7 @@ const POCMOUsListPage = () => {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate('/poc-portal')}
+                onClick={() => navigate(basePath)}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="h-5 w-5" />
