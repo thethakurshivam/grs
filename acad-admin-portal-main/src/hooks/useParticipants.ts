@@ -9,7 +9,7 @@ interface Participant {
   enrollment_number: string;
   full_name: string;
   gender: string;
-  dob: Date;
+  dob: Date | string;
   birth_place: string;
   birth_state: string;
   country: string;
@@ -17,24 +17,33 @@ interface Participant {
   mobile_no: string;
   alternate_number?: string;
   email: string;
-  password: string;
+  password?: string;
   address: string;
-  mou_id: string;
-  course_id: string[];
-  credits: number;
-  available_credit: number;
-  used_credit: number;
-  createdAt: string;
-  updatedAt: string;
+  mou_id?: string;
+  course_id?: string[];
+  credits?: number;
+  available_credit?: number;
+  used_credit?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-interface ParticipantsResponse {
-  success: boolean;
-  data: {
-    students: Participant[];
-    poc: any;
+interface AdminParticipantsResponse {
+  success?: boolean;
+  count?: number;
+  data?: Participant[];
+  error?: string;
+  [key: string]: unknown;
+}
+
+interface PocParticipantsResponse {
+  success?: boolean;
+  data?: {
+    students?: Participant[];
+    poc?: unknown;
   };
   error?: string;
+  [key: string]: unknown;
 }
 
 export const useParticipants = () => {
@@ -43,25 +52,61 @@ export const useParticipants = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Debug function to check local storage
-  const debugAuth = () => {
+  const resolveContext = () => {
     const pocToken = localStorage.getItem('pocToken');
     const pocId = localStorage.getItem('pocUserId');
-    const pocUser = localStorage.getItem('pocUser');
+    const adminToken = localStorage.getItem('authToken');
 
-    console.log('=== AUTH DEBUG ===');
-    console.log('POC Token:', pocToken ? 'Present' : 'Missing');
-    console.log('POC ID:', pocId);
-    if (pocUser) {
-      try {
-        console.log('POC User:', JSON.parse(pocUser));
-      } catch (e) {
-        console.log('POC User: Invalid JSON');
-      }
-    } else {
-      console.log('POC User: Missing');
+    if (pocToken && pocId) {
+      return {
+        mode: 'poc' as const,
+        token: pocToken,
+        url: `http://localhost:3002/api/poc/${pocId}/students`,
+      };
     }
-    return { pocToken, pocId, pocUser };
+
+    if (adminToken) {
+      return {
+        mode: 'admin' as const,
+        token: adminToken,
+        url: `http://localhost:3000/api/participants`,
+      };
+    }
+
+    return null;
+  };
+
+  const parseResponse = (raw: string) => {
+    try {
+      const json = JSON.parse(raw) as AdminParticipantsResponse | PocParticipantsResponse | Participant[];
+
+      // If admin returns array directly
+      if (Array.isArray(json)) {
+        return { items: json as Participant[], total: (json as Participant[]).length };
+      }
+
+      const maybe = json as AdminParticipantsResponse & PocParticipantsResponse;
+      if (maybe.success && Array.isArray((maybe as AdminParticipantsResponse).data)) {
+        const items = (maybe as AdminParticipantsResponse).data as Participant[];
+        return { items, total: (maybe as AdminParticipantsResponse).count ?? items.length };
+      }
+
+      if (maybe.success && (maybe as PocParticipantsResponse).data && Array.isArray((maybe as PocParticipantsResponse).data!.students)) {
+        const items = (maybe as PocParticipantsResponse).data!.students as Participant[];
+        return { items, total: items.length };
+      }
+
+      // Fallback: try to find first array in object
+      for (const key of Object.keys(json as object)) {
+        const val = (json as any)[key];
+        if (Array.isArray(val)) {
+          return { items: val as Participant[], total: val.length };
+        }
+      }
+    } catch (_) {
+      // Ignore JSON parse errors; handled by caller
+    }
+    return { items: [] as Participant[], total: 0 };
   };
 
   const fetchParticipants = async () => {
@@ -69,90 +114,30 @@ export const useParticipants = () => {
       setLoading(true);
       setError(null);
 
-      // Force console logs to appear
-      console.warn('=== START FETCHING PARTICIPANTS ===');
-
-      // Get auth data
-      const token = localStorage.getItem('pocToken');
-      const pocId = localStorage.getItem('pocUserId');
-      const pocUser = localStorage.getItem('pocUser');
-
-      // Log auth status
-      console.warn('Auth Status:', {
-        hasToken: !!token,
-        pocId: pocId,
-        hasUser: !!pocUser,
-      });
-
-      if (!token || !pocId) {
+      const ctx = resolveContext();
+      if (!ctx) {
         throw new Error('Authentication required. Please log in again.');
       }
-      console.log('=== POC ID FOUND ===');
-      console.log('POC ID:', pocId);
 
-      if (!pocId) {
-        throw new Error('POC ID not found in token');
-      }
-
-      console.log(
-        'Making API request to:',
-        `http://localhost:3002/api/poc/${pocId}/students`
-      );
-      console.log('POC ID:', pocId);
-
-      // Prepare request URL and headers
-      const apiUrl = `http://localhost:3002/api/poc/${pocId}/students`;
-      console.warn('Making request to:', apiUrl);
-
-      const response = await fetch(apiUrl, {
+      const response = await fetch(ctx.url, {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${ctx.token}`,
           'Content-Type': 'application/json',
           Accept: 'application/json',
-          Origin: window.location.origin,
         },
         credentials: 'include',
-      });
-
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-
-      // Get and log response details
-      console.warn('Response received:', {
-        status: response.status,
-        ok: response.ok,
-        statusText: response.statusText,
+        mode: 'cors',
       });
 
       const responseText = await response.text();
-      console.warn('Raw response:', responseText);
-
       if (!response.ok) {
-        throw new Error(
-          `HTTP error! status: ${response.status} - ${responseText}`
-        );
+        throw new Error(`HTTP error! status: ${response.status} - ${responseText}`);
       }
 
-      // Parse and validate response
-      const data: ParticipantsResponse = JSON.parse(responseText);
-      console.warn('Parsed response:', {
-        success: data.success,
-        studentCount: data.data?.students?.length || 0,
-        hasPocData: !!data.data?.poc,
-      });
-
-      if (data.success) {
-        setParticipants(data.data.students);
-        setCount(data.data.students.length);
-        console.log(
-          'Successfully fetched',
-          data.data.students.length,
-          'participants'
-        );
-      } else {
-        throw new Error(data.error || 'Failed to fetch participants');
-      }
+      const { items, total } = parseResponse(responseText);
+      setParticipants(items);
+      setCount(total);
     } catch (err) {
       console.error('Error in fetchParticipants:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');

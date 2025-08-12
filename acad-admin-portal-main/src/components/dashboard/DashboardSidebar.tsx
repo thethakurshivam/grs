@@ -21,7 +21,8 @@ import {
   Users, 
   GraduationCap,
   LogOut,
-  Menu
+  Menu,
+  Send
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -137,6 +138,25 @@ export function DashboardSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Dummy BPR&D Request */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start hover:bg-accent"
+                    onClick={() =>
+                      toast({
+                        title: 'BPR&D Request',
+                        description: 'This is a placeholder. Coming soon.',
+                      })
+                    }
+                  >
+                    <Send className="h-4 w-4" />
+                    {!collapsed && <span className="ml-2">BPR&D Request</span>}
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
