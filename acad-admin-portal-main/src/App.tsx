@@ -207,6 +207,10 @@ const App = () => (
             element={<BPRNDStudentProfileAPI />}
           />
           <Route
+            path="/student/bprnd/profile"
+            element={<BPRNDStudentProfile />}
+          />
+          <Route
             path="/student/bprnd/dashboard"
             element={<StudentDashboard isBPRND />}
           />

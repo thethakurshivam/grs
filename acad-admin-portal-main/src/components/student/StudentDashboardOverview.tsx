@@ -1,97 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import {
-  User,
-  BookOpen,
-  GraduationCap,
-  CreditCard,
-  Coins,
+import { 
+  User, 
+  BookOpen, 
+  GraduationCap, 
+  CreditCard, 
+  Coins, 
   Award,
-  UserCircle,
+  UserCircle
 } from 'lucide-react';
 import { useStudentDashboardData } from '../../hooks/useStudentDashboardData';
+import { BPRNDStudentDashboard } from './BPRNDStudentDashboard';
 
 import { useNavigate } from 'react-router-dom';
-
-// BPRND Student Dashboard - API-powered profile
-const BPRNDStudentDashboard: React.FC = () => {
-  const navigate = useNavigate();
-
-  // Get data from localStorage for display
-  const studentName = localStorage.getItem('studentName') || 'Officer John Doe';
-  const studentDesignation =
-    localStorage.getItem('studentDesignation') || 'Police Officer';
-  const studentState = localStorage.getItem('studentState') || 'Maharashtra';
-  const studentUmbrella =
-    localStorage.getItem('studentUmbrella') || 'Cyber Security';
-
-  const handleProfileCardClick = () => {
-    // Navigate to API-powered profile page
-    navigate('/student/bprnd/profile-api');
-  };
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          BPRND Student Dashboard
-        </h1>
-        <p className="text-gray-700 mt-2">
-          Welcome to your BPRND portal! Access your profile and training
-          information.
-        </p>
-      </div>
-
-      {/* SINGLE PROFILE CARD - CONNECTS TO API */}
-      <div className="flex justify-center">
-        <Card
-          className="hover:shadow-lg transition-shadow cursor-pointer w-80 h-48"
-          onClick={handleProfileCardClick}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg font-medium text-gray-700">
-              Your Profile
-            </CardTitle>
-            <div className="p-3 rounded-lg bg-blue-100">
-              <UserCircle className="w-6 h-6 text-blue-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-gray-900 mb-2">
-              {studentName}
-            </div>
-            <p className="text-sm text-gray-600">
-              {studentDesignation} | {studentState} Police
-            </p>
-            <div className="mt-4 space-y-1 text-xs text-gray-500">
-              <p>• Click to view complete profile</p>
-              <p>• Fetched from database</p>
-              <p>• Umbrella: {studentUmbrella}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-};
 
 interface StudentDashboardOverviewProps {
   isBPRND?: boolean;
 }
 
-export const StudentDashboardOverview: React.FC<
-  StudentDashboardOverviewProps
-> = ({ isBPRND = false }) => {
-  // EARLY RETURN FOR BPRND - API-POWERED PROFILE
+export const StudentDashboardOverview: React.FC<StudentDashboardOverviewProps> = ({ 
+  isBPRND = false 
+}) => {
+  // Early return for BPRND students - completely separate component
   if (isBPRND) {
     return <BPRNDStudentDashboard />;
   }
-
-  // REGULAR STUDENT LOGIC BELOW
   const navigate = useNavigate();
 
   const [studentId, setStudentId] = useState<string>('');
-
+  
   const {
     courses,
     availableCredits,
@@ -103,7 +40,7 @@ export const StudentDashboardOverview: React.FC<
     courseCount,
     completedCourseCount,
     enrolledCourseCount,
-    refreshData,
+    refreshData
   } = useStudentDashboardData(studentId);
 
   // Debug logging
@@ -113,16 +50,14 @@ export const StudentDashboardOverview: React.FC<
     enrolledCourseCount,
     loading,
     error,
-    studentId,
+    studentId
   });
 
   // Log card values for debugging
   console.log('Card values:', {
     availableCourses: loading ? 'Loading...' : `${courseCount} courses`,
-    completedCourses: loading
-      ? 'Loading...'
-      : `${completedCourseCount} courses`,
-    enrolledCourses: loading ? 'Loading...' : `${enrolledCourseCount} courses`,
+    completedCourses: loading ? 'Loading...' : `${completedCourseCount} courses`,
+    enrolledCourses: loading ? 'Loading...' : `${enrolledCourseCount} courses`
   });
 
   // Get student ID from localStorage or other source
@@ -132,6 +67,8 @@ export const StudentDashboardOverview: React.FC<
       setStudentId(storedStudentId);
     }
   }, []);
+
+
 
   const handleCoursesCardClick = () => {
     navigate('/student/available-courses');
@@ -148,6 +85,8 @@ export const StudentDashboardOverview: React.FC<
   const handleProfileCardClick = () => {
     navigate('/student/profile');
   };
+
+
 
   const cards: Array<{
     title: string;
@@ -167,7 +106,7 @@ export const StudentDashboardOverview: React.FC<
       color: 'text-teal-600',
       bgColor: 'bg-teal-100',
       onClick: handleProfileCardClick,
-      clickable: true,
+      clickable: true
     },
     {
       title: 'Basic Info & Available Courses',
@@ -177,7 +116,7 @@ export const StudentDashboardOverview: React.FC<
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
       onClick: handleCoursesCardClick,
-      clickable: true,
+      clickable: true
     },
     {
       title: 'Enrolled Courses',
@@ -187,7 +126,7 @@ export const StudentDashboardOverview: React.FC<
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-100',
       onClick: handleEnrolledCoursesCardClick,
-      clickable: true,
+      clickable: true
     },
     {
       title: 'Completed Courses',
@@ -197,7 +136,7 @@ export const StudentDashboardOverview: React.FC<
       color: 'text-green-600',
       bgColor: 'bg-green-100',
       onClick: handleCompletedCoursesCardClick,
-      clickable: true,
+      clickable: true
     },
     {
       title: 'Credit Bank',
@@ -205,7 +144,7 @@ export const StudentDashboardOverview: React.FC<
       description: 'Total credits earned',
       icon: CreditCard,
       color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
+      bgColor: 'bg-purple-100'
     },
     {
       title: 'Available Credit',
@@ -213,7 +152,7 @@ export const StudentDashboardOverview: React.FC<
       description: 'Credits available for use',
       icon: Coins,
       color: 'text-orange-600',
-      bgColor: 'bg-orange-100',
+      bgColor: 'bg-orange-100'
     },
     {
       title: 'Used Credit',
@@ -221,7 +160,7 @@ export const StudentDashboardOverview: React.FC<
       description: 'Credits already utilized',
       icon: Award,
       color: 'text-red-600',
-      bgColor: 'bg-red-100',
+      bgColor: 'bg-red-100'
     },
     {
       title: 'Completed Courses Other Than RRU',
@@ -229,27 +168,23 @@ export const StudentDashboardOverview: React.FC<
       description: 'External course completions',
       icon: User,
       color: 'text-indigo-600',
-      bgColor: 'bg-indigo-100',
-    },
+      bgColor: 'bg-indigo-100'
+    }
   ];
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Student Dashboard</h1>
-        <p className="text-gray-700 mt-2">
-          Welcome back! Here's an overview of your academic progress.
-        </p>
+        <p className="text-gray-700 mt-2">Welcome back! Here's an overview of your academic progress.</p>
       </div>
 
       {/* Error Display */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h3 className="text-red-900 font-semibold mb-2">
-            Error occurred while loading data:
-          </h3>
+          <h3 className="text-red-900 font-semibold mb-2">Error occurred while loading data:</h3>
           <p className="text-red-700 text-sm">{error}</p>
-          <button
+          <button 
             onClick={refreshData}
             className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm"
           >
@@ -258,35 +193,36 @@ export const StudentDashboardOverview: React.FC<
         </div>
       )}
 
+
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {cards.map((card, index) => {
           const Icon = card.icon;
           return (
-            <Card
-              key={index}
-              className={`hover:shadow-lg transition-shadow ${
-                card.clickable ? 'cursor-pointer' : ''
-              }`}
+            <Card 
+              key={index} 
+              className={`hover:shadow-lg transition-shadow ${card.clickable ? 'cursor-pointer' : ''}`}
               onClick={card.onClick}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-700">
-                  {card.title}
-                </CardTitle>
+                              <CardTitle className="text-sm font-medium text-gray-700">
+                {card.title}
+              </CardTitle>
                 <div className={`p-2 rounded-lg ${card.bgColor}`}>
                   <Icon className={`w-4 h-4 ${card.color}`} />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900">
-                  {card.value}
-                </div>
+                <div className="text-2xl font-bold text-gray-900">{card.value}</div>
                 <p className="text-xs text-gray-600 mt-1">{card.description}</p>
               </CardContent>
             </Card>
           );
         })}
       </div>
+
+
+
     </div>
   );
 };

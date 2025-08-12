@@ -62,158 +62,35 @@ export const BPRNDProfilePage: React.FC = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Personal Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="w-5 h-5" />
-              Personal Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3">
-              <User className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-sm text-gray-500">Full Name</p>
-                <p className="font-medium">{profileData.name}</p>
-              </div>
+      <Card className="border-teal-200 bg-teal-50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-teal-700">Your Profile</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="grid grid-cols-3 gap-1">
+              <span className="text-sm font-medium">Name:</span>
+              <span className="text-sm col-span-2">{studentName}</span>
             </div>
-
-            <div className="flex items-center gap-3">
-              <Mail className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-sm text-gray-500">Email</p>
-                <p className="font-medium">{profileData.email}</p>
-              </div>
+            <div className="grid grid-cols-3 gap-1">
+              <span className="text-sm font-medium">Email:</span>
+              <span className="text-sm col-span-2">{studentEmail}</span>
             </div>
-
-            <div className="flex items-center gap-3">
-              <Phone className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-sm text-gray-500">Phone</p>
-                <p className="font-medium">{profileData.phone}</p>
-              </div>
+            <div className="grid grid-cols-3 gap-1">
+              <span className="text-sm font-medium">Designation:</span>
+              <span className="text-sm col-span-2">{studentDesignation}</span>
             </div>
-
-            <div className="flex items-center gap-3">
-              <MapPin className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-sm text-gray-500">State</p>
-                <p className="font-medium">{profileData.state}</p>
-              </div>
+            <div className="grid grid-cols-3 gap-1">
+              <span className="text-sm font-medium">State:</span>
+              <span className="text-sm col-span-2">{studentState}</span>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Professional Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building className="w-5 h-5" />
-              Professional Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3">
-              <FileText className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-sm text-gray-500">Employee ID</p>
-                <p className="font-medium">{profileData.employeeId}</p>
-              </div>
+            <div className="grid grid-cols-3 gap-1">
+              <span className="text-sm font-medium">Department:</span>
+              <span className="text-sm col-span-2">{studentDepartment}</span>
             </div>
-
-            <div className="flex items-center gap-3">
-              <Award className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-sm text-gray-500">Designation</p>
-                <p className="font-medium">{profileData.designation}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Building className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-sm text-gray-500">Department</p>
-                <p className="font-medium">{profileData.department}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Calendar className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-sm text-gray-500">Joining Date</p>
-                <p className="font-medium">{profileData.joiningDate}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Training Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5" />
-              Training Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3">
-              <GraduationCap className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-sm text-gray-500">Umbrella Category</p>
-                <Badge variant="secondary">{profileData.umbrella}</Badge>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <BookOpen className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-sm text-gray-500">Training Hours</p>
-                <p className="font-medium">{profileData.trainingHours} hours</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <CreditCard className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-sm text-gray-500">Credits Earned</p>
-                <p className="font-medium">
-                  {profileData.creditsEarned} credits
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Course Statistics */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <GraduationCap className="w-5 h-5" />
-              Course Statistics
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Completed Courses</span>
-              <Badge variant="default">{profileData.completedCourses}</Badge>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Ongoing Courses</span>
-              <Badge variant="secondary">{profileData.ongoingCourses}</Badge>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Total Courses</span>
-              <Badge variant="outline">
-                {profileData.completedCourses + profileData.ongoingCourses}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

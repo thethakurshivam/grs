@@ -59,10 +59,44 @@ const StudentLoginPage: React.FC<StudentLoginPageProps> = ({
       if (response.ok) {
         // Store authentication data
         localStorage.setItem('isStudentAuthenticated', 'true');
-        localStorage.setItem('studentEmail', data.student.email);
-        localStorage.setItem('studentName', data.student.full_name);
         localStorage.setItem('studentToken', data.token);
-        localStorage.setItem('studentId', data.student.id);
+        
+        if (isBPRND) {
+          // Store BPRND student information
+          localStorage.setItem('studentEmail', data.student.email);
+          localStorage.setItem('studentName', data.student.Name);
+          localStorage.setItem('studentId', data.student._id);
+          
+          // Store professional information
+          localStorage.setItem('studentDesignation', data.student.Designation || '');
+          localStorage.setItem('studentState', data.student.State || '');
+          localStorage.setItem('studentDepartment', data.student.Department || '');
+          localStorage.setItem('studentEmployeeId', data.student.EmployeeId || '');
+          
+          // Store training information
+          localStorage.setItem('studentUmbrella', data.student.Umbrella || '');
+          
+          // Store contact information
+          localStorage.setItem('studentPhone', data.student.Phone || '');
+          localStorage.setItem('studentJoiningDate', data.student.JoiningDate || '');
+          
+          // Store complete data backup
+          localStorage.setItem('bprndStudentData', JSON.stringify(data.student));
+          
+          // Log stored data for debugging
+          console.log('BPRND student data stored:', {
+            name: data.student.Name,
+            email: data.student.email,
+            designation: data.student.Designation,
+            state: data.student.State,
+            umbrella: data.student.Umbrella
+          });
+        } else {
+          // Store regular student information
+          localStorage.setItem('studentEmail', data.student.email);
+          localStorage.setItem('studentName', data.student.full_name);
+          localStorage.setItem('studentId', data.student.id);
+        }
 
         toast({
           title: 'Success',
