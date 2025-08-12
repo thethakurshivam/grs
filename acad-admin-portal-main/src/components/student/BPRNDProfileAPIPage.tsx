@@ -15,7 +15,7 @@ export const BPRNDProfileAPIPage: React.FC = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">BPRND Student Profile</h1>
+          <h1 className="text-3xl font-bold text-gray-900">BPR&D Student Profile</h1>
           <p className="text-gray-700 mt-2">Loading your profile information...</p>
         </div>
         <div className="flex justify-center items-center h-64">
@@ -29,7 +29,7 @@ export const BPRNDProfileAPIPage: React.FC = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">BPRND Student Profile</h1>
+          <h1 className="text-3xl font-bold text-gray-900">BPR&D Student Profile</h1>
           <p className="text-gray-700 mt-2">Error loading profile information</p>
         </div>
         <Card className="border border-red-200 bg-white">
@@ -70,7 +70,7 @@ export const BPRNDProfileAPIPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">BPRND Student Profile</h1>
+        <h1 className="text-3xl font-bold text-gray-900">BPR&D Student Profile</h1>
         <p className="text-gray-700 mt-2">Profile loaded from API - All data from credit_calculations collection</p>
       </div>
 

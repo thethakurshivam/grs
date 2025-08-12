@@ -508,9 +508,32 @@ router.get('/student/:id/certifications', async (req, res) => {
       'Emergency_Management',
     ];
 
+    // Build a working copy of umbrella credits
+    const creditsByField = {};
+    let anyUmbrellaCredits = false;
+    for (const key of UMBRELLA_FIELDS) {
+      const val = Number(student[key] || 0);
+      creditsByField[key] = val;
+      if (val > 0) anyUmbrellaCredits = true;
+    }
+
+    // Fallback: Some historical records only have Total_Credits and Umbrella name filled.
+    // If none of the umbrella-specific fields have credits, attribute Total_Credits to the student's Umbrella.
+    if (!anyUmbrellaCredits && typeof student.Total_Credits === 'number' && student.Total_Credits > 0 && student.Umbrella) {
+      const umbrellaName = String(student.Umbrella)
+        .trim()
+        .replace(/\s+/g, '_');
+      const matchedKey = UMBRELLA_FIELDS.find(
+        (k) => k.toLowerCase() === umbrellaName.toLowerCase()
+      );
+      if (matchedKey) {
+        creditsByField[matchedKey] = Number(student.Total_Credits);
+      }
+    }
+
     const results = [];
     for (const key of UMBRELLA_FIELDS) {
-      const credits = Number(student[key] || 0);
+      const credits = Number(creditsByField[key] || 0);
       let qualification = null;
       if (credits >= 40) {
         qualification = 'pg diploma';

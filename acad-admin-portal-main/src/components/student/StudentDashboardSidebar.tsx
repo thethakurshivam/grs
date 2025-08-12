@@ -4,12 +4,15 @@ import {
   LogOut,
   Plus,
   Award,
-  BadgeCheck
+  BadgeCheck,
+  ExternalLink
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export const StudentDashboardSidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleLogout = () => {
     // Clear all student-related data from localStorage
@@ -35,6 +38,13 @@ export const StudentDashboardSidebar: React.FC = () => {
     navigate('/student/bprnd/claim-credits');
   };
 
+  const handleRise = () => {
+    toast({ title: 'Redirecting', description: 'Opening RISE portal...' });
+    setTimeout(() => {
+      window.open('https://rise.rru.ac.in/', '_blank', 'noopener');
+    }, 900);
+  };
+
   const menuItems: Array<{
     name: string;
     icon: React.ComponentType<{ className?: string }>;
@@ -58,6 +68,12 @@ export const StudentDashboardSidebar: React.FC = () => {
       icon: BadgeCheck,
       path: '/student/bprnd/claim-credits',
       onClick: handleClaimCredits,
+    },
+    {
+      name: 'Rise',
+      icon: ExternalLink,
+      path: '/student/bprnd/rise',
+      onClick: handleRise,
     },
   ];
 

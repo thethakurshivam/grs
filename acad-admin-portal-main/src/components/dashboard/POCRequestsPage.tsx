@@ -11,6 +11,7 @@ const POCRequestsPage = () => {
   const location = useLocation();
   const basePath = location.pathname.startsWith('/poc-portal/bprnd') ? '/poc-portal/bprnd' : '/poc-portal';
   const { data, isLoading, error, refetch } = useBPRNDPendingCredits();
+  const [actedIds, setActedIds] = useState<Record<string, true>>({});
   const { toast } = useToast();
   
   const handleAccept = async (item: {
@@ -52,7 +53,9 @@ const POCRequestsPage = () => {
         title: 'Credits applied',
         description: `New credits: ${json?.data?.newCredits} | Total: ${json?.data?.updatedTotalCredits}`,
       });
-      refetch();
+      setActedIds((prev) => ({ ...prev, [item.id]: true }));
+      // Optional backend refetch to update list if needed
+      // refetch();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Network error applying credits';
       toast({ title: 'Error', description: message, variant: 'destructive' });
@@ -146,13 +149,23 @@ const POCRequestsPage = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleAccept(item)}
-                        className="px-3 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-md"
-                      >
-                        Accept
-                      </button>
-                      <a href={item.rejectUrl} className="px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md">Reject</a>
+                      {!actedIds[item.id] && (
+                        <>
+                          <button
+                            onClick={() => handleAccept(item)}
+                            className="px-3 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-md"
+                          >
+                            Accept
+                          </button>
+                          <a
+                            onClick={() => setActedIds((prev) => ({ ...prev, [item.id]: true }))}
+                            href={item.rejectUrl}
+                            className="px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md"
+                          >
+                            Reject
+                          </a>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}

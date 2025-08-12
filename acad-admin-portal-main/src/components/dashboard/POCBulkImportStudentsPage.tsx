@@ -45,8 +45,8 @@ const POCBulkImportStudentsPage: React.FC<POCBulkImportStudentsPageProps> = ({
     error: coursesError,
   } = usePOCCoursesForDropdown();
   const {
-    umbrellas,
-    loading: umbrellasLoading,
+    data: umbrellas,
+    isLoading: umbrellasLoading,
     error: umbrellasError,
   } = useBPRNDUmbrellas();
 
@@ -375,7 +375,7 @@ const POCBulkImportStudentsPage: React.FC<POCBulkImportStudentsPageProps> = ({
                   Umbrella *{' '}
                   {umbrellasLoading
                     ? '(Loading...)'
-                    : `(${umbrellas.length} available)`}
+                    : `(${(umbrellas?.length || 0)} available)`}
                 </Label>
                 <Select
                   value={umbrella}
@@ -385,16 +385,16 @@ const POCBulkImportStudentsPage: React.FC<POCBulkImportStudentsPageProps> = ({
                   <SelectTrigger>
                     <SelectValue
                       placeholder={
-                        umbrellasLoading
+                         umbrellasLoading
                           ? 'Loading umbrellas...'
-                          : umbrellas.length === 0
+                          : (umbrellas?.length || 0) === 0
                           ? 'No umbrellas available'
                           : 'Select an umbrella'
                       }
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {umbrellas.map((umbrellaItem) => (
+                    {(umbrellas || []).map((umbrellaItem) => (
                       <SelectItem
                         key={umbrellaItem._id}
                         value={umbrellaItem.name}

@@ -394,8 +394,8 @@ app.post('/api/bprnd/pending-credits/:studentId/apply', async (req, res) => {
       });
     }
 
-    // Compute new credits as integer part of (Total_Hours / 15)
-    const newCredits = Math.floor(hoursNum / 15);
+    // Compute new credits and always award at least 1 credit when hours > 0
+    const newCredits = hoursNum > 0 ? Math.ceil(hoursNum / 15) : 0;
 
     // Find student and update Total_Credits
     const student = await bprndStudents.findById(studentId);
@@ -404,7 +404,6 @@ app.post('/api/bprnd/pending-credits/:studentId/apply', async (req, res) => {
     }
 
     const previousTotal = Number(student.Total_Credits || 0);
-    student.Total_Credits = previousTotal + newCredits;
 
     // Also increment the umbrella-specific field so breakdown reflects the change
     const UMBRELLA_KEYS = [
@@ -419,20 +418,51 @@ app.post('/api/bprnd/pending-credits/:studentId/apply', async (req, res) => {
       'Intelligence_Studies',
       'Emergency_Management',
     ];
-    const norm = String(discipline || '')
+    const normalize = (s) => String(s || '')
       .toLowerCase()
-      .replace(/_/g, ' ')
+      .replace(/[_-]+/g, ' ')
+      .replace(/[^a-z\s]/g, '')
       .replace(/\s+/g, ' ')
       .trim();
-    const fieldKey = UMBRELLA_KEYS.find(
-      (k) => k.replace(/_/g, ' ').toLowerCase() === norm
+    const normDiscipline = normalize(discipline);
+    let fieldKey = UMBRELLA_KEYS.find(
+      (k) => normalize(k.replace(/_/g, ' ')) === normDiscipline
     );
-    if (fieldKey && Object.prototype.hasOwnProperty.call(student, fieldKey)) {
-      const current = Number(student[fieldKey] || 0);
-      student[fieldKey] = current + newCredits;
+    if (!fieldKey) {
+      // Try partial includes match
+      fieldKey = UMBRELLA_KEYS.find(
+        (k) => normalize(k.replace(/_/g, ' ')).includes(normDiscipline) ||
+               normDiscipline.includes(normalize(k.replace(/_/g, ' ')))
+      );
+    }
+    if (!fieldKey && student && student.Umbrella) {
+      // Fallback to student's umbrella selection
+      const normStudentUmbrella = normalize(student.Umbrella);
+      fieldKey = UMBRELLA_KEYS.find(
+        (k) => normalize(k.replace(/_/g, ' ')) === normStudentUmbrella
+      ) || UMBRELLA_KEYS.find(
+        (k) => normalize(k.replace(/_/g, ' ')).includes(normStudentUmbrella)
+      );
+    }
+    if (fieldKey) {
+      await bprndStudents.updateOne(
+        { _id: studentId },
+        {
+          $inc: {
+            Total_Credits: newCredits,
+            [fieldKey]: newCredits,
+          },
+        }
+      );
+    } else {
+      await bprndStudents.updateOne(
+        { _id: studentId },
+        { $inc: { Total_Credits: newCredits } }
+      );
     }
 
-    await student.save();
+    // Reload the student to get updated values
+    const updatedStudent = await bprndStudents.findById(studentId);
 
     return res.status(200).json({
       success: true,
@@ -446,9 +476,9 @@ app.post('/api/bprnd/pending-credits/:studentId/apply', async (req, res) => {
         noOfDays: daysNum,
         pdf: pdf || null,
         newCredits,
-        updatedTotalCredits: student.Total_Credits,
+        updatedTotalCredits: updatedStudent ? updatedStudent.Total_Credits : previousTotal + newCredits,
         updatedUmbrellaField: fieldKey || null,
-        updatedUmbrellaCredits: fieldKey ? student[fieldKey] : null,
+        updatedUmbrellaCredits: fieldKey && updatedStudent ? updatedStudent[fieldKey] : null,
         previousTotalCredits: previousTotal,
       },
     });

@@ -50,7 +50,7 @@ const BPRNDClaimCredits: React.FC = () => {
     <StudentDashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Claim Credits</h1>
+          <h1 className="text-3xl font-bold text-gray-900">BPR&D Claim Credits</h1>
           <p className="text-gray-700 mt-2">Review your eligibility and claim certifications.</p>
         </div>
 

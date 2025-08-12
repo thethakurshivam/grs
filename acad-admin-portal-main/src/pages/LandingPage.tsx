@@ -135,7 +135,7 @@ const LandingPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* BPRND Student Card */}
+          {/* BPR&D Student Card */}
           <Card
             className="bg-white hover:shadow-lg transition-shadow cursor-pointer border-[#0b2e63]"
             onClick={handleBPRNDClick}
@@ -147,24 +147,24 @@ const LandingPage: React.FC = () => {
                 </div>
               </div>
               <CardTitle className="text-xl font-bold text-[#0b2e63]">
-                BPRND Student Portal
+                BPR&D Student Portal
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-black mb-6 text-sm">
-                Access BPRND student dashboard to view courses, projects, and
+                Access BPR&D student dashboard to view courses, projects, and
                 research activities.
               </p>
               <Button
                 className="w-full bg-[#0b2e63] hover:bg-[#09264f] text-white"
                 onClick={handleBPRNDClick}
               >
-                Access BPRND Portal
+                Access BPR&D Portal
               </Button>
             </CardContent>
           </Card>
 
-          {/* BPRND POC Card */}
+          {/* BPR&D POC Card */}
           <Card
             className="bg-white hover:shadow-lg transition-shadow cursor-pointer border-[#0b2e63]"
             onClick={handleBPRNDPOCClick}
@@ -176,19 +176,19 @@ const LandingPage: React.FC = () => {
                 </div>
               </div>
               <CardTitle className="text-xl font-bold text-[#0b2e63]">
-                BPRND POC Portal
+                BPR&D POC Portal
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-black mb-6 text-sm">
-                Access the BPRND Point of Contact portal to manage research
+                Access the BPR&D Point of Contact portal to manage research
                 activities, partnerships, and student progress.
               </p>
               <Button
                 className="w-full bg-[#0b2e63] hover:bg-[#09264f] text-white"
                 onClick={handleBPRNDPOCClick}
               >
-                Access BPRND POC Portal
+                Access BPR&D POC Portal
               </Button>
             </CardContent>
           </Card>

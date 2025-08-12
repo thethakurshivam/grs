@@ -107,17 +107,17 @@ const POCLogin: React.FC<POCLoginProps> = ({ isBPRND = false }) => {
                 <Activity className="h-8 w-8 text-white" />
               </div>
             </div>
-            <CardTitle
+              <CardTitle
               className={
                 isBPRND
                   ? 'text-2xl font-bold text-[#0b2e63]'
                   : 'text-2xl font-bold text-gray-900'
               }
             >
-              {isBPRND ? 'BPRND POC Portal Login' : 'POC Portal Login'}
+              {isBPRND ? 'BPR&D POC Portal Login' : 'POC Portal Login'}
             </CardTitle>
             <CardDescription className={isBPRND ? 'text-black/70' : 'text-gray-600'}>
-              Access your {isBPRND ? 'BPRND POC' : 'POC'} management dashboard
+              Access your {isBPRND ? 'BPR&D POC' : 'POC'} management dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>

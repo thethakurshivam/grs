@@ -21,10 +21,10 @@ export const StudentDashboardLayout: React.FC<StudentDashboardLayoutProps> = ({ 
   }, [navigate]);
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-blue-50 text-black">
       <StudentDashboardSidebar />
       <main className="flex-1 overflow-y-auto">
-        <div className="p-6">
+        <div className="p-8">
           {children}
         </div>
       </main>

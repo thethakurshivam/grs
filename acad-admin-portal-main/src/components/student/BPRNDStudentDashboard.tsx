@@ -38,56 +38,55 @@ export const BPRNDStudentDashboard: React.FC = () => {
     <StudentDashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">BPRND Student Dashboard</h1>
-          <p className="text-gray-700 mt-2">
-            Welcome to your BPRND portal! Access your profile and training information.
-          </p>
+          <h1 className="text-4xl font-extrabold text-[#0b2e63]">BPR&D Student Portal</h1>
+          <p className="text-lg text-black mt-2">Access your profile, credits and certifications.</p>
         </div>
 
         <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6">
           <Card
-            className="hover:shadow-lg transition-shadow cursor-pointer"
+            className="bg-white border border-[#0b2e63]/20 hover:border-[#0b2e63]/40 hover:shadow-xl transition-shadow cursor-pointer rounded-xl"
             onClick={handleProfileCardClick}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700">
+              <CardTitle className="text-lg font-bold text-black">
                 Your Profile
               </CardTitle>
-              <UserCircle className="h-5 w-5 text-[#0b2e63]" />
+              <div className="h-9 w-9 rounded-full bg-[#0b2e63]/10 flex items-center justify-center">
+                <UserCircle className="h-5 w-5 text-[#0b2e63]" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-sm">
-                <p className="font-medium">{studentName}</p>
-                <p className="text-gray-600">{studentDesignation} | {studentState} Police</p>
+              <div className="text-lg text-black">
+                <p className="font-semibold">{studentName}</p>
+                <p className="opacity-80">{studentDesignation} | {studentState} Police</p>
                 <div className="mt-3 space-y-1">
-                  <p className="text-xs">• Training Hours: 120 hrs</p>
-                  <p className="text-xs">• Credits Earned: 45</p>
-                  <p className="text-xs">• Umbrella: {studentUmbrella}</p>
+                  <p className="text-base">• Training Hours: 120 hrs</p>
+                  <p className="text-base">• Credits Earned: 45</p>
+                  <p className="text-base">• Umbrella: {studentUmbrella}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card
-            className="hover:shadow-lg transition-shadow cursor-pointer"
+            className="bg-white border border-[#0b2e63]/20 hover:border-[#0b2e63]/40 hover:shadow-xl transition-shadow cursor-pointer rounded-xl"
             onClick={handleCreditCardClick}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700">
+              <CardTitle className="text-lg font-bold text-black">
                 Credit
               </CardTitle>
-              <CreditCard className="h-5 w-5 text-[#0b2e63]" />
+              <div className="h-9 w-9 rounded-full bg-[#0b2e63]/10 flex items-center justify-center">
+                <CreditCard className="h-5 w-5 text-[#0b2e63]" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-sm">
-                <p className="text-gray-600">View your credit history and balance</p>
+              <div className="text-lg text-black">
+                <p className="opacity-80">View your credit history and balance</p>
                 <div className="mt-3 space-y-1">
-                  <p className="text-xs">
-                    • Current Balance:{' '}
-                    {isLoading ? 'Loading...' : typeof totalCredits === 'number' ? `${totalCredits} Credits` : 'N/A'}
-                  </p>
+                  <p className="text-base">• Current Balance {isLoading ? 'Loading...' : typeof totalCredits === 'number' ? `${totalCredits} Credits` : 'N/A'}</p>
                   {error && (
-                    <p className="text-xs text-red-600" title={error}>• Failed to load credits</p>
+                    <p className="text-sm text-red-600" title={error}>• Failed to load credits</p>
                   )}
                 </div>
               </div>
