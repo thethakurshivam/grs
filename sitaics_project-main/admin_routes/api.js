@@ -85,7 +85,8 @@ const School = require('../models/school');
 const Field = require('../models/fields');
 const Admin = require('../models/admin');
 const PendingAdmin = require('../models/pendingAdmin');
-const Candidate = require('../models/students');
+// Use the existing Student model for candidates/participants
+const Candidate = require('../models1/student');
 const Student = require('../models1/student'); // Import the correct Student model
 
 // Input sanitization helper

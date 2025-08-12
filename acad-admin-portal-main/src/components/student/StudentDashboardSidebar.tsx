@@ -5,7 +5,8 @@ import {
   Plus,
   Award,
   BadgeCheck,
-  ExternalLink
+  ExternalLink,
+  Home
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,6 +14,8 @@ export const StudentDashboardSidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const isBprnd = location.pathname.startsWith('/student/bprnd');
 
   const handleLogout = () => {
     // Clear all student-related data from localStorage
@@ -45,6 +48,14 @@ export const StudentDashboardSidebar: React.FC = () => {
     }, 900);
   };
 
+  const handleDashboard = () => {
+    navigate('/student/bprnd/dashboard');
+  };
+
+  const handleTrainingCalendar = () => {
+    navigate('/student/bprnd/training-calendar');
+  };
+
   const menuItems: Array<{
     name: string;
     icon: React.ComponentType<{ className?: string }>;
@@ -52,10 +63,22 @@ export const StudentDashboardSidebar: React.FC = () => {
     onClick?: () => void;
   }> = [
     {
-      name: 'Add Course Other Than RRU',
+      name: 'Dashboard',
+      icon: Home,
+      path: '/student/bprnd/dashboard',
+      onClick: handleDashboard,
+    },
+    {
+      name: 'Add courses',
       icon: Plus,
-      path: '/student/add-course-other-than-rru',
+      path: '/student/previous-courses',
       onClick: handleAddCourseOtherThanRRU,
+    },
+    {
+      name: 'Training Calendar',
+      icon: ExternalLink,
+      path: '/student/bprnd/training-calendar',
+      onClick: handleTrainingCalendar,
     },
     {
       name: 'Certifications',
@@ -80,7 +103,7 @@ export const StudentDashboardSidebar: React.FC = () => {
   return (
     <div className="w-64 bg-sidebar-background shadow-lg">
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-800">Student Portal</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{isBprnd ? 'BPR&D Student' : 'Student'} Portal</h1>
       </div>
       
       <nav className="mt-6">

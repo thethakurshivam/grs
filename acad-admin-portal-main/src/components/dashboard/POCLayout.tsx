@@ -71,7 +71,7 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
   return (
     <div
       className={
-        type === 'bprnd' ? 'min-h-screen bg-blue-50 flex' : 'min-h-screen bg-gray-50 flex'
+        type === 'bprnd' ? 'min-h-screen bg-blue-50 text-black flex' : 'min-h-screen bg-gray-50 flex'
       }
     >
       {/* Sidebar */}
@@ -108,7 +108,7 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
                     : 'text-lg font-semibold text-gray-900'
                 }
               >
-                {type === 'bprnd' ? 'BPRND POC Portal' : 'POC Portal'}
+                {type === 'bprnd' ? 'BPR&D POC Portal' : 'POC Portal'}
               </h2>
               <p className={type === 'bprnd' ? 'text-sm text-black/60' : 'text-sm text-gray-500'}>
                 Management Dashboard
@@ -216,7 +216,7 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
               <p className={type === 'bprnd' ? 'text-black/70' : 'text-gray-600'}>
                 {isActive(basePath) &&
                   `Welcome to the ${
-                    type === 'bprnd' ? 'BPRND POC' : 'POC'
+                    type === 'bprnd' ? 'BPR&D POC' : 'POC'
                   } portal. Manage and monitor all activities from here.`}
                 {isActive('/poc-portal/students') &&
                   'Manage and view all students associated with your POC account.'}

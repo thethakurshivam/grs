@@ -86,7 +86,7 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground">
-                {type === 'bprnd' ? 'BPRND POC Portal' : 'POC Portal'}
+                {type === 'bprnd' ? 'BPR&D POC Portal' : 'POC Portal'}
               </h2>
               <p className="text-sm text-muted-foreground">Management Dashboard</p>
             </div>
@@ -158,7 +158,7 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
               <p className="text-gray-600">
                 {isActive(basePath) &&
                   `Welcome to the ${
-                    type === 'bprnd' ? 'BPRND POC' : 'POC'
+                    type === 'bprnd' ? 'BPR&D POC' : 'POC'
                   } portal. Manage and monitor all activities from here.`}
                 {isActive('/poc-portal/students') &&
                   'Manage and view all students associated with your POC account.'}

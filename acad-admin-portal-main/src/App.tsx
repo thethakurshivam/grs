@@ -32,6 +32,7 @@ import BPRNDStudentProfile from './pages/BPRNDStudentProfile';
 import BPRNDStudentProfileAPI from './pages/BPRNDStudentProfileAPI';
 import BPRNDCertifications from './pages/BPRNDCertifications';
 import BPRNDClaimCredits from './pages/BPRNDClaimCredits';
+import BPRNDTrainingCalendar from './pages/BPRNDTrainingCalendar';
 import { CompletedCoursesList } from './pages/CompletedCoursesList';
 import EnrolledCoursesList from './pages/EnrolledCoursesList';
 import SectorTrainingFields from './pages/SectorTrainingFields';
@@ -205,6 +206,11 @@ const App = () => (
             path="/student/bprnd/signup"
             element={<StudentSignup isBPRND />}
           />
+          {/* Default redirect to dashboard for BPRND root */}
+          <Route
+            path="/student/bprnd"
+            element={<BPRNDStudentDashboard />}
+          />
           <Route
             path="/student/bprnd/profile-api"
             element={<BPRNDStudentProfileAPI />}
@@ -224,6 +230,10 @@ const App = () => (
           <Route
             path="/student/bprnd/claim-credits"
             element={<BPRNDClaimCredits />}
+          />
+          <Route
+            path="/student/bprnd/training-calendar"
+            element={<BPRNDTrainingCalendar />}
           />
 
           {/* Legacy Routes - Redirect to landing page */}

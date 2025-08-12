@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-const POCMOUsPage = () => {
+interface Props { type?: 'standard' | 'bprnd' }
+const POCMOUsPage: React.FC<Props> = ({ type = 'standard' }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const basePath = location.pathname.startsWith('/poc-portal/bprnd') ? '/poc-portal/bprnd' : '/poc-portal';
@@ -32,9 +33,9 @@ const POCMOUsPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={type === 'bprnd' ? 'min-h-screen bg-blue-50 text-black' : 'min-h-screen bg-gray-50'}>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className={type === 'bprnd' ? 'bg-white shadow-sm border-b border-[#0b2e63]/20' : 'bg-white shadow-sm border-b border-gray-200'}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
@@ -60,8 +61,8 @@ const POCMOUsPage = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">MOUs Management</h2>
-          <p className="text-gray-600">Manage and monitor all Memorandums of Understanding</p>
+          <h2 className={type === 'bprnd' ? 'text-3xl font-extrabold text-[#0b2e63] mb-2' : 'text-3xl font-bold text-gray-900 mb-2'}>MOUs Management</h2>
+          <p className={type === 'bprnd' ? 'text-black/80' : 'text-gray-600'}>Manage and monitor all Memorandums of Understanding</p>
         </div>
 
         {/* Stats Cards */}

@@ -124,18 +124,18 @@ const PreviousCoursesForm: React.FC = () => {
             onClick={() => navigate('/student/dashboard')}
             className="hover:bg-gray-100 rounded-full"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-700" />
+            <ArrowLeft className="h-5 w-5 text-indigo-800" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900">Add Course Other Than RRU</h1>
-            <p className="text-gray-600 mt-2">Submit a course certificate (PDF) for pending credits.</p>
+            <h1 className="text-3xl font-bold text-indigo-900">Add Course Other Than RRU</h1>
+            <p className="text-gray-800 mt-2">Submit a course certificate (PDF) for pending credits.</p>
           </div>
         </div>
 
         {/* Form */}
         <Card className="border-0 shadow-lg bg-white">
           <CardHeader className="border-b border-gray-200 px-8 py-6">
-            <CardTitle className="text-2xl font-semibold text-gray-900 flex items-center gap-3">
+            <CardTitle className="text-2xl font-semibold text-indigo-900 flex items-center gap-3">
               <div className="p-2 bg-indigo-100 rounded-lg">
                 <Upload className="h-6 w-6 text-indigo-600" />
               </div>
@@ -145,7 +145,7 @@ const PreviousCoursesForm: React.FC = () => {
           <CardContent className="p-8 space-y-8">
             {/* Applicant name */}
             <div className="space-y-3">
-              <Label htmlFor="applicant-name" className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
+              <Label htmlFor="applicant-name" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
                 Your Name *
               </Label>
               <Input
@@ -153,37 +153,51 @@ const PreviousCoursesForm: React.FC = () => {
                 value={applicantName}
                 onChange={(e) => setApplicantName(e.target.value)}
                 placeholder="e.g., John Doe"
-                className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base"
+                className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
               />
             </div>
 
             {/* Discipline */}
             <div className="space-y-3">
-              <Label htmlFor="discipline" className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
+              <Label htmlFor="discipline" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
                 Discipline *
               </Label>
               <select
                 id="discipline"
                 value={discipline}
                 onChange={(e) => setDiscipline(e.target.value)}
-                className="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base rounded-md"
+                className="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base rounded-md text-gray-900"
               >
                 <option value="" disabled>{umbrellasLoading ? 'Loading...' : 'Select a discipline'}</option>
-                {umbrellas.map((u) => (
+                {(umbrellas || []).map((u) => (
                   <option key={u._id} value={u.name}>{u.name}</option>
                 ))}
               </select>
               {umbrellasError && (
-                <p className="text-sm text-red-600">Failed to load disciplines: {umbrellasError}</p>
+                <p className="text-sm text-red-700">Failed to load disciplines: {umbrellasError}</p>
               )}
             </div>
 
             {previousCourses.map((course, index) => (
               <Card key={index} className="border border-gray-200 bg-gray-50 shadow-sm">
                 <CardContent className="p-8 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-indigo-900">Course {index + 1}</h3>
+                    {previousCourses.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeCourse(index)}
+                        className="border-red-200 text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" /> Remove
+                      </Button>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <Label htmlFor={`org-${index}`} className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
+                      <Label htmlFor={`org-${index}`} className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
                         Organization *
                       </Label>
                       <Input
@@ -191,12 +205,12 @@ const PreviousCoursesForm: React.FC = () => {
                         value={course.organization_name}
                         onChange={(e) => updateCourse(index, 'organization_name', e.target.value)}
                         placeholder="e.g., Coursera, edX, ..."
-                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base"
+                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
                       />
                     </div>
 
                   <div className="space-y-3">
-                      <Label htmlFor={`course-${index}`} className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
+                      <Label htmlFor={`course-${index}`} className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
                         Course Name
                       </Label>
                       <Input
@@ -204,7 +218,7 @@ const PreviousCoursesForm: React.FC = () => {
                         value={course.course_name}
                         onChange={(e) => updateCourse(index, 'course_name', e.target.value)}
                         placeholder="e.g., Machine Learning, Web Development..."
-                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base"
+                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
                       />
                     </div>
                   </div>
@@ -212,7 +226,7 @@ const PreviousCoursesForm: React.FC = () => {
                   {/* Totals */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <Label htmlFor="total-hours" className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
+                      <Label htmlFor="total-hours" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
                         Total Hours *
                       </Label>
                       <Input
@@ -222,11 +236,11 @@ const PreviousCoursesForm: React.FC = () => {
                         value={totalHours}
                         onChange={(e) => setTotalHours(e.target.value)}
                         placeholder="e.g., 40"
-                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base"
+                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label htmlFor="no-of-days" className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
+                      <Label htmlFor="no-of-days" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
                         Number of Days *
                       </Label>
                       <Input
@@ -236,13 +250,13 @@ const PreviousCoursesForm: React.FC = () => {
                         value={noOfDays}
                         onChange={(e) => setNoOfDays(e.target.value)}
                         placeholder="e.g., 5"
-                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base"
+                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <Label htmlFor={`cert-${index}`} className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
+                    <Label htmlFor={`cert-${index}`} className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
                       Certificate PDF *
                     </Label>
                     <div className="flex items-center gap-4">
@@ -256,7 +270,7 @@ const PreviousCoursesForm: React.FC = () => {
                         />
                       </div>
                     </div>
-                    <p className="text-xs text-gray-500">Upload your course completion certificate (PDF format only)</p>
+                    <p className="text-sm text-gray-700">Upload your course completion certificate (PDF format only)</p>
                   </div>
                 </CardContent>
               </Card>
@@ -267,7 +281,7 @@ const PreviousCoursesForm: React.FC = () => {
                 type="button"
                 variant="outline"
                 onClick={addCourse}
-                className="w-full border-2 border-dashed border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-indigo-300 h-16 text-base font-medium"
+                className="w-full border-2 border-dashed border-gray-300 text-indigo-800 hover:bg-gray-50 hover:border-indigo-300 h-16 text-base font-medium"
               >
                 <Plus className="h-5 w-5 mr-3" />
                 Add Another Course
@@ -278,7 +292,7 @@ const PreviousCoursesForm: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={() => navigate('/student/dashboard')}
-                className="flex-1 h-12 text-base font-medium border-gray-300 text-gray-700 hover:bg-gray-50"
+                className="flex-1 h-12 text-base font-medium border-gray-300 text-indigo-800 hover:bg-gray-50"
               >
                 Cancel
               </Button>

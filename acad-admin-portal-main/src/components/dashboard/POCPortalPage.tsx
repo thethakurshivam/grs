@@ -86,11 +86,12 @@ const POCPortalPage: React.FC<POCComponentProps> = ({ type = 'standard' }) => {
       {/* Welcome Section */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          POC Portal Dashboard 👋
+          {type === 'bprnd' ? 'BPR&D POC Portal Dashboard 👋' : 'POC Portal Dashboard 👋'}
         </h2>
         <p className="text-gray-600">
-          Welcome to the POC (Proof of Concept) portal. Manage and monitor all
-          POC activities from here.
+          {type === 'bprnd'
+            ? 'Welcome to the POC (Point of Contact) portal. Manage and monitor all POC activities from here.'
+            : 'Welcome to the POC (Proof of Concept) portal. Manage and monitor all POC activities from here.'}
         </p>
       </div>
 

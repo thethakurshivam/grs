@@ -135,11 +135,11 @@ const POCSignup: React.FC<POCSignupProps> = ({ isBPRND = false }) => {
             </div>
             <CardTitle className="text-2xl font-bold text-gray-900">
               {isBPRND
-                ? 'BPRND POC Portal Registration'
+                ? 'BPR&D POC Portal Registration'
                 : 'POC Portal Registration'}
             </CardTitle>
             <CardDescription className="text-gray-600">
-              Create your {isBPRND ? 'BPRND POC' : 'POC'} account to access the
+              Create your {isBPRND ? 'BPR&D POC' : 'POC'} account to access the
               management dashboard
             </CardDescription>
           </CardHeader>
