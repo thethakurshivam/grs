@@ -9,6 +9,8 @@ const fs = require('fs');
 const CreditCalculation = require('./model3/bprndstudents');
 const umbrella = require('./model3/umbrella');
 const Credit = require('./model3/credit');
+const multer = require('multer');
+const PendingCredits = require('./model3/pendingcredits'); // Import your schema
 
 // Load environment variables from .env.api4 file
 require('dotenv').config({ path: '.env.api4' });
@@ -16,6 +18,44 @@ require('dotenv').config({ path: '.env.api4' });
 const app = express();
 const router = express.Router();
 const PORT = process.env.PORT || 3004;
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads', 'pdfs');
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log('📁 Created uploads directory:', uploadsDir);
+  }
+} catch (e) {
+  console.warn('⚠️ Could not ensure uploads dir:', e?.message);
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// File filter to only allow PDFs
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === 'application/pdf') {
+    cb(null, true);
+  } else {
+    cb(new Error('Only PDF files are allowed'), false);
+  }
+};
+
+const upload = multer({ 
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
 
 // MongoDB connection
 const MONGODB_URI =
@@ -220,6 +260,47 @@ router.get('/student/:id', async (req, res) => {
     });
   }
 });
+
+// Pending credits upload (PDF)
+router.post('/pending-credits', upload.single('pdf'), async (req, res) => {
+  try {
+    const { name, organization } = req.body;
+
+    // Validate required fields
+    if (!name || !organization || !req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, organization, and PDF file are required'
+      });
+    }
+
+    // Create new pending credit record
+    const pendingCredit = new PendingCredits({
+      name: name,
+      organization: organization,
+      pdf: req.file.path // Store the file path
+    });
+
+    // Save to database
+    const savedRecord = await pendingCredit.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Pending credit record created successfully',
+      data: savedRecord
+    });
+
+  } catch (error) {
+    console.error('Error creating pending credit:', error);
+    res.status(500).json({
+      success: false,
+      message: error?.message || 'Internal server error'
+    });
+  }
+});
+
+
+
 
 // Mount router
 app.use('/', router);

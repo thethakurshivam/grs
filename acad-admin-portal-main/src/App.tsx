@@ -34,6 +34,7 @@ import { CompletedCoursesList } from './pages/CompletedCoursesList';
 import EnrolledCoursesList from './pages/EnrolledCoursesList';
 import SectorTrainingFields from './pages/SectorTrainingFields';
 import FieldCourses from './pages/FieldCourses';
+import { BPRNDStudentDashboard } from './components/student/BPRNDStudentDashboard';
 
 // POC Portal Components
 import POCPortalPage from './components/dashboard/POCPortalPage';
@@ -212,7 +213,7 @@ const App = () => (
           />
           <Route
             path="/student/bprnd/dashboard"
-            element={<StudentDashboard isBPRND />}
+            element={<BPRNDStudentDashboard />}
           />
 
           {/* Legacy Routes - Redirect to landing page */}

@@ -10,21 +10,11 @@ import {
   UserCircle
 } from 'lucide-react';
 import { useStudentDashboardData } from '../../hooks/useStudentDashboardData';
-import { BPRNDStudentDashboard } from './BPRNDStudentDashboard';
+
 
 import { useNavigate } from 'react-router-dom';
 
-interface StudentDashboardOverviewProps {
-  isBPRND?: boolean;
-}
-
-export const StudentDashboardOverview: React.FC<StudentDashboardOverviewProps> = ({ 
-  isBPRND = false 
-}) => {
-  // Early return for BPRND students - completely separate component
-  if (isBPRND) {
-    return <BPRNDStudentDashboard />;
-  }
+export const StudentDashboardOverview: React.FC = () => {
   const navigate = useNavigate();
 
   const [studentId, setStudentId] = useState<string>('');
@@ -225,4 +215,4 @@ export const StudentDashboardOverview: React.FC<StudentDashboardOverviewProps> =
 
     </div>
   );
-};
+}; 
