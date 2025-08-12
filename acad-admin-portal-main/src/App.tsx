@@ -30,6 +30,8 @@ import StudentCreditBank from './pages/StudentCreditBank';
 import StudentProfile from './pages/StudentProfile';
 import BPRNDStudentProfile from './pages/BPRNDStudentProfile';
 import BPRNDStudentProfileAPI from './pages/BPRNDStudentProfileAPI';
+import BPRNDCertifications from './pages/BPRNDCertifications';
+import BPRNDClaimCredits from './pages/BPRNDClaimCredits';
 import { CompletedCoursesList } from './pages/CompletedCoursesList';
 import EnrolledCoursesList from './pages/EnrolledCoursesList';
 import SectorTrainingFields from './pages/SectorTrainingFields';
@@ -214,6 +216,14 @@ const App = () => (
           <Route
             path="/student/bprnd/dashboard"
             element={<BPRNDStudentDashboard />}
+          />
+          <Route
+            path="/student/bprnd/certifications"
+            element={<BPRNDCertifications />}
+          />
+          <Route
+            path="/student/bprnd/claim-credits"
+            element={<BPRNDClaimCredits />}
           />
 
           {/* Legacy Routes - Redirect to landing page */}

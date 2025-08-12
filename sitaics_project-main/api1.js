@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/sitaics';
+const MONGODB_URI = 'mongodb://localhost:27017/sitaics';
 
 // Connect to MongoDB
 mongoose.connect(MONGODB_URI)

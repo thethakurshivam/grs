@@ -3,6 +3,9 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const pocbprnd = require('./model3/pocbprnd');
+const PendingCredits = require('./model3/pendingcredits');
+const Value = require('./model3/value');
+const path = require('path');
 // Add these imports at the top of api3.js after existing imports
 const multer = require('multer');
 const xlsx = require('xlsx');
@@ -52,9 +55,12 @@ app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve uploaded PDFs statically so they are accessible via URL
+app.use('/files', express.static(path.join(__dirname, 'uploads', 'pdfs')));
+
 // MongoDB connection
 mongoose
-  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/sitaics')
+  .connect('mongodb://localhost:27017/sitaics')
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
@@ -279,6 +285,46 @@ app.post('/api/bprnd/poc/login', async (req, res) => {
   }
 });
 
+// Retrieve all pending credit records (including a public pdfUrl for the PDF)
+app.get('/api/bprnd/pending-credits', async (req, res) => {
+  try {
+    const records = await PendingCredits.find({}).sort({ createdAt: -1 }).lean();
+
+    const withUrls = records.map((rec) => {
+      const fileName = rec?.pdf ? path.basename(rec.pdf) : '';
+      const pdfUrl = fileName
+        ? `${req.protocol}://${req.get('host')}/files/${fileName}`
+        : null;
+      const acceptUrl = `${req.protocol}://${req.get('host')}/api/bprnd/pending-credits/${rec._id}/accept`;
+      const rejectUrl = `${req.protocol}://${req.get('host')}/api/bprnd/pending-credits/${rec._id}/reject`;
+      return {
+        id: rec._id,
+        studentId: rec.studentId,
+        name: rec.name,
+        organization: rec.organization,
+        discipline: rec.discipline,
+        totalHours: rec.totalHours,
+        noOfDays: rec.noOfDays,
+        pdf: pdfUrl,
+        acceptUrl,
+        rejectUrl,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Pending credits retrieved successfully',
+      data: withUrls,
+    });
+  } catch (error) {
+    console.error('Error retrieving pending credits:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+});
+
 // Get all umbrellas route
 app.get('/api/bprnd/umbrellas', async (req, res) => {
   try {
@@ -298,6 +344,143 @@ app.get('/api/bprnd/umbrellas', async (req, res) => {
       message: 'Error retrieving umbrellas',
       error: error.message,
     });
+  }
+});
+
+// Get all value mappings (credit → qualification)
+app.get('/api/bprnd/values', async (req, res) => {
+  try {
+    const values = await Value.find({}).sort({ credit: 1 }).lean();
+    return res.status(200).json({
+      success: true,
+      message: 'Values retrieved successfully',
+      data: values,
+      count: values.length,
+    });
+  } catch (error) {
+    console.error('Error retrieving values:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Apply pending credits: compute new credits from totalHours and add to student's Total_Credits
+// New: studentId as route parameter
+app.post('/api/bprnd/pending-credits/:studentId/apply', async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const {
+      name,
+      organization,
+      discipline,
+      totalHours,
+      noOfDays,
+      pdf,
+    } = req.body || {};
+
+    // Validate inputs
+    if (!studentId || !name || !organization || !discipline || totalHours === undefined || noOfDays === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'studentId, name, organization, discipline, totalHours, and noOfDays are required',
+      });
+    }
+
+    const hoursNum = Number(totalHours);
+    const daysNum = Number(noOfDays);
+    if (Number.isNaN(hoursNum) || Number.isNaN(daysNum) || hoursNum < 0 || daysNum < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'totalHours and noOfDays must be non-negative numbers',
+      });
+    }
+
+    // Compute new credits as integer part of (Total_Hours / 15)
+    const newCredits = Math.floor(hoursNum / 15);
+
+    // Find student and update Total_Credits
+    const student = await bprndStudents.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    }
+
+    const previousTotal = Number(student.Total_Credits || 0);
+    student.Total_Credits = previousTotal + newCredits;
+
+    // Also increment the umbrella-specific field so breakdown reflects the change
+    const UMBRELLA_KEYS = [
+      'Cyber_Security',
+      'Criminology',
+      'Military_Law',
+      'Police_Administration',
+      'Forensic_Science',
+      'National_Security',
+      'International_Security',
+      'Counter_Terrorism',
+      'Intelligence_Studies',
+      'Emergency_Management',
+    ];
+    const norm = String(discipline || '')
+      .toLowerCase()
+      .replace(/_/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const fieldKey = UMBRELLA_KEYS.find(
+      (k) => k.replace(/_/g, ' ').toLowerCase() === norm
+    );
+    if (fieldKey && Object.prototype.hasOwnProperty.call(student, fieldKey)) {
+      const current = Number(student[fieldKey] || 0);
+      student[fieldKey] = current + newCredits;
+    }
+
+    await student.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Credits applied successfully',
+      data: {
+        studentId: student._id,
+        name,
+        organization,
+        discipline,
+        totalHours: hoursNum,
+        noOfDays: daysNum,
+        pdf: pdf || null,
+        newCredits,
+        updatedTotalCredits: student.Total_Credits,
+        updatedUmbrellaField: fieldKey || null,
+        updatedUmbrellaCredits: fieldKey ? student[fieldKey] : null,
+        previousTotalCredits: previousTotal,
+      },
+    });
+  } catch (error) {
+    console.error('Error applying pending credits:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Backward compatibility: keep old route for now
+app.post('/api/bprnd/pending-credits/apply', async (req, res) => {
+  try {
+    const {
+      studentId,
+      name,
+      organization,
+      discipline,
+      totalHours,
+      noOfDays,
+      pdf,
+    } = req.body || {};
+
+    if (!studentId) {
+      return res.status(400).json({ success: false, message: 'studentId is required' });
+    }
+
+    // Delegate to param route logic by reusing code path
+    req.params.studentId = studentId;
+    return app._router.handle(req, res, () => {});
+  } catch (error) {
+    console.error('Error applying pending credits (legacy route):', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 

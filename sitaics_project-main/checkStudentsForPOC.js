@@ -5,9 +5,7 @@ require('dotenv').config();
 
 async function checkStudentsForPOC(pocId) {
   try {
-    await mongoose.connect(
-      process.env.MONGODB_URI || 'mongodb://localhost:27017/sitaics'
-    );
+    await mongoose.connect('mongodb://localhost:27017/sitaics');
     console.log('Connected to MongoDB');
 
     // Get POC and their MOUs

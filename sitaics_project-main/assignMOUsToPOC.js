@@ -8,7 +8,7 @@ const Course = require('./models/courses');
 const Field = require('./models/fields');
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/sitaics')
+mongoose.connect('mongodb://localhost:27017/sitaics')
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 

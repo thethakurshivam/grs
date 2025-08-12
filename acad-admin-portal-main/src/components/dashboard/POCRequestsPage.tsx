@@ -1,35 +1,65 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MessageSquare, ArrowLeft, Search, Filter } from 'lucide-react';
+import { MessageSquare, ArrowLeft, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import useBPRNDPendingCredits from '@/hooks/useBPRNDPendingCredits';
+import { useToast } from '@/hooks/use-toast';
 
 const POCRequestsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const basePath = location.pathname.startsWith('/poc-portal/bprnd') ? '/poc-portal/bprnd' : '/poc-portal';
-  const [searchTerm, setSearchTerm] = useState('');
+  const { data, isLoading, error, refetch } = useBPRNDPendingCredits();
+  const { toast } = useToast();
+  
+  const handleAccept = async (item: {
+    id: string;
+    studentId?: string;
+    name: string;
+    organization: string;
+    discipline: string;
+    totalHours: number;
+    noOfDays: number;
+    pdf: string | null;
+  }) => {
+    try {
+      const studentId = item.studentId || '';
+      if (!studentId) {
+        toast({ title: 'Missing student ID', description: 'This request has no studentId. Please ensure the student submission included their ID.', variant: 'destructive' });
+        return;
+      }
 
-  const mockStats = {
-    totalRequests: 8,
-    pendingRequests: 5,
-    approvedRequests: 2,
-    rejectedRequests: 1
+      const res = await fetch(`http://localhost:3003/api/bprnd/pending-credits/${encodeURIComponent(studentId)}/apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: item.name,
+          organization: item.organization,
+          discipline: item.discipline,
+          totalHours: item.totalHours,
+          noOfDays: item.noOfDays,
+          pdf: item.pdf,
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json?.success === false) {
+        throw new Error(json?.message || `Failed with status ${res.status}`);
+      }
+
+      toast({
+        title: 'Credits applied',
+        description: `New credits: ${json?.data?.newCredits} | Total: ${json?.data?.updatedTotalCredits}`,
+      });
+      refetch();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Network error applying credits';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
+    }
   };
 
-  const mockRequests = [
-    { id: 1, title: 'Course Enrollment Request', requester: 'John Doe', type: 'Enrollment', status: 'Pending', date: '2024-02-15' },
-    { id: 2, title: 'MOU Approval Request', requester: 'Jane Smith', type: 'MOU', status: 'Approved', date: '2024-02-14' },
-    { id: 3, title: 'Student Registration', requester: 'Bob Johnson', type: 'Registration', status: 'Pending', date: '2024-02-13' },
-    { id: 4, title: 'Course Modification', requester: 'Alice Brown', type: 'Course', status: 'Rejected', date: '2024-02-12' },
-    { id: 5, title: 'Partnership Request', requester: 'Charlie Wilson', type: 'Partnership', status: 'Pending', date: '2024-02-11' }
-  ];
-
-  const filteredRequests = mockRequests.filter(request =>
-    request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.requester.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const totalRequests = data.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -58,13 +88,11 @@ const POCRequestsPage = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Requests Management</h2>
           <p className="text-gray-600">Manage and monitor all pending approval requests</p>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -72,96 +100,65 @@ const POCRequestsPage = () => {
               <MessageSquare className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{mockStats.totalRequests}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Pending Requests</CardTitle>
-              <MessageSquare className="h-4 w-4 text-yellow-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{mockStats.pendingRequests}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Approved Requests</CardTitle>
-              <MessageSquare className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{mockStats.approvedRequests}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Rejected Requests</CardTitle>
-              <MessageSquare className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{mockStats.rejectedRequests}</div>
+              <div className="text-2xl font-bold text-gray-900">{totalRequests}</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Search and Filters */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search requests by title or requester..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Button variant="outline" className="flex items-center space-x-2">
-              <Filter className="h-4 w-4" />
-              <span>Filter</span>
-            </Button>
-            <Button>
-              Create New Request
-            </Button>
+          <div className="flex items-center justify-between">
+            <p className="text-gray-600">Pending credit submissions</p>
+            <Button variant="outline" onClick={refetch}>Refresh</Button>
           </div>
         </div>
 
-        {/* Requests List */}
         <Card>
           <CardHeader>
             <CardTitle>Pending Approval Requests</CardTitle>
-            <CardDescription>All requests awaiting approval in the POC program</CardDescription>
+            <CardDescription>All pending credit submissions</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {filteredRequests.map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center">
-                      <MessageSquare className="h-5 w-5 text-orange-600" />
+            {isLoading && <p className="text-gray-600">Loading pending credits...</p>}
+            {error && !isLoading && <p className="text-red-600">{error}</p>}
+            {!isLoading && !error && (
+              <div className="space-y-4">
+                {data.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center">
+                        <MessageSquare className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">{item.name}</h3>
+                        <p className="text-sm text-gray-500">Organization: {item.organization}</p>
+                        <p className="text-sm text-gray-500">Discipline: {item.discipline}</p>
+                        <p className="text-sm text-gray-500">Total Hours: {item.totalHours} • Days: {item.noOfDays}</p>
+                        {item.pdf && (
+                          <a
+                            className="inline-flex items-center text-sm text-[#0b2e63] hover:underline mt-1"
+                            href={item.pdf}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            View PDF <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                          </a>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{request.title}</h3>
-                      <p className="text-sm text-gray-500">Requester: {request.requester} • Type: {request.type}</p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleAccept(item)}
+                        className="px-3 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-md"
+                      >
+                        Accept
+                      </button>
+                      <a href={item.rejectUrl} className="px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md">Reject</a>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      request.status === 'Approved' 
-                        ? 'bg-green-100 text-green-800' 
-                        : request.status === 'Pending'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {request.status}
-                    </span>
-                    <span className="text-sm text-gray-500">{request.date}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+                {data.length === 0 && <p className="text-gray-600">No pending credits found.</p>}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>

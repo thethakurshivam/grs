@@ -18,9 +18,7 @@ const umbrellaFields = [
 async function createUmbrellaFields() {
   try {
     // Connect to MongoDB
-    await mongoose.connect(
-      process.env.MONGODB_URI || 'mongodb://localhost:27017/sitaics'
-    );
+    await mongoose.connect('mongodb://localhost:27017/sitaics');
     console.log('Connected to MongoDB');
 
     // Delete existing records (optional - uncomment if you want to start fresh)

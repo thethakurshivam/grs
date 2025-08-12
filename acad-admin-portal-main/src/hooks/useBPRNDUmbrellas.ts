@@ -1,67 +1,46 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-interface Umbrella {
+export interface UmbrellaItem {
   _id: string;
   name: string;
 }
 
-interface UseBPRNDUmbrellasReturn {
-  umbrellas: Umbrella[];
-  loading: boolean;
-  error: string | null;
-}
-
-const useBPRNDUmbrellas = (): UseBPRNDUmbrellasReturn => {
-  const [umbrellas, setUmbrellas] = useState<Umbrella[]>([]);
-  const [loading, setLoading] = useState(true);
+export function useBPRNDUmbrellas() {
+  const [data, setData] = useState<UmbrellaItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchUmbrellas = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const response = await fetch(
-          'http://localhost:3003/api/bprnd/umbrellas',
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch umbrellas: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data.success && Array.isArray(data.data)) {
-          setUmbrellas(data.data);
-        } else {
-          throw new Error('Invalid response format');
-        }
-      } catch (err) {
-        console.error('Error fetching umbrellas:', err);
-        setError(
-          err instanceof Error ? err.message : 'Failed to fetch umbrellas'
-        );
-        setUmbrellas([]);
-      } finally {
-        setLoading(false);
+  const fetchUmbrellas = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    const controller = new AbortController();
+    try {
+      const res = await fetch('http://localhost:3004/umbrellas', { signal: controller.signal });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        const text = await res.text();
+        throw new Error(text?.slice(0, 160) || 'Unexpected non-JSON response');
       }
-    };
-
-    fetchUmbrellas();
+      const json = await res.json();
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || 'Failed to load umbrellas');
+      }
+      setData(Array.isArray(json.data) ? json.data : []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Network error fetching umbrellas';
+      setError(message);
+      setData([]);
+    } finally {
+      setIsLoading(false);
+    }
+    return () => controller.abort();
   }, []);
 
-  return {
-    umbrellas,
-    loading,
-    error,
-  };
-};
+  useEffect(() => {
+    fetchUmbrellas();
+  }, [fetchUmbrellas]);
+
+  return { data, isLoading, error, refetch: fetchUmbrellas };
+}
 
 export default useBPRNDUmbrellas;

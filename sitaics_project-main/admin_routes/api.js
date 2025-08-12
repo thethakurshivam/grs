@@ -74,8 +74,8 @@ const upload = multer({
 });
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/sitaics')
-  .then(() => console.log('Connected to MongoDB'))
+mongoose.connect('mongodb://localhost:27017/sitaics')
+  .then(() => console.log('Connected to MongoDB at mongodb://localhost:27017/sitaics'))
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Import MOU schema

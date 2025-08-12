@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { ArrowLeft, Plus, Trash2, Upload } from 'lucide-react';
+import useBPRNDUmbrellas from '@/hooks/useBPRNDUmbrellas';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../hooks/use-toast';
 
@@ -20,6 +21,20 @@ const PreviousCoursesForm: React.FC = () => {
     { organization_name: '', course_name: '', certificate_pdf: null }
   ]);
   const [applicantName, setApplicantName] = useState('');
+  const [discipline, setDiscipline] = useState('');
+  const [totalHours, setTotalHours] = useState<string>('');
+  const [noOfDays, setNoOfDays] = useState<string>('');
+  const { data: umbrellas, isLoading: umbrellasLoading, error: umbrellasError } = useBPRNDUmbrellas();
+  // Resolve BPRND student ID from localStorage
+  const storedBprnd = typeof window !== 'undefined' ? localStorage.getItem('bprndStudentData') : null;
+  let derivedStudentId: string | null = null;
+  try {
+    if (storedBprnd) {
+      const parsed = JSON.parse(storedBprnd);
+      derivedStudentId = parsed?._id || null;
+    }
+  } catch (_) {}
+  const studentId = derivedStudentId || (typeof window !== 'undefined' ? (localStorage.getItem('bprndStudentId') || localStorage.getItem('studentId')) : null);
 
   const addCourse = () => {
     setPreviousCourses([...previousCourses, { organization_name: '', course_name: '', certificate_pdf: null }]);
@@ -53,6 +68,10 @@ const PreviousCoursesForm: React.FC = () => {
         toast({ title: 'Validation Error', description: 'Please enter your name', variant: 'destructive' });
         return;
       }
+      if (!studentId) {
+        toast({ title: 'Validation Error', description: 'Missing student ID. Please log in again.', variant: 'destructive' });
+        return;
+      }
       const first = previousCourses[0];
       if (!first.organization_name.trim()) {
         toast({ title: 'Validation Error', description: 'Please enter organization name', variant: 'destructive' });
@@ -65,8 +84,12 @@ const PreviousCoursesForm: React.FC = () => {
 
       // Compose form-data for api4 /pending-credits
       const formData = new FormData();
+      formData.append('studentId', studentId);
       formData.append('name', applicantName.trim());
       formData.append('organization', first.organization_name.trim());
+      formData.append('discipline', discipline.trim());
+      formData.append('totalHours', String(Number(totalHours)));
+      formData.append('noOfDays', String(Number(noOfDays)));
       formData.append('pdf', first.certificate_pdf);
 
       const response = await fetch('http://localhost:3004/pending-credits', {
@@ -134,6 +157,27 @@ const PreviousCoursesForm: React.FC = () => {
               />
             </div>
 
+            {/* Discipline */}
+            <div className="space-y-3">
+              <Label htmlFor="discipline" className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
+                Discipline *
+              </Label>
+              <select
+                id="discipline"
+                value={discipline}
+                onChange={(e) => setDiscipline(e.target.value)}
+                className="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base rounded-md"
+              >
+                <option value="" disabled>{umbrellasLoading ? 'Loading...' : 'Select a discipline'}</option>
+                {umbrellas.map((u) => (
+                  <option key={u._id} value={u.name}>{u.name}</option>
+                ))}
+              </select>
+              {umbrellasError && (
+                <p className="text-sm text-red-600">Failed to load disciplines: {umbrellasError}</p>
+              )}
+            </div>
+
             {previousCourses.map((course, index) => (
               <Card key={index} className="border border-gray-200 bg-gray-50 shadow-sm">
                 <CardContent className="p-8 space-y-6">
@@ -151,7 +195,7 @@ const PreviousCoursesForm: React.FC = () => {
                       />
                     </div>
 
-                    <div className="space-y-3">
+                  <div className="space-y-3">
                       <Label htmlFor={`course-${index}`} className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
                         Course Name
                       </Label>
@@ -160,6 +204,38 @@ const PreviousCoursesForm: React.FC = () => {
                         value={course.course_name}
                         onChange={(e) => updateCourse(index, 'course_name', e.target.value)}
                         placeholder="e.g., Machine Learning, Web Development..."
+                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Totals */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="total-hours" className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
+                        Total Hours *
+                      </Label>
+                      <Input
+                        id="total-hours"
+                        type="number"
+                        min={0}
+                        value={totalHours}
+                        onChange={(e) => setTotalHours(e.target.value)}
+                        placeholder="e.g., 40"
+                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="no-of-days" className="text-gray-700 font-semibold text-sm uppercase tracking-wide">
+                        Number of Days *
+                      </Label>
+                      <Input
+                        id="no-of-days"
+                        type="number"
+                        min={0}
+                        value={noOfDays}
+                        onChange={(e) => setNoOfDays(e.target.value)}
+                        placeholder="e.g., 5"
                         className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base"
                       />
                     </div>

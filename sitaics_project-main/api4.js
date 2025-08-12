@@ -58,8 +58,7 @@ const upload = multer({
 });
 
 // MongoDB connection
-const MONGODB_URI =
-  process.env.MONGODB_URI || 'mongodb://localhost:27017/sitaics';
+const MONGODB_URI = 'mongodb://localhost:27017/sitaics';
 
 // Connect to MongoDB with options
 mongoose
@@ -380,20 +379,33 @@ router.get('/student/:id/credits/breakdown', async (req, res) => {
 // Pending credits upload (PDF)
 router.post('/pending-credits', upload.single('pdf'), async (req, res) => {
   try {
-    const { name, organization } = req.body;
+    const { name, organization, discipline, studentId } = req.body;
+    const totalHours = Number(req.body?.totalHours);
+    const noOfDays = Number(req.body?.noOfDays);
 
     // Validate required fields
-    if (!name || !organization || !req.file) {
+    if (!studentId || !name || !organization || !discipline || Number.isNaN(totalHours) || Number.isNaN(noOfDays) || !req.file) {
       return res.status(400).json({
         success: false,
-        message: 'Name, organization, and PDF file are required'
+        message: 'studentId, name, organization, discipline, totalHours, noOfDays, and PDF file are required'
+      });
+    }
+
+    if (totalHours < 0 || noOfDays < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'totalHours and noOfDays must be non-negative numbers'
       });
     }
 
     // Create new pending credit record
     const pendingCredit = new PendingCredits({
-      name: name,
-      organization: organization,
+      studentId,
+      name: String(name),
+      organization: String(organization),
+      discipline: String(discipline),
+      totalHours,
+      noOfDays,
       pdf: req.file.path // Store the file path
     });
 
@@ -451,6 +463,175 @@ app.get('/test-db', async (req, res) => {
       message: 'Database connection failed',
       error: error.message,
     });
+  }
+});
+
+// Retrieve all umbrellas for discipline dropdown
+router.get('/umbrellas', async (req, res) => {
+  try {
+    const umbrellas = await umbrella.find({}).sort({ name: 1 }).lean();
+    return res.status(200).json({
+      success: true,
+      message: 'Umbrellas retrieved successfully',
+      data: umbrellas,
+    });
+  } catch (error) {
+    console.error('Error fetching umbrellas:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Determine certification eligibility for a BPRND student by umbrella field credits
+router.get('/student/:id/certifications', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Student ID is required' });
+    }
+
+    const student = await CreditCalculation.findById(id).lean();
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    }
+
+    // Umbrella credit fields in the student document
+    const UMBRELLA_FIELDS = [
+      'Cyber_Security',
+      'Criminology',
+      'Military_Law',
+      'Police_Administration',
+      'Forensic_Science',
+      'National_Security',
+      'International_Security',
+      'Counter_Terrorism',
+      'Intelligence_Studies',
+      'Emergency_Management',
+    ];
+
+    const results = [];
+    for (const key of UMBRELLA_FIELDS) {
+      const credits = Number(student[key] || 0);
+      let qualification = null;
+      if (credits >= 40) {
+        qualification = 'pg diploma';
+      } else if (credits >= 30) {
+        qualification = 'diploma';
+      } else if (credits >= 20) {
+        qualification = 'certificate';
+      }
+
+      if (qualification) {
+        // Human readable label: replace underscores with spaces
+        const fieldLabel = key.replace(/_/g, ' ');
+        const claimUrl = `${req.protocol}://${req.get('host')}/student/${id}/claim-certification`;
+        results.push({
+          fieldKey: key,
+          field: fieldLabel,
+          credits,
+          qualification,
+          claimUrl,
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Certification eligibility computed',
+      data: results,
+      totalEligible: results.length,
+    });
+  } catch (error) {
+    console.error('Error computing certifications:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Placeholder claim endpoint (can be extended to create records or issue certificates)
+router.post('/student/:id/claim-certification', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fieldKey, qualification } = req.body || {};
+    if (!id || !fieldKey || !qualification) {
+      return res.status(400).json({ success: false, message: 'id, fieldKey and qualification are required' });
+    }
+    // Here you could persist a claim record; for now just confirm receipt
+    return res.status(200).json({
+      success: true,
+      message: 'Certification claim received',
+      data: { studentId: id, fieldKey, qualification },
+    });
+  } catch (error) {
+    console.error('Error claiming certification:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Redeem credits from a student's umbrella field based on claimed qualification
+// Params: :id (studentId), :umbrella (e.g., "Cyber Security"), :qualification (certificate|diploma|pg%20diploma)
+router.post('/student/:id/umbrella/:umbrella/redeem/:qualification', async (req, res) => {
+  try {
+    const { id, umbrella, qualification } = req.params;
+
+    if (!id || !umbrella || !qualification) {
+      return res.status(400).json({ success: false, message: 'id, umbrella and qualification are required' });
+    }
+
+    // Determine decrement credits based on qualification
+    const q = decodeURIComponent(String(qualification)).trim().toLowerCase();
+    const decMap = new Map([
+      ['certificate', 20],
+      ['diploma', 30],
+      ['pg diploma', 40],
+    ]);
+    if (!decMap.has(q)) {
+      return res.status(400).json({ success: false, message: 'Invalid qualification. Use certificate | diploma | pg diploma' });
+    }
+    const decredit = decMap.get(q);
+
+    // Map umbrella name to field key (spaces -> underscores) and validate exists
+    const fieldKey = decodeURIComponent(String(umbrella)).replace(/\s+/g, '_');
+    const UMBRELLA_FIELDS = new Set([
+      'Cyber_Security',
+      'Criminology',
+      'Military_Law',
+      'Police_Administration',
+      'Forensic_Science',
+      'National_Security',
+      'International_Security',
+      'Counter_Terrorism',
+      'Intelligence_Studies',
+      'Emergency_Management',
+    ]);
+    if (!UMBRELLA_FIELDS.has(fieldKey)) {
+      return res.status(400).json({ success: false, message: `Unknown umbrella field: ${fieldKey}` });
+    }
+
+    // Fetch student
+    const student = await CreditCalculation.findById(id);
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    }
+
+    const previous = Number(student[fieldKey] || 0);
+    const updated = Math.max(0, previous - decredit);
+    student[fieldKey] = updated;
+    await student.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Umbrella credits updated successfully',
+      data: {
+        studentId: student._id,
+        umbrella: fieldKey,
+        qualification: q,
+        decredit,
+        previous,
+        updated,
+      },
+    });
+  } catch (error) {
+    console.error('Error redeeming umbrella credits:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 

@@ -2,7 +2,9 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   LogOut,
-  Plus
+  Plus,
+  Award,
+  BadgeCheck
 } from 'lucide-react';
 
 export const StudentDashboardSidebar: React.FC = () => {
@@ -25,6 +27,14 @@ export const StudentDashboardSidebar: React.FC = () => {
     navigate('/student/previous-courses');
   };
 
+  const handleCertifications = () => {
+    navigate('/student/bprnd/certifications');
+  };
+
+  const handleClaimCredits = () => {
+    navigate('/student/bprnd/claim-credits');
+  };
+
   const menuItems: Array<{
     name: string;
     icon: React.ComponentType<{ className?: string }>;
@@ -36,6 +46,18 @@ export const StudentDashboardSidebar: React.FC = () => {
       icon: Plus,
       path: '/student/add-course-other-than-rru',
       onClick: handleAddCourseOtherThanRRU,
+    },
+    {
+      name: 'Certifications',
+      icon: Award,
+      path: '/student/bprnd/certifications',
+      onClick: handleCertifications,
+    },
+    {
+      name: 'Claim Credits',
+      icon: BadgeCheck,
+      path: '/student/bprnd/claim-credits',
+      onClick: handleClaimCredits,
     },
   ];
 
