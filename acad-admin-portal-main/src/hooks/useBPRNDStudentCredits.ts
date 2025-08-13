@@ -71,6 +71,21 @@ export function useBPRNDStudentCredits(studentId: string | null | undefined): Us
     fetchCredits();
   }, [fetchCredits]);
 
+  // Lightweight polling to reflect approvals quickly
+  useEffect(() => {
+    let intervalId: number | undefined;
+    if (canFetch) {
+      intervalId = window.setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          fetchCredits();
+        }
+      }, 15000); // 15s polling
+    }
+    return () => {
+      if (intervalId) window.clearInterval(intervalId);
+    };
+  }, [canFetch, fetchCredits]);
+
   return {
     totalCredits,
     isLoading,

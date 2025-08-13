@@ -11,6 +11,8 @@ const umbrella = require('./model3/umbrella');
 const Credit = require('./model3/credit');
 const multer = require('multer');
 const PendingCredits = require('./model3/pendingcredits'); // Import your schema
+const BprndClaim = require('./model3/bprnd_certification_claim');
+const BprndCertificate = require('./model3/bprnd_certificate');
 
 // Load environment variables from .env.api4 file
 require('dotenv').config({ path: '.env.api4' });
@@ -654,6 +656,141 @@ router.post('/student/:id/umbrella/:umbrella/redeem/:qualification', async (req,
     });
   } catch (error) {
     console.error('Error redeeming umbrella credits:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Student requests a certification (creates a claim). No deduction here.
+router.post('/student/:id/certifications/request', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { umbrellaKey, qualification } = req.body || {};
+    if (!id || !umbrellaKey || !qualification) {
+      return res.status(400).json({ success: false, message: 'id, umbrellaKey and qualification are required' });
+    }
+
+    // Map required credits
+    const decMap = new Map([
+      ['certificate', 20],
+      ['diploma', 30],
+      ['pg diploma', 40],
+    ]);
+    const q = String(qualification).trim().toLowerCase();
+    if (!decMap.has(q)) {
+      return res.status(400).json({ success: false, message: 'Invalid qualification. Use certificate | diploma | pg diploma' });
+    }
+    const requiredCredits = decMap.get(q);
+
+    // Normalize umbrella key from label or key
+    const key = String(umbrellaKey).replace(/\s+/g, '_');
+    const UMBRELLA_FIELDS = new Set([
+      'Cyber_Security','Criminology','Military_Law','Police_Administration','Forensic_Science','National_Security','International_Security','Counter_Terrorism','Intelligence_Studies','Emergency_Management',
+    ]);
+    if (!UMBRELLA_FIELDS.has(key)) {
+      return res.status(400).json({ success: false, message: `Unknown umbrella field: ${key}` });
+    }
+
+    // Validate eligibility at request time (has at least required credits now)
+    const student = await CreditCalculation.findById(id);
+    if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
+    const available = Number(student[key] || 0);
+    if (available < requiredCredits) {
+      return res.status(400).json({ success: false, message: `Insufficient credits in ${key.replace(/_/g,' ')}. Required ${requiredCredits}, found ${available}` });
+    }
+
+    // Prevent duplicate pending claim for same umbrella+qualification
+    const existingPending = await BprndClaim.findOne({ studentId: id, umbrellaKey: key, qualification: q, status: { $in: ['pending','admin_approved','poc_approved'] } });
+    if (existingPending) {
+      return res.status(409).json({ success: false, message: 'A similar claim is already in progress' });
+    }
+
+    const claim = await BprndClaim.create({
+      studentId: id,
+      umbrellaKey: key,
+      qualification: q,
+      requiredCredits,
+      status: 'pending',
+    });
+
+    return res.status(201).json({ success: true, message: 'Certification request submitted', data: claim });
+  } catch (error) {
+    console.error('Error creating certification request:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// List student claims
+router.get('/student/:id/claims', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const claims = await BprndClaim.find({ studentId: id }).sort({ createdAt: -1 }).lean();
+    return res.status(200).json({ success: true, data: claims });
+  } catch (error) {
+    console.error('Error listing claims:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Internal finalize: called by admin/POC APIs once both approved; idempotent
+router.post('/internal/bprnd/claims/:claimId/finalize', async (req, res) => {
+  try {
+    const { claimId } = req.params;
+    const claim = await BprndClaim.findById(claimId);
+    if (!claim) return res.status(404).json({ success: false, message: 'Claim not found' });
+
+    // Idempotency: if certificate already exists for this claim, return success with current totals
+    const existingCertificate = await BprndCertificate.findOne({ claimId: claim._id });
+    if (existingCertificate) {
+      const studentForTotals = await CreditCalculation.findById(claim.studentId).select('Total_Credits');
+      return res.status(200).json({
+        success: true,
+        message: 'Already finalized',
+        data: {
+          claim,
+          certificate: existingCertificate,
+          totals: { total: studentForTotals?.Total_Credits ?? null }
+        }
+      });
+    }
+
+    // Require both approvals regardless of current claim.status text
+    const bothApproved = claim.adminApproval?.decision === 'approved' && claim.pocApproval?.decision === 'approved';
+    if (!bothApproved) return res.status(400).json({ success: false, message: 'Both approvals required' });
+
+    // Deduct credits atomically with minimal race window
+    const key = claim.umbrellaKey;
+    const student = await CreditCalculation.findById(claim.studentId);
+    if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
+
+    const beforeUmbrella = Number(student[key] || 0);
+    const beforeTotal = Number(student.Total_Credits || 0);
+    if (beforeUmbrella < claim.requiredCredits) {
+      claim.status = 'declined';
+      await claim.save();
+      return res.status(409).json({ success: false, message: 'Insufficient credits at finalize time; claim declined' });
+    }
+
+    student[key] = Math.max(0, beforeUmbrella - claim.requiredCredits);
+    student.Total_Credits = Math.max(0, beforeTotal - claim.requiredCredits);
+    await student.save();
+
+    // Issue certificate record
+    const certificate = await BprndCertificate.create({
+      studentId: claim.studentId,
+      umbrellaKey: key,
+      qualification: claim.qualification,
+      claimId: claim._id,
+      issuedAt: new Date(),
+      certificateNo: `CERT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    });
+
+    // Mark claim approved
+    claim.status = 'approved';
+    await claim.save();
+
+    return res.status(200).json({ success: true, message: 'Finalized: credits deducted and certificate issued', data: { claim, certificate, totals: { total: student.Total_Credits, umbrella: student[key] } } });
+  } catch (error) {
+    console.error('Error finalizing claim:', error);
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });

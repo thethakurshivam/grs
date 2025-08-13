@@ -54,6 +54,9 @@ import POCLogin from './pages/POCLogin';
 import POCSignup from './pages/POCSignup';
 import POCAuthGuard from './components/auth/POCAuthGuard';
 import StudentAuthGuard from './components/auth/StudentAuthGuard';
+import AdminBPRNDClaimsPage from './components/dashboard/AdminBPRNDClaimsPage';
+import POCBPRNDClaimsPage from './components/dashboard/POCBPRNDClaimsPage';
+import BPRNDStudentClaimsPage from './components/student/BPRNDStudentClaimsPage';
 
 const queryClient = new QueryClient();
 
@@ -116,6 +119,7 @@ const App = () => (
             <Route path="sector-training" element={<SectorTrainingFields />} />
             <Route path="sector-training/:fieldId" element={<FieldCourses />} />
             <Route path="field-courses/:fieldId" element={<FieldCourses />} />
+            <Route path="bprnd/claims" element={<AdminBPRNDClaimsPage />} />
           </Route>
 
           {/* POC Authentication Routes */}
@@ -145,6 +149,7 @@ const App = () => (
             <Route path="courses" element={<POCCoursesListPage />} />
             <Route path="mous" element={<POCMOUsListPage />} />
             <Route path="requests" element={<POCRequestsPage />} />
+            <Route path="bprnd/claims" element={<POCBPRNDClaimsPage />} />
           </Route>
 
           {/* BPRND POC Portal Routes (Protected with Authentication) */}
@@ -232,8 +237,20 @@ const App = () => (
             element={<BPRNDClaimCredits />}
           />
           <Route
+            path="/student/bprnd/claims"
+            element={<BPRNDStudentClaimsPage />}
+          />
+          <Route
             path="/student/bprnd/training-calendar"
             element={<BPRNDTrainingCalendar />}
+          />
+          <Route
+            path="/student/bprnd/credit-bank"
+            element={<StudentCreditBank />}
+          />
+          <Route
+            path="/student/bprnd/previous-courses"
+            element={<PreviousCoursesForm />}
           />
 
           {/* Legacy Routes - Redirect to landing page */}

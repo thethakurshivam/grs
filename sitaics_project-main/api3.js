@@ -14,6 +14,9 @@ const bprndStudents = require('./model3/bprndstudents');
 const umbrella = require('./model3/umbrella');
 require('dotenv').config();
 
+// Polyfill fetch if needed
+const fetch = global.fetch || ((...args) => import('node-fetch').then(({ default: f }) => f(...args)));
+
 const app = express();
 
 // CORS Configuration
@@ -511,6 +514,83 @@ app.post('/api/bprnd/pending-credits/apply', async (req, res) => {
   } catch (error) {
     console.error('Error applying pending credits (legacy route):', error);
     return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// ===== BPR&D Certification Claims (POC) =====
+const BprndClaim = require('./model3/bprnd_certification_claim');
+
+const pocAuth = (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ success: false, error: 'Access token required' });
+    jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+      if (err) return res.status(403).json({ success: false, error: 'Invalid token' });
+      req.user = user; next();
+    });
+  } catch {
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  }
+};
+
+app.get('/api/bprnd/claims', pocAuth, async (req, res) => {
+  try {
+    const { status } = req.query;
+    const filter = status ? { status } : {};
+    const claims = await BprndClaim.find(filter).sort({ createdAt: -1 }).lean();
+    res.json({ success: true, count: claims.length, data: claims });
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/bprnd/claims/:claimId/approve', pocAuth, async (req, res) => {
+  try {
+    const { claimId } = req.params;
+    const claim = await BprndClaim.findById(claimId);
+    if (!claim) return res.status(404).json({ success: false, error: 'Claim not found' });
+
+    if (claim.status === 'declined' || claim.status === 'approved') {
+      return res.json({ success: true, message: `Claim already ${claim.status}` });
+    }
+
+    claim.pocApproval = { by: req.user?.email || 'bprnd-poc', at: new Date(), decision: 'approved' };
+    claim.status = claim.adminApproval?.decision === 'approved' ? 'approved' : 'poc_approved';
+    await claim.save();
+
+    if (claim.status === 'approved') {
+      try {
+        const finalizeUrl = `http://localhost:3004/internal/bprnd/claims/${claim._id}/finalize`;
+        const resp = await fetch(finalizeUrl, { method: 'POST' });
+        const json = await resp.json().catch(() => ({}));
+        if (!resp.ok || json?.success === false) {
+          return res.status(502).json({ success: false, error: json?.message || `Finalize failed: ${resp.status}` });
+        }
+        return res.json({ success: true, message: 'Approved and finalized', data: json?.data });
+      } catch (err) {
+        return res.status(502).json({ success: false, error: 'Finalize request failed' });
+      }
+    }
+
+    res.json({ success: true, message: 'POC approved' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/bprnd/claims/:claimId/decline', pocAuth, async (req, res) => {
+  try {
+    const { claimId } = req.params;
+    const claim = await BprndClaim.findById(claimId);
+    if (!claim) return res.status(404).json({ success: false, error: 'Claim not found' });
+
+    claim.pocApproval = { by: req.user?.email || 'bprnd-poc', at: new Date(), decision: 'declined' };
+    claim.status = 'declined';
+    await claim.save();
+    res.json({ success: true, message: 'POC declined' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 });
 

@@ -26,7 +26,10 @@ const BPRNDClaimCredits: React.FC = () => {
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ umbrellaKey: item.fieldKey, qualification: item.qualification }),
+        body: JSON.stringify({
+          umbrellaKey: item.fieldKey,
+          qualification: item.qualification,
+        }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || json?.success === false) {
@@ -94,5 +97,3 @@ const BPRNDClaimCredits: React.FC = () => {
 };
 
 export default BPRNDClaimCredits;
-
-

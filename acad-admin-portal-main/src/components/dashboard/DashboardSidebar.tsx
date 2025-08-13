@@ -146,14 +146,11 @@ export function DashboardSidebar() {
                     variant="ghost"
                     className="w-full justify-start hover:bg-accent"
                     onClick={() =>
-                      toast({
-                        title: 'BPR&D Request',
-                        description: 'This is a placeholder. Coming soon.',
-                      })
+                      navigate('/dashboard/bprnd/claims')
                     }
                   >
                     <Send className="h-4 w-4" />
-                    {!collapsed && <span className="ml-2">BPR&D Request</span>}
+                    {!collapsed && <span className="ml-2">BPR&D Requests</span>}
                   </Button>
                 </SidebarMenuButton>
               </SidebarMenuItem>

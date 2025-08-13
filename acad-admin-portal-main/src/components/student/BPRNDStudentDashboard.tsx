@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { UserCircle, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -25,13 +25,19 @@ export const BPRNDStudentDashboard: React.FC = () => {
     // ignore JSON parse errors
   }
   const studentId = derivedId || localStorage.getItem('bprndStudentId') || localStorage.getItem('studentId');
-  const { totalCredits, isLoading, error } = useBPRNDStudentCredits(studentId);
+  const { totalCredits, isLoading, error, refetch } = useBPRNDStudentCredits(studentId);
+
+  useEffect(() => {
+    const onFocus = () => refetch();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [refetch]);
 
   const handleProfileCardClick = () => {
     navigate('/student/bprnd/profile-api');
   };
   const handleCreditCardClick = () => {
-    navigate('/student/credit-bank');
+    navigate('/student/bprnd/credit-bank');
   };
 
   return (

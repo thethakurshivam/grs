@@ -76,7 +76,7 @@ const POCPortalPage: React.FC<POCComponentProps> = ({ type = 'standard' }) => {
       bgColor: 'bg-orange-50',
       path:
         type === 'bprnd'
-          ? '/poc-portal/bprnd/requests'
+          ? '/poc-portal/bprnd/claims'
           : '/poc-portal/requests',
     },
   ];

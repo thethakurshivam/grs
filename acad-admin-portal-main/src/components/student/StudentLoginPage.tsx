@@ -57,42 +57,42 @@ const StudentLoginPage: React.FC<StudentLoginPageProps> = ({
       const data = await response.json();
 
       if (response.ok) {
-        // Store authentication data
-        localStorage.setItem('isStudentAuthenticated', 'true');
-        localStorage.setItem('studentToken', data.token);
-        
+        // Clear prior session keys to avoid cross-portal bleed
+        localStorage.removeItem('isStudentAuthenticated');
+        localStorage.removeItem('studentToken');
+        localStorage.removeItem('bprndIsAuthenticated');
+        localStorage.removeItem('bprndStudentToken');
+
         if (isBPRND) {
+          // BPR&D session keys
+          localStorage.setItem('bprndIsAuthenticated', 'true');
+          if (data.token) localStorage.setItem('bprndStudentToken', data.token);
+
           // Store BPRND student information
           localStorage.setItem('studentEmail', data.student.email);
           localStorage.setItem('studentName', data.student.Name);
-          localStorage.setItem('studentId', data.student._id);
           localStorage.setItem('bprndStudentId', data.student._id);
-          
-          // Store professional information
+
+          // Professional information
           localStorage.setItem('studentDesignation', data.student.Designation || '');
           localStorage.setItem('studentState', data.student.State || '');
           localStorage.setItem('studentDepartment', data.student.Department || '');
           localStorage.setItem('studentEmployeeId', data.student.EmployeeId || '');
-          
-          // Store training information
+
+          // Training information
           localStorage.setItem('studentUmbrella', data.student.Umbrella || '');
-          
-          // Store contact information
+
+          // Contact information
           localStorage.setItem('studentPhone', data.student.Phone || '');
           localStorage.setItem('studentJoiningDate', data.student.JoiningDate || '');
-          
-          // Store complete data backup
+
+          // Complete data backup
           localStorage.setItem('bprndStudentData', JSON.stringify(data.student));
-          
-          // Log stored data for debugging
-          console.log('BPRND student data stored:', {
-            name: data.student.Name,
-            email: data.student.email,
-            designation: data.student.Designation,
-            state: data.student.State,
-            umbrella: data.student.Umbrella
-          });
         } else {
+          // Normal student session keys
+          localStorage.setItem('isStudentAuthenticated', 'true');
+          if (data.token) localStorage.setItem('studentToken', data.token);
+
           // Store regular student information
           localStorage.setItem('studentEmail', data.student.email);
           localStorage.setItem('studentName', data.student.full_name);

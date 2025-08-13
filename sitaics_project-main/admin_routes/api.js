@@ -8,6 +8,9 @@ const multer = require('multer');
 const XLSX = require('xlsx');
 require('dotenv').config();
 
+// Polyfill fetch in Node if not available
+const fetch = global.fetch || ((...args) => import('node-fetch').then(({ default: f }) => f(...args)));
+
 // Debug: Check if environment variables are loaded
 console.log('EMAIL_USER:', process.env.EMAIL_USER);
 console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? 'LOADED' : 'NOT LOADED');
@@ -88,6 +91,7 @@ const PendingAdmin = require('../models/pendingAdmin');
 // Use the existing Student model for candidates/participants
 const Candidate = require('../models1/student');
 const Student = require('../models1/student'); // Import the correct Student model
+const BprndClaim = require('../model3/bprnd_certification_claim');
 
 // Input sanitization helper
 const sanitizeInput = (input) => {
@@ -1759,6 +1763,59 @@ app.post('/api/students/previous-courses', authenticateToken, asyncHandler(async
       error: 'Failed to save previous courses'
     });
   }
+}));
+
+// List all BPR&D certification claims (basic listing; add auth as needed)
+app.get('/api/bprnd/claims', authenticateToken, asyncHandler(async (req, res) => {
+  const { status } = req.query;
+  const filter = status ? { status } : {};
+  const claims = await BprndClaim.find(filter).sort({ createdAt: -1 }).lean();
+  res.json({ success: true, count: claims.length, data: claims });
+}));
+
+// Approve a claim as Admin
+app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(async (req, res) => {
+  const { claimId } = req.params;
+  const claim = await BprndClaim.findById(claimId);
+  if (!claim) return res.status(404).json({ success: false, error: 'Claim not found' });
+
+  if (claim.status === 'declined' || claim.status === 'approved') {
+    return res.json({ success: true, message: `Claim already ${claim.status}` });
+  }
+
+  claim.adminApproval = { by: req.user?.email || 'admin', at: new Date(), decision: 'approved' };
+  claim.status = claim.pocApproval?.decision === 'approved' ? 'approved' : 'admin_approved';
+  await claim.save();
+
+  if (claim.status === 'approved') {
+    // both approved; finalize via api4
+    try {
+      const finalizeUrl = `http://localhost:3004/internal/bprnd/claims/${claim._id}/finalize`;
+      const resp = await fetch(finalizeUrl, { method: 'POST' });
+      const json = await resp.json().catch(() => ({}));
+      if (!resp.ok || json?.success === false) {
+        return res.status(502).json({ success: false, error: json?.message || `Finalize failed: ${resp.status}` });
+      }
+      return res.json({ success: true, message: 'Approved and finalized', data: json?.data });
+    } catch (err) {
+      return res.status(502).json({ success: false, error: 'Finalize request failed' });
+    }
+  }
+
+  res.json({ success: true, message: 'Admin approved' });
+}));
+
+// Decline a claim as Admin
+app.post('/api/bprnd/claims/:claimId/decline', authenticateToken, asyncHandler(async (req, res) => {
+  const { claimId } = req.params;
+  const claim = await BprndClaim.findById(claimId);
+  if (!claim) return res.status(404).json({ success: false, error: 'Claim not found' });
+
+  claim.adminApproval = { by: req.user?.email || 'admin', at: new Date(), decision: 'declined' };
+  claim.status = 'declined';
+  await claim.save();
+
+  res.json({ success: true, message: 'Admin declined' });
 }));
 
 // Start the server

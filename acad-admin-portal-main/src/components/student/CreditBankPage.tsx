@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { CreditCard } from 'lucide-react';
 import useBPRNDCreditBreakdown from '@/hooks/useBPRNDCreditBreakdown';
@@ -15,6 +15,12 @@ export const CreditBankPage: React.FC = () => {
   const studentId = derivedId || localStorage.getItem('bprndStudentId') || localStorage.getItem('studentId');
 
   const { data, isLoading, error, refetch } = useBPRNDCreditBreakdown(studentId);
+
+  useEffect(() => {
+    const onFocus = () => refetch();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [refetch]);
 
   const entries = useMemo(
     () =>
