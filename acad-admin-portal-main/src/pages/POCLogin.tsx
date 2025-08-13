@@ -45,6 +45,14 @@ const POCLogin: React.FC<POCLoginProps> = ({ isBPRND = false }) => {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        // Clear any existing admin/student tokens to prevent conflicts
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('studentToken');
+        localStorage.removeItem('isStudentAuthenticated');
+        localStorage.removeItem('bprndStudentToken');
+        localStorage.removeItem('bprndIsAuthenticated');
+        
         // Store authentication data
         localStorage.setItem('pocToken', data.token);
         localStorage.setItem('pocUser', JSON.stringify(data.user));

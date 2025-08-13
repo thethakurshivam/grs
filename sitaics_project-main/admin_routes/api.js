@@ -1768,7 +1768,12 @@ app.post('/api/students/previous-courses', authenticateToken, asyncHandler(async
 // List all BPR&D certification claims (basic listing; add auth as needed)
 app.get('/api/bprnd/claims', authenticateToken, asyncHandler(async (req, res) => {
   const { status } = req.query;
-  const filter = status ? { status } : {};
+  
+  // If specific status requested, use it; otherwise show only claims needing Admin approval
+  const filter = status ? { status } : { 
+    status: { $in: ['pending', 'poc_approved'] } 
+  };
+  
   const claims = await BprndClaim.find(filter).sort({ createdAt: -1 }).lean();
   res.json({ success: true, count: claims.length, data: claims });
 }));

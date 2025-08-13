@@ -29,6 +29,14 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
         throw new Error(data?.error || `Login failed (status ${res.status})`);
       }
 
+      // Clear any existing admin/student tokens to prevent conflicts
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("studentToken");
+      localStorage.removeItem("isStudentAuthenticated");
+      localStorage.removeItem("bprndStudentToken");
+      localStorage.removeItem("bprndIsAuthenticated");
+      
       // Persist real token and user info expected by the dashboard hooks
       localStorage.setItem('pocToken', data.token);
       const pocUser = {

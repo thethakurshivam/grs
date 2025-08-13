@@ -88,8 +88,8 @@ const AdminBPRNDClaimsPage: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-black">BPR&D Certification Requests</h1>
-          <p className="text-gray-700">Approve or decline student certification requests</p>
+          <h1 className="text-2xl font-bold text-black">Pending Admin Approval</h1>
+          <p className="text-gray-700">Review and approve student certification requests awaiting admin approval</p>
         </div>
         <div className="ml-auto">
           <Button variant="outline" onClick={fetchClaims} disabled={loading} className="flex items-center gap-2">

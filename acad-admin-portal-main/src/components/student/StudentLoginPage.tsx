@@ -57,11 +57,17 @@ const StudentLoginPage: React.FC<StudentLoginPageProps> = ({
       const data = await response.json();
 
       if (response.ok) {
-        // Clear prior session keys to avoid cross-portal bleed
+        // Clear all session keys to avoid cross-portal bleed
         localStorage.removeItem('isStudentAuthenticated');
         localStorage.removeItem('studentToken');
         localStorage.removeItem('bprndIsAuthenticated');
         localStorage.removeItem('bprndStudentToken');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('pocToken');
+        localStorage.removeItem('pocUser');
+        localStorage.removeItem('pocUserId');
+        localStorage.removeItem('isPOCAuthenticated');
 
         if (isBPRND) {
           // BPR&D session keys

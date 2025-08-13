@@ -731,6 +731,39 @@ router.get('/student/:id/claims', async (req, res) => {
   }
 });
 
+// List student certificates
+router.get('/student/:id/certificates', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Validate student ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid student ID format' 
+      });
+    }
+
+    // Retrieve all certificates for the student
+    const certificates = await BprndCertificate.find({ studentId: id })
+      .sort({ issuedAt: -1 }) // Sort by most recent first
+      .lean();
+
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Certificates retrieved successfully',
+      count: certificates.length,
+      data: certificates 
+    });
+  } catch (error) {
+    console.error('Error listing student certificates:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error' 
+    });
+  }
+});
+
 // Internal finalize: called by admin/POC APIs once both approved; idempotent
 router.post('/internal/bprnd/claims/:claimId/finalize', async (req, res) => {
   try {

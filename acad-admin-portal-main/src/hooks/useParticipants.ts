@@ -57,19 +57,20 @@ export const useParticipants = () => {
     const pocId = localStorage.getItem('pocUserId');
     const adminToken = localStorage.getItem('authToken');
 
-    if (pocToken && pocId) {
-      return {
-        mode: 'poc' as const,
-        token: pocToken,
-        url: `http://localhost:3002/api/poc/${pocId}/students`,
-      };
-    }
-
+    // Prioritize admin context if admin token exists
     if (adminToken) {
       return {
         mode: 'admin' as const,
         token: adminToken,
         url: `http://localhost:3000/api/participants`,
+      };
+    }
+
+    if (pocToken && pocId) {
+      return {
+        mode: 'poc' as const,
+        token: pocToken,
+        url: `http://localhost:3002/api/poc/${pocId}/students`,
       };
     }
 

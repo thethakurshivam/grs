@@ -46,16 +46,7 @@ export const useMOU = () => {
     const pocId = localStorage.getItem('pocUserId');
     const adminToken = localStorage.getItem('authToken');
 
-    if (pocToken && pocId) {
-      return {
-        mode: 'poc' as const,
-        token: pocToken,
-        pocId,
-        listUrl: `http://localhost:3002/api/poc/${pocId}/mous`,
-        byIdUrl: (mouId: string) => `http://localhost:3002/api/poc/${pocId}/mous/${mouId}`,
-      };
-    }
-
+    // Prioritize admin context if admin token exists
     if (adminToken) {
       return {
         mode: 'admin' as const,
@@ -63,6 +54,16 @@ export const useMOU = () => {
         pocId: null,
         listUrl: `http://localhost:3000/api/mous`,
         byIdUrl: (mouId: string) => `http://localhost:3000/api/mous/${mouId}`,
+      };
+    }
+
+    if (pocToken && pocId) {
+      return {
+        mode: 'poc' as const,
+        token: pocToken,
+        pocId,
+        listUrl: `http://localhost:3002/api/poc/${pocId}/mous`,
+        byIdUrl: (mouId: string) => `http://localhost:3002/api/poc/${pocId}/mous/${mouId}`,
       };
     }
 

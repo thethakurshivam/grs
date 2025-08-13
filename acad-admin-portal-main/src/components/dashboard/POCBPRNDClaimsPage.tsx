@@ -32,6 +32,8 @@ const POCBPRNDClaimsPage: React.FC = () => {
       });
       const json = await res.json();
       if (!res.ok || json?.success === false) throw new Error(json?.error || `HTTP ${res.status}`);
+      
+      // Backend now filters to show only claims needing POC approval
       setClaims(json.data || []);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load claims');
@@ -53,7 +55,9 @@ const POCBPRNDClaimsPage: React.FC = () => {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || json?.success === false) throw new Error(json?.error || `HTTP ${res.status}`);
-      await fetchClaims();
+      
+      // Remove the approved claim from the local state immediately
+      setClaims(prevClaims => prevClaims.filter(claim => claim._id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Approve failed');
     }
@@ -69,7 +73,9 @@ const POCBPRNDClaimsPage: React.FC = () => {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || json?.success === false) throw new Error(json?.error || `HTTP ${res.status}`);
-      await fetchClaims();
+      
+      // Remove the declined claim from the local state immediately
+      setClaims(prevClaims => prevClaims.filter(claim => claim._id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Decline failed');
     }
@@ -82,8 +88,8 @@ const POCBPRNDClaimsPage: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-[#0b2e63]">BPR&D Certification Requests</h1>
-          <p className="text-black">Approve or decline student certification requests</p>
+          <h1 className="text-2xl font-bold text-[#0b2e63]">Pending Approval Requests</h1>
+          <p className="text-black">Review and approve student certification requests awaiting POC approval</p>
         </div>
         <div className="ml-auto">
           <Button variant="outline" onClick={fetchClaims} disabled={loading} className="flex items-center gap-2">

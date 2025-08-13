@@ -467,9 +467,22 @@ app.post('/api/bprnd/pending-credits/:studentId/apply', async (req, res) => {
     // Reload the student to get updated values
     const updatedStudent = await bprndStudents.findById(studentId);
 
+    // Delete the corresponding pending credit record
+    // Match by studentId and the exact data submitted
+    const deleteResult = await PendingCredits.deleteOne({
+      studentId: studentId,
+      name: name,
+      organization: organization,
+      discipline: discipline,
+      totalHours: hoursNum,
+      noOfDays: daysNum
+    });
+
+    console.log(`Deleted ${deleteResult.deletedCount} pending credit record(s) for student ${studentId}`);
+
     return res.status(200).json({
       success: true,
-      message: 'Credits applied successfully',
+      message: 'Credits applied successfully and pending request removed',
       data: {
         studentId: student._id,
         name,
@@ -483,6 +496,7 @@ app.post('/api/bprnd/pending-credits/:studentId/apply', async (req, res) => {
         updatedUmbrellaField: fieldKey || null,
         updatedUmbrellaCredits: fieldKey && updatedStudent ? updatedStudent[fieldKey] : null,
         previousTotalCredits: previousTotal,
+        deletedPendingRecords: deleteResult.deletedCount,
       },
     });
   } catch (error) {
@@ -537,7 +551,12 @@ const pocAuth = (req, res, next) => {
 app.get('/api/bprnd/claims', pocAuth, async (req, res) => {
   try {
     const { status } = req.query;
-    const filter = status ? { status } : {};
+    
+    // If specific status requested, use it; otherwise show only claims needing POC approval
+    const filter = status ? { status } : { 
+      status: { $in: ['pending', 'admin_approved'] } 
+    };
+    
     const claims = await BprndClaim.find(filter).sort({ createdAt: -1 }).lean();
     res.json({ success: true, count: claims.length, data: claims });
   } catch (e) {

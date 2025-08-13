@@ -45,6 +45,16 @@ const LoginPage = () => {
       const data = await response.json();
 
       if (response.ok) {
+        // Clear any existing POC/student tokens to prevent conflicts
+        localStorage.removeItem("pocToken");
+        localStorage.removeItem("pocUser");
+        localStorage.removeItem("pocUserId");
+        localStorage.removeItem("isPOCAuthenticated");
+        localStorage.removeItem("studentToken");
+        localStorage.removeItem("isStudentAuthenticated");
+        localStorage.removeItem("bprndStudentToken");
+        localStorage.removeItem("bprndIsAuthenticated");
+        
         // Store authentication data
         localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem("userEmail", data.admin.email);
