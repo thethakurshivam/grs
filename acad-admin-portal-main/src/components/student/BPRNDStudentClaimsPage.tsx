@@ -42,16 +42,16 @@ const BPRNDStudentClaimsPage: React.FC = () => {
   useEffect(() => { fetchClaims(); }, [fetchClaims]);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">My Certification Requests</h1>
+    <div className="space-y-6 m-6">
+      <div className="p-6 bg-white border border-blue-200 rounded-lg shadow-lg">
+         <h1 className="text-2xl font-bold text-[#1e3a8a]">My Certification Requests</h1>
         <p className="text-gray-700">Track the status of your requests</p>
       </div>
 
-      <Card>
+      <Card className="bg-white border border-blue-200 shadow-lg">
         <CardHeader>
-          <CardTitle>Requests</CardTitle>
-          <CardDescription>Total: {claims.length}</CardDescription>
+          <CardTitle className="text-[#1e3a8a]">Requests</CardTitle>
+          <CardDescription className="text-gray-600">Total: {claims.length}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -63,12 +63,17 @@ const BPRNDStudentClaimsPage: React.FC = () => {
           ) : (
             <div className="space-y-3">
               {claims.map((c) => (
-                <div key={c._id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div key={c._id} className="flex items-center justify-between p-4 border border-blue-200 rounded-lg bg-blue-50/30 hover:bg-blue-50/50 transition-colors">
                   <div>
-                    <p className="font-semibold">{c.umbrellaKey.replace(/_/g, ' ')} — {c.qualification}</p>
-                    <p className="text-sm text-gray-700">Required: {c.requiredCredits} | Status: {c.status}</p>
+                    <p className="font-semibold text-[#1e3a8a]">{c.umbrellaKey.replace(/_/g, ' ')} — {c.qualification}</p>
+                    <p className="text-sm text-gray-700">Required: {c.requiredCredits} | Status: <span className={`font-medium ${
+                      c.status === 'approved' ? 'text-green-600' : 
+                      c.status === 'declined' ? 'text-red-600' : 
+                      c.status === 'pending' ? 'text-orange-600' : 
+                      'text-blue-600'
+                    }`}>{c.status}</span></p>
                   </div>
-                  <div className="text-xs text-gray-500">{new Date(c.createdAt).toLocaleString()}</div>
+                  <div className="text-xs text-gray-600">{new Date(c.createdAt).toLocaleString()}</div>
                 </div>
               ))}
             </div>

@@ -398,6 +398,7 @@ const POCBulkImportStudentsPage: React.FC<POCBulkImportStudentsPageProps> = ({
                       <SelectItem
                         key={umbrellaItem._id}
                         value={umbrellaItem.name}
+                        className="text-gray-900 font-medium"
                       >
                         {umbrellaItem.name}
                       </SelectItem>

@@ -28,8 +28,10 @@ export const StudentDashboardLayout: React.FC<StudentDashboardLayoutProps> = ({ 
     }
   }, [location.pathname, navigate]);
 
+  const isBprnd = location.pathname.startsWith('/student/bprnd');
+
   return (
-    <div className="flex h-screen bg-blue-50 text-black">
+    <div className={`flex h-screen ${isBprnd ? 'bg-blue-50' : 'bg-gray-50'} text-black`}>
       <StudentDashboardSidebar />
       <main className="flex-1 overflow-y-auto">
         <div className="p-8">

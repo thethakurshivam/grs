@@ -116,9 +116,9 @@ export const StudentDashboardSidebar: React.FC = () => {
   const menuItems = isBprnd ? bprndMenuItems : studentMenuItems;
 
   return (
-    <div className="w-64 bg-sidebar-background shadow-lg">
+    <div className={`w-64 shadow-lg ${isBprnd ? 'bg-[#1e3a8a]' : 'bg-sidebar-background'}`}>
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-800">{isBprnd ? 'BPR&D Student' : 'Student'} Portal</h1>
+        <h1 className={`text-2xl font-bold ${isBprnd ? 'text-white' : 'text-gray-800'}`}>{isBprnd ? 'BPR&D Student' : 'Student'} Portal</h1>
       </div>
       
       <nav className="mt-6">
@@ -131,7 +131,9 @@ export const StudentDashboardSidebar: React.FC = () => {
                 key={item.name}
                 onClick={item.onClick}
                 className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                  isActive ? 'bg-sidebar-accent text-gray-900' : 'text-gray-700 hover:bg-sidebar-accent hover:text-gray-900'
+                  isBprnd 
+                    ? (isActive ? 'bg-blue-600 text-white' : 'text-blue-100 hover:bg-blue-600 hover:text-white')
+                    : (isActive ? 'bg-sidebar-accent text-gray-900' : 'text-gray-700 hover:bg-sidebar-accent hover:text-gray-900')
                 }`}
               >
                 <Icon className="w-5 h-5 mr-3" />
@@ -145,7 +147,11 @@ export const StudentDashboardSidebar: React.FC = () => {
       <div className="absolute bottom-0 w-64 p-4">
         <button 
           onClick={handleLogout}
-          className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-sidebar-accent hover:text-gray-900 transition-colors"
+          className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+            isBprnd 
+              ? 'text-blue-100 hover:bg-blue-600 hover:text-white' 
+              : 'text-gray-700 hover:bg-sidebar-accent hover:text-gray-900'
+          }`}
         >
           <LogOut className="w-5 h-5 mr-3" />
           Logout

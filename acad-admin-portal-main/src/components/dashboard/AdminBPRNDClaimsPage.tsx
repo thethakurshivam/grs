@@ -55,7 +55,9 @@ const AdminBPRNDClaimsPage: React.FC = () => {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || json?.success === false) throw new Error(json?.error || `HTTP ${res.status}`);
-      await fetchClaims();
+      
+      // Remove the approved claim from the local state immediately
+      setClaims(prevClaims => prevClaims.filter(claim => claim._id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Approve failed');
     }
@@ -71,7 +73,9 @@ const AdminBPRNDClaimsPage: React.FC = () => {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || json?.success === false) throw new Error(json?.error || `HTTP ${res.status}`);
-      await fetchClaims();
+      
+      // Remove the declined claim from the local state immediately
+      setClaims(prevClaims => prevClaims.filter(claim => claim._id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Decline failed');
     }
@@ -119,7 +123,7 @@ const AdminBPRNDClaimsPage: React.FC = () => {
                     <p className="text-sm text-gray-700">Required: {c.requiredCredits} | Status: {c.status}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={() => approve(c._id)} className="flex items-center gap-2">
+                    <Button variant="outline" onClick={() => approve(c._id)} className="flex items-center gap-2 text-gray-900 font-semibold">
                       <ShieldCheck className="h-4 w-4" /> Approve
                     </Button>
                     <Button variant="destructive" onClick={() => decline(c._id)} className="flex items-center gap-2">

@@ -78,7 +78,7 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
       <div
         className={
           type === 'bprnd'
-            ? 'w-64 bg-white shadow-lg border-r border-[#0b2e63]/20'
+            ? 'w-64 bg-[#1e3a8a] shadow-lg border-r border-blue-800'
             : 'w-64 bg-white shadow-lg border-r border-gray-200'
         }
       >
@@ -86,13 +86,13 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
         <div
           className={
             type === 'bprnd'
-              ? 'p-6 border-b border-[#0b2e63]/20'
+              ? 'p-6 border-b border-blue-800'
               : 'p-6 border-b border-gray-200'
           }
         >
           <div className="flex items-center space-x-3">
             {type === 'bprnd' ? (
-              <div className="h-10 w-10 bg-[#0b2e63] rounded-full flex items-center justify-center">
+              <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center">
                 <Users className="h-5 w-5 text-white" />
               </div>
             ) : (
@@ -104,13 +104,13 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
               <h2
                 className={
                   type === 'bprnd'
-                    ? 'text-lg font-semibold text-[#0b2e63]'
+                    ? 'text-lg font-semibold text-white'
                     : 'text-lg font-semibold text-gray-900'
                 }
               >
                 {type === 'bprnd' ? 'BPR&D POC Portal' : 'POC Portal'}
               </h2>
-              <p className={type === 'bprnd' ? 'text-sm text-black/60' : 'text-sm text-gray-500'}>
+              <p className={type === 'bprnd' ? 'text-sm text-blue-100' : 'text-sm text-gray-500'}>
                 Management Dashboard
               </p>
             </div>
@@ -126,10 +126,10 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
                 isActive(item.path)
                   ? type === 'bprnd'
-                    ? 'bg-[#0b2e63]/10 text-[#0b2e63] border border-[#0b2e63]/30'
+                    ? 'bg-blue-600 text-white border border-blue-500'
                     : 'bg-blue-50 text-blue-700 border border-blue-200'
                   : type === 'bprnd'
-                  ? 'text-black hover:bg-blue-50 hover:text-[#0b2e63]'
+                  ? 'text-blue-100 hover:bg-blue-600 hover:text-white'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
@@ -137,10 +137,10 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
                 className={`h-5 w-5 ${
                   isActive(item.path)
                     ? type === 'bprnd'
-                      ? 'text-[#0b2e63]'
+                      ? 'text-white'
                       : 'text-blue-600'
                     : type === 'bprnd'
-                    ? 'text-[#0b2e63]'
+                    ? 'text-blue-100'
                     : item.color
                 }`}
               />
@@ -153,7 +153,7 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
         <div
           className={
             type === 'bprnd'
-              ? 'absolute bottom-0 w-64 p-4 border-t border-[#0b2e63]/20'
+              ? 'absolute bottom-0 w-64 p-4 border-t border-blue-800'
               : 'absolute bottom-0 w-64 p-4 border-t border-gray-200'
           }
         >
@@ -162,7 +162,7 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
               onClick={() => navigate('/')}
               className={
                 type === 'bprnd'
-                  ? 'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-black hover:bg-blue-50 hover:text-[#0b2e63] transition-colors'
+                  ? 'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-blue-100 hover:bg-blue-600 hover:text-white transition-colors'
                   : 'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors'
               }
             >
@@ -180,7 +180,7 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
               }}
               className={
                 type === 'bprnd'
-                  ? 'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-black hover:bg-blue-50 hover:text-[#0b2e63] transition-colors'
+                  ? 'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-blue-100 hover:bg-blue-600 hover:text-white transition-colors'
                   : 'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors'
               }
             >
@@ -197,7 +197,7 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
         <header
           className={
             type === 'bprnd'
-              ? 'bg-white shadow-sm border-b border-[#0b2e63]/20 px-6 py-4'
+              ? 'bg-white shadow-sm border-b border-blue-200 px-6 py-4'
               : 'bg-white shadow-sm border-b border-gray-200 px-6 py-4'
           }
         >
@@ -206,14 +206,14 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
               <h1
                 className={
                   type === 'bprnd'
-                    ? 'text-2xl font-bold text-[#0b2e63]'
+                    ? 'text-2xl font-bold text-[#1e3a8a]'
                     : 'text-2xl font-bold text-gray-900'
                 }
               >
                 {sidebarItems.find((item) => isActive(item.path))?.title ||
                   'POC Portal'}
               </h1>
-              <p className={type === 'bprnd' ? 'text-black/70' : 'text-gray-600'}>
+              <p className={type === 'bprnd' ? 'text-gray-700' : 'text-gray-600'}>
                 {isActive(basePath) &&
                   `Welcome to the ${
                     type === 'bprnd' ? 'BPR&D POC' : 'POC'

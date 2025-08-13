@@ -82,8 +82,8 @@ const POCBPRNDClaimsPage: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">BPR&D Certification Requests</h1>
-          <p className="text-gray-700">Approve or decline student certification requests</p>
+          <h1 className="text-2xl font-bold text-[#0b2e63]">BPR&D Certification Requests</h1>
+          <p className="text-black">Approve or decline student certification requests</p>
         </div>
         <div className="ml-auto">
           <Button variant="outline" onClick={fetchClaims} disabled={loading} className="flex items-center gap-2">
@@ -100,21 +100,21 @@ const POCBPRNDClaimsPage: React.FC = () => {
 
       <Card className="border-0 shadow-md">
         <CardHeader>
-          <CardTitle>Requests</CardTitle>
-          <CardDescription>Total: {claims.length}</CardDescription>
+          <CardTitle className="text-[#0b2e63]">Requests</CardTitle>
+          <CardDescription className="text-gray-800">Total: {claims.length}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-gray-700">Loading...</p>
+            <p className="text-black">Loading...</p>
           ) : claims.length === 0 ? (
-            <p className="text-gray-700">No requests found.</p>
+            <p className="text-black">No requests found.</p>
           ) : (
             <div className="space-y-3">
               {claims.map((c) => (
                 <div key={c._id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
-                    <p className="font-semibold">{c.umbrellaKey.replace(/_/g, ' ')} — {c.qualification}</p>
-                    <p className="text-sm text-gray-700">Required: {c.requiredCredits} | Status: {c.status}</p>
+                    <p className="font-semibold text-gray-900">{c.umbrellaKey.replace(/_/g, ' ')} — {c.qualification}</p>
+                    <p className="text-sm text-gray-900">Required: {c.requiredCredits} | Status: {c.status}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" onClick={() => approve(c._id)} className="flex items-center gap-2">

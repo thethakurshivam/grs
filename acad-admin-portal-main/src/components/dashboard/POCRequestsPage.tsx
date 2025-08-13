@@ -126,7 +126,7 @@ const POCRequestsPage: React.FC<Props> = ({ type = 'standard' }) => {
             {error && !isLoading && <p className="text-red-600">{error}</p>}
             {!isLoading && !error && (
               <div className="space-y-4">
-                {data.map((item) => (
+                {data.filter(item => !actedIds[item.id]).map((item) => (
                   <div key={item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center">
@@ -150,27 +150,23 @@ const POCRequestsPage: React.FC<Props> = ({ type = 'standard' }) => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {!actedIds[item.id] && (
-                        <>
-                          <button
-                            onClick={() => handleAccept(item)}
-                            className="px-3 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-md"
-                          >
-                            Accept
-                          </button>
-                          <a
-                            onClick={() => setActedIds((prev) => ({ ...prev, [item.id]: true }))}
-                            href={item.rejectUrl}
-                            className="px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md"
-                          >
-                            Reject
-                          </a>
-                        </>
-                      )}
+                      <button
+                        onClick={() => handleAccept(item)}
+                        className="px-3 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-md"
+                      >
+                        Accept
+                      </button>
+                      <a
+                        onClick={() => setActedIds((prev) => ({ ...prev, [item.id]: true }))}
+                        href={item.rejectUrl}
+                        className="px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md"
+                      >
+                        Reject
+                      </a>
                     </div>
                   </div>
                 ))}
-                {data.length === 0 && <p className="text-gray-600">No pending credits found.</p>}
+                {data.filter(item => !actedIds[item.id]).length === 0 && <p className="text-gray-600">No pending credits found.</p>}
               </div>
             )}
           </CardContent>
