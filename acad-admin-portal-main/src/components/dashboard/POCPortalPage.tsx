@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import usePOCStudents from '@/hooks/usePOCStudents';
 import { usePOCCourses } from '@/hooks/usePOCCourses';
 import { usePOCMOUs } from '@/hooks/usePOCMOUs';
+import { useBPRNDPOCClaims } from '@/hooks/useBPRNDPOCClaims';
 
 import { POCComponentProps } from '@/types/poc';
 
@@ -30,9 +31,12 @@ const POCPortalPage: React.FC<POCComponentProps> = ({ type = 'standard' }) => {
   const { students, loading: studentsLoading } = usePOCStudents(pocId);
   const { courses, loading: coursesLoading } = usePOCCourses();
   const { mous, loading: mousLoading } = usePOCMOUs();
+  
+  // Fetch certification claims for BPR&D POC
+  const { count: certificationCount, loading: claimsLoading } = useBPRNDPOCClaims();
 
   const [stats] = useState({
-    requests: 8,
+    requests: 8, // This is for standard POC requests
   });
 
   const dashboardCards = [
@@ -68,9 +72,11 @@ const POCPortalPage: React.FC<POCComponentProps> = ({ type = 'standard' }) => {
       path: type === 'bprnd' ? '/poc-portal/bprnd/mous' : '/poc-portal/mous',
     },
     {
-      title: 'Requests',
-      value: stats.requests,
-      description: 'Pending approval requests',
+      title: type === 'bprnd' ? 'Certification Requests' : 'Requests',
+      value: type === 'bprnd' 
+        ? (claimsLoading ? 'Loading...' : certificationCount.toLocaleString())
+        : stats.requests,
+      description: type === 'bprnd' ? 'Pending certification claims' : 'Pending approval requests',
       icon: MessageSquare,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
