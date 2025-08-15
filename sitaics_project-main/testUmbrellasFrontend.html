@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Umbrellas API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 4px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .loading { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 10px 5px; }
+        button:hover { background: #0056b3; }
+        .umbrella-item { margin: 5px 0; padding: 5px; background: #f8f9fa; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Test Umbrellas API Access</h1>
+    
+    <button onclick="testUmbrellasAPI()">Test Umbrellas API</button>
+    <button onclick="testCORS()">Test CORS</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="result"></div>
+
+    <script>
+        async function testUmbrellasAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result loading">Testing umbrellas API...</div>';
+            
+            try {
+                console.log('Testing umbrellas API...');
+                
+                const response = await fetch('http://localhost:3003/api/bprnd/umbrellas', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok && data.success) {
+                    const umbrellas = data.data || [];
+                    const umbrellasList = umbrellas.map(umbrella => 
+                        `<div class="umbrella-item">• ${umbrella.name} (ID: ${umbrella._id})</div>`
+                    ).join('');
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>✅ Umbrellas API Test Successful!</h3>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Message:</strong> ${data.message}</p>
+                            <p><strong>Count:</strong> ${data.count}</p>
+                            <p><strong>Umbrellas:</strong></p>
+                            ${umbrellasList}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Umbrellas API Test Failed</h3>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Error:</strong> ${data.message || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('API test error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Network Error</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>This usually means the API server is not running or there's a CORS issue.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testCORS() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result loading">Testing CORS...</div>';
+            
+            try {
+                console.log('Testing CORS...');
+                
+                const response = await fetch('http://localhost:3003/api/bprnd/umbrellas', {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': 'http://localhost:8080',
+                        'Access-Control-Request-Method': 'GET',
+                        'Access-Control-Request-Headers': 'Content-Type',
+                    },
+                });
+                
+                console.log('CORS Response status:', response.status);
+                console.log('CORS Response headers:', response.headers);
+                
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                    'Access-Control-Allow-Credentials': response.headers.get('Access-Control-Allow-Credentials'),
+                };
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <h3>✅ CORS Test Results</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>CORS Headers:</strong></p>
+                        <pre>${JSON.stringify(corsHeaders, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('CORS test error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ CORS Test Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('result').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

@@ -57,6 +57,7 @@ import StudentAuthGuard from './components/auth/StudentAuthGuard';
 import AdminBPRNDClaimsPage from './components/dashboard/AdminBPRNDClaimsPage';
 import POCBPRNDClaimsPage from './components/dashboard/POCBPRNDClaimsPage';
 import BPRNDStudentClaimsPage from './components/student/BPRNDStudentClaimsPage';
+import BPRNDCertificationRequestPage from './components/dashboard/BPRNDCertificationRequestPage';
 
 const queryClient = new QueryClient();
 
@@ -120,6 +121,7 @@ const App = () => (
             <Route path="sector-training/:fieldId" element={<FieldCourses />} />
             <Route path="field-courses/:fieldId" element={<FieldCourses />} />
             <Route path="bprnd/claims" element={<AdminBPRNDClaimsPage />} />
+            <Route path="bprnd-certification-request" element={<BPRNDCertificationRequestPage />} />
           </Route>
 
           {/* POC Authentication Routes */}

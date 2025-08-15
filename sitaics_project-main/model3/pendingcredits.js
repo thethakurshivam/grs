@@ -33,6 +33,10 @@ const pendingCreditsSchema = new mongoose.Schema(
       type: String, // Store file path
       required: true,
     },
+    admin_approved: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

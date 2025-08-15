@@ -15,7 +15,7 @@ export function useBPRNDUmbrellas() {
     setError(null);
     const controller = new AbortController();
     try {
-      const res = await fetch('http://localhost:3004/umbrellas', { signal: controller.signal });
+      const res = await fetch('http://localhost:3003/api/bprnd/umbrellas', { signal: controller.signal });
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
         const text = await res.text();

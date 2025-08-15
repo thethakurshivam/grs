@@ -11,6 +11,7 @@ const umbrella = require('./model3/umbrella');
 const Credit = require('./model3/credit');
 const multer = require('multer');
 const PendingCredits = require('./model3/pendingcredits'); // Import your schema
+
 const BprndClaim = require('./model3/bprnd_certification_claim');
 const BprndCertificate = require('./model3/bprnd_certificate');
 
@@ -159,8 +160,11 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Direct password comparison (no hashing)
-    if (password !== student.password) {
+    // Compare password using bcrypt
+    const bcrypt = require('bcrypt');
+    const isPasswordValid = await bcrypt.compare(password, student.password);
+    
+    if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
@@ -408,7 +412,9 @@ router.post('/pending-credits', upload.single('pdf'), async (req, res) => {
       discipline: String(discipline),
       totalHours,
       noOfDays,
-      pdf: req.file.path // Store the file path
+      pdf: req.file.path, // Store the file path
+      admin_approved: false, // Explicitly set default value
+      bprnd_poc_approved: false // Explicitly set default value
     });
 
     // Save to database
@@ -416,7 +422,7 @@ router.post('/pending-credits', upload.single('pdf'), async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Pending credit record created successfully',
+      message: 'Pending credit record created successfully. Waiting for admin and BPR&D POC approval.',
       data: savedRecord
     });
 

@@ -92,6 +92,8 @@ const PendingAdmin = require('../models/pendingAdmin');
 const Candidate = require('../models1/student');
 const Student = require('../models1/student'); // Import the correct Student model
 const BprndClaim = require('../model3/bprnd_certification_claim');
+const PendingCredits = require('../model3/pendingcredits');
+const CreditCalculation = require('../model3/bprndstudents');
 
 // Input sanitization helper
 const sanitizeInput = (input) => {
@@ -768,10 +770,157 @@ app.post('/api/courses/update-completion-status', authenticateToken, asyncHandle
   }
 }));
 
+// Route to get all pending credits that need approval (for admin)
+// Route to get all pending credits that need approval (for admin)
+app.get('/api/pending-credits', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    // Find all pending credits where either admin_approved is false OR bprnd_poc_approved is false OR both are false
+    const pendingCredits = await PendingCredits.find({
+      $or: [
+        { admin_approved: false }
+        
+      ]
+    })
+    .populate('studentId', 'Name email Designation State') // Populate student details
+    .sort({ createdAt: -1 }); // Sort by newest first
 
+    // Add approve and decline links to each pending credit document
+    const pendingCreditsWithLinks = pendingCredits.map(pendingCredit => {
+      const pendingCreditData = pendingCredit.toObject();
+      return {
+        // All document data
+        _id: pendingCreditData._id,
+        studentId: pendingCreditData.studentId,
+        name: pendingCreditData.name,
+        organization: pendingCreditData.organization,
+        discipline: pendingCreditData.discipline,
+        totalHours: pendingCreditData.totalHours,
+        noOfDays: pendingCreditData.noOfDays,
+        pdf: pendingCreditData.pdf,
+        admin_approved: pendingCreditData.admin_approved,
+        bprnd_poc_approved: pendingCreditData.bprnd_poc_approved,
+        createdAt: pendingCreditData.createdAt,
+        updatedAt: pendingCreditData.updatedAt,
+        // Action links
+        approveLink: `/api/pending-credits/${pendingCredit._id}/approve`,
+        declineLink: `/api/pending-credits/${pendingCredit._id}/decline`
+      };
+    });
 
-  
- 
+    res.json({
+      success: true,
+      message: 'Pending credits retrieved successfully',
+      count: pendingCreditsWithLinks.length,
+      data: pendingCreditsWithLinks
+    });
+
+  } catch (error) {
+    console.error('Error fetching pending credits:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error fetching pending credits: ' + error.message
+    });
+  }
+}));
+
+// Route for admin to approve pending credits
+app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    // Get the id from parameters and store in variable
+    const id = req.params.id;
+
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid pending credit ID format'
+      });
+    }
+
+    // Find and update the admin_approved field to true
+    const pendingCredit = await PendingCredits.findByIdAndUpdate(
+      id,
+      { admin_approved: true },
+      { new: true }
+    );
+
+    if (!pendingCredit) {
+      return res.status(404).json({
+        success: false,
+        error: 'Pending credit request not found'
+      });
+    }
+
+    // Check if both admin_approved and bprnd_poc_approved are true
+    if (pendingCredit.admin_approved && pendingCredit.bprnd_poc_approved) {
+      // Both approvals are complete, update status to fully approved
+      await PendingCredits.findByIdAndUpdate(
+        id,
+        { status: 'approved' },
+        { new: true }
+      );
+    }
+
+    res.json({
+      success: true,
+      message: 'Pending credit approved successfully',
+      data: pendingCredit
+    });
+
+  } catch (error) {
+    console.error('Error approving pending credit:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error approving pending credit: ' + error.message
+    });
+  }
+}));
+
+// Route for admin to decline pending credits by ID
+app.post('/api/pending-credits/:id/decline', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    // Get the id from parameters
+    const id = req.params.id;
+
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid pending credit ID format'
+      });
+    }
+
+    // Find and update the admin_status field to declined
+    const pendingCredit = await PendingCredits.findByIdAndUpdate(
+      id,
+      { 
+        admin_approved: false,
+        status: 'declined'
+      },
+      { new: true }
+    );
+
+    if (!pendingCredit) {
+      return res.status(404).json({
+        success: false,
+        error: 'Pending credit request not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Pending credit declined successfully',
+      data: pendingCredit
+    });
+
+  } catch (error) {
+    console.error('Error declining pending credit:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error declining pending credit: ' + error.message
+    });
+  }
+}));
 
 // Route to get all schools with their information and links
 app.get('/api/schools', authenticateToken, asyncHandler(async (req, res) => {
@@ -1821,6 +1970,107 @@ app.post('/api/bprnd/claims/:claimId/decline', authenticateToken, asyncHandler(a
   await claim.save();
 
   res.json({ success: true, message: 'Admin declined' });
+}));
+
+// Get pending credits for a specific student
+app.get('/api/pending-credits/:studentId', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    
+    // Validate student ID format
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid student ID format'
+      });
+    }
+
+    // Find all pending credits documents for the given student ID
+    const pendingCredits = await PendingCredits.find({ studentId: studentId }).sort({ createdAt: -1 });
+    
+    if (!pendingCredits || pendingCredits.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'No pending credits found for this student'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Found ${pendingCredits.length} pending credits for student`,
+      data: {
+        studentId: studentId,
+        count: pendingCredits.length,
+        pendingCredits: pendingCredits
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching pending credits:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch pending credits',
+      details: error.message
+    });
+  }
+}));
+
+// Decline pending credits by student ID
+app.post('/api/pending-credits/:studentId/decline', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    
+    // Validate student ID format
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid student ID format'
+      });
+    }
+
+    // Find all pending credits documents for the given student ID
+    const pendingCredits = await PendingCredits.find({ studentId: studentId });
+    
+    if (!pendingCredits || pendingCredits.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'No pending credits found for this student'
+      });
+    }
+
+    // Update all found documents: set admin_approved to false and add admin_status field
+    const updatePromises = pendingCredits.map(async (pendingCredit) => {
+      pendingCredit.admin_approved = false;
+      // Add admin_status field if it doesn't exist in the schema
+      pendingCredit.admin_status = 'declined';
+      pendingCredit.admin_decision_date = new Date();
+      pendingCredit.admin_decision_by = req.user?.email || 'admin';
+      return pendingCredit.save();
+    });
+
+    await Promise.all(updatePromises);
+
+    console.log(`✅ Declined ${pendingCredits.length} pending credits for student ${studentId}`);
+
+    res.json({
+      success: true,
+      message: `Successfully declined ${pendingCredits.length} pending credits`,
+      data: {
+        studentId: studentId,
+        declinedCount: pendingCredits.length,
+        declinedAt: new Date(),
+        declinedBy: req.user?.email || 'admin'
+      }
+    });
+
+  } catch (error) {
+    console.error('Error declining pending credits:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to decline pending credits',
+      details: error.message
+    });
+  }
 }));
 
 // Start the server

@@ -139,18 +139,18 @@ export function DashboardSidebar() {
                 </SidebarMenuItem>
               ))}
 
-              {/* Dummy BPR&D Request */}
+              {/* BPR&D Certification Request */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Button
                     variant="ghost"
                     className="w-full justify-start hover:bg-accent"
                     onClick={() =>
-                      navigate('/dashboard/bprnd/claims')
+                      navigate('/dashboard/bprnd-certification-request')
                     }
                   >
                     <Send className="h-4 w-4" />
-                    {!collapsed && <span className="ml-2">BPR&D Requests</span>}
+                    {!collapsed && <span className="ml-2">BPR&D Certification Request</span>}
                   </Button>
                 </SidebarMenuButton>
               </SidebarMenuItem>

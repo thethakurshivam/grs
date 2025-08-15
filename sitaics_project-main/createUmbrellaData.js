@@ -4,15 +4,11 @@ require('dotenv').config();
 
 const umbrellaFields = [
   { name: 'Cyber Security' },
-  { name: 'Criminology' },
   { name: 'Military Law' },
+  { name: 'Forensics' },
+  { name: 'Criminology' },
   { name: 'Police Administration' },
-  { name: 'Forensic Science' },
-  { name: 'National Security' },
-  { name: 'International Security' },
-  { name: 'Counter-Terrorism' },
-  { name: 'Intelligence Studies' },
-  { name: 'Emergency Management' },
+  { name: 'Defence' },
 ];
 
 async function createUmbrellaFields() {
@@ -21,8 +17,9 @@ async function createUmbrellaFields() {
     await mongoose.connect('mongodb://localhost:27017/sitaics');
     console.log('Connected to MongoDB');
 
-    // Delete existing records (optional - uncomment if you want to start fresh)
-    // await Umbrella.deleteMany({});
+    // Delete existing records to start fresh
+    await Umbrella.deleteMany({});
+    console.log('Cleared existing umbrella fields');
 
     // Insert the new fields
     const result = await Umbrella.insertMany(umbrellaFields);

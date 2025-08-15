@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const POCBPRND = require('./model3/pocbprnd');
 require('dotenv').config();
 
-const uri = process.env.MONGODB_URI;
+const uri = 'mongodb://localhost:27017/sitaics';
 
 const createDummyBPRNDPOC = async () => {
   try {
