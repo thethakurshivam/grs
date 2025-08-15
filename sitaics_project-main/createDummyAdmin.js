@@ -6,7 +6,7 @@ require('dotenv').config();
 const Admin = require('./models/admin');
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/academic_portal', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/sitaics', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
