@@ -670,8 +670,8 @@ app.get('/api/test-email-config', authenticatePOC, async (req, res) => {
 });
 
 
-// Explicitly set port to 3002
-const PORT = 3002;
+// Use environment variable or default to 3002
+const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
   console.log(`POC API Server is running on port ${PORT}`);
   console.log(`API endpoints available at http://localhost:${PORT}/api`);

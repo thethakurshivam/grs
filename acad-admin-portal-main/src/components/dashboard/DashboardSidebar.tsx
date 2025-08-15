@@ -154,6 +154,22 @@ export function DashboardSidebar() {
                   </Button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              {/* BPR&D Pending Credits */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start hover:bg-accent"
+                    onClick={() =>
+                      navigate('/dashboard/bprnd-pending-credits')
+                    }
+                  >
+                    <FileText className="h-4 w-4" />
+                    {!collapsed && <span className="ml-2">BPR&D Pending Credits</span>}
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

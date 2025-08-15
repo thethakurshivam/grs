@@ -777,8 +777,8 @@ app.get('/api/pending-credits', authenticateToken, asyncHandler(async (req, res)
     // Find all pending credits where either admin_approved is false OR bprnd_poc_approved is false OR both are false
     const pendingCredits = await PendingCredits.find({
       $or: [
-        { admin_approved: false }
-        
+        { admin_approved: false },
+        { bprnd_poc_approved: false }
       ]
     })
     .populate('studentId', 'Name email Designation State') // Populate student details
