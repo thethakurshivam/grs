@@ -94,6 +94,7 @@ const Student = require('../models1/student'); // Import the correct Student mod
 const BprndClaim = require('../model3/bprnd_certification_claim');
 const PendingCredits = require('../model3/pendingcredits');
 const CreditCalculation = require('../model3/bprndstudents');
+const bprnd_certification_claim = require('../model3/bprnd_certification_claim');
 
 // Input sanitization helper
 const sanitizeInput = (input) => {
@@ -837,10 +838,13 @@ app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(asy
       });
     }
 
-    // Find and update the admin_approved field to true
+    // Find and update the admin_approved field to true and update status
     const pendingCredit = await PendingCredits.findByIdAndUpdate(
       id,
-      { admin_approved: true },
+      { 
+        admin_approved: true,
+        status: 'admin_approved'
+      },
       { new: true }
     );
 
@@ -851,19 +855,19 @@ app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(asy
       });
     }
 
-    // Check if both admin_approved and bprnd_poc_approved are true
+    // Check if both approvals are complete
     if (pendingCredit.admin_approved && pendingCredit.bprnd_poc_approved) {
-      // Both approvals are complete, update status to fully approved
-      await PendingCredits.findByIdAndUpdate(
-        id,
-        { status: 'approved' },
-        { new: true }
-      );
+      // Both approved - this pending credit is now fully approved
+      await PendingCredits.findByIdAndUpdate(id, { status: 'approved' });
+      console.log(`✅ Pending credit ${id} is now fully approved by both admin and BPRND POC`);
+    } else {
+      // Waiting for BPRND POC approval
+      console.log(`⏳ Pending credit ${id} approved by admin, waiting for BPRND POC approval`);
     }
 
     res.json({
       success: true,
-      message: 'Pending credit approved successfully',
+      message: 'Pending credit approved successfully by admin',
       data: pendingCredit
     });
 
@@ -890,7 +894,7 @@ app.post('/api/pending-credits/:id/decline', authenticateToken, asyncHandler(asy
       });
     }
 
-    // Find and update the admin_status field to declined
+    // Find and update the admin_approved field to false and set status to declined
     const pendingCredit = await PendingCredits.findByIdAndUpdate(
       id,
       { 
@@ -1923,14 +1927,14 @@ app.get('/api/bprnd/claims', authenticateToken, asyncHandler(async (req, res) =>
     status: { $in: ['pending', 'poc_approved'] } 
   };
   
-  const claims = await BprndClaim.find(filter).sort({ createdAt: -1 }).lean();
+  const claims = await bprnd_certification_claim.find(filter).sort({ createdAt: -1 }).lean();
   res.json({ success: true, count: claims.length, data: claims });
 }));
 
 // Approve a claim as Admin
 app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(async (req, res) => {
   const { claimId } = req.params;
-  const claim = await BprndClaim.findById(claimId);
+  const claim = await bprnd_certification_claim.findById(claimId);
   if (!claim) return res.status(404).json({ success: false, error: 'Claim not found' });
 
   if (claim.status === 'declined' || claim.status === 'approved') {
@@ -2038,13 +2042,10 @@ app.post('/api/pending-credits/:studentId/decline', authenticateToken, asyncHand
       });
     }
 
-    // Update all found documents: set admin_approved to false and add admin_status field
+    // Update all found documents: set admin_approved to false and status to declined
     const updatePromises = pendingCredits.map(async (pendingCredit) => {
       pendingCredit.admin_approved = false;
-      // Add admin_status field if it doesn't exist in the schema
-      pendingCredit.admin_status = 'declined';
-      pendingCredit.admin_decision_date = new Date();
-      pendingCredit.admin_decision_by = req.user?.email || 'admin';
+      pendingCredit.status = 'declined';
       return pendingCredit.save();
     });
 

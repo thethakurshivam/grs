@@ -37,6 +37,15 @@ const pendingCreditsSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    bprnd_poc_approved: {
+      type: Boolean,
+      default: false,
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'admin_approved', 'poc_approved', 'approved', 'declined'],
+      default: 'pending',
+    },
   },
   {
     timestamps: true,

@@ -360,6 +360,7 @@ app.get('/api/bprnd/pending-credits', async (req, res) => {
         pdf: pdfUrl,
         admin_approved: rec.admin_approved,
         bprnd_poc_approved: rec.bprnd_poc_approved,
+        status: rec.status || 'pending',
         acceptUrl,
         rejectUrl,
         createdAt: rec.createdAt,
@@ -397,7 +398,10 @@ app.post('/api/bprnd/pending-credits/:id/accept', async (req, res) => {
     // Find and update the pending credit
     const pendingCredit = await PendingCredits.findByIdAndUpdate(
       id,
-      { bprnd_poc_approved: true },
+      { 
+        bprnd_poc_approved: true,
+        status: 'poc_approved'
+      },
       { new: true }
     );
 
@@ -410,16 +414,110 @@ app.post('/api/bprnd/pending-credits/:id/accept', async (req, res) => {
 
     // Check if both approvals are complete
     if (pendingCredit.admin_approved && pendingCredit.bprnd_poc_approved) {
-      // Both approved - process the credit application
+      // Both approved - update status to approved and process the credit application
+      await PendingCredits.findByIdAndUpdate(id, { status: 'approved' });
+      
+      // Apply credits to student's credit bank and umbrella field
+      let newCredits = 0;
+      let fieldKey = null;
+      
+      try {
+        // Calculate credits: 15 hours = 1 credit
+        const totalHours = Number(pendingCredit.totalHours || 0);
+        newCredits = totalHours > 0 ? Math.ceil(totalHours / 15) : 0;
+        
+        if (newCredits > 0) {
+          // Find student and update Total_Credits
+          const student = await bprndStudents.findById(pendingCredit.studentId);
+          if (student) {
+            // Define umbrella field keys
+            const UMBRELLA_KEYS = [
+              'Cyber_Security',
+              'Criminology',
+              'Military_Law',
+              'Police_Administration',
+              'Forensic_Science',
+              'National_Security',
+              'International_Security',
+              'Counter_Terrorism',
+              'Intelligence_Studies',
+              'Emergency_Management',
+            ];
+            
+            // Normalize discipline for matching
+            const normalize = (s) => String(s || '')
+              .toLowerCase()
+              .replace(/[_-]+/g, ' ')
+              .replace(/[^a-z\s]/g, '')
+              .replace(/\s+/g, ' ')
+              .trim();
+            
+            const normDiscipline = normalize(pendingCredit.discipline);
+            fieldKey = UMBRELLA_KEYS.find(
+              (k) => normalize(k.replace(/_/g, ' ')) === normDiscipline
+            );
+            
+            if (!fieldKey) {
+              // Try partial includes match
+              fieldKey = UMBRELLA_KEYS.find(
+                (k) => normalize(k.replace(/_/g, ' ')).includes(normDiscipline) ||
+                       normDiscipline.includes(normalize(k.replace(/_/g, ' ')))
+              );
+            }
+            
+            if (!fieldKey && student.Umbrella) {
+              // Fallback to student's umbrella selection
+              const normStudentUmbrella = normalize(student.Umbrella);
+              fieldKey = UMBRELLA_KEYS.find(
+                (k) => normalize(k.replace(/_/g, ' ')) === normStudentUmbrella
+              ) || UMBRELLA_KEYS.find(
+                (k) => normalize(k.replace(/_/g, ' ')).includes(normStudentUmbrella)
+              );
+            }
+            
+            // Update student credits
+            if (fieldKey) {
+              await bprndStudents.updateOne(
+                { _id: pendingCredit.studentId },
+                {
+                  $inc: {
+                    Total_Credits: newCredits,
+                    [fieldKey]: newCredits,
+                  },
+                }
+              );
+            } else {
+              await bprndStudents.updateOne(
+                { _id: pendingCredit.studentId },
+                { $inc: { Total_Credits: newCredits } }
+              );
+            }
+            
+            console.log(`✅ Credits applied: ${newCredits} credits added to student ${pendingCredit.studentId} (${fieldKey || 'Total_Credits only'})`);
+          }
+        }
+        
+        // Delete the pending credit record after successful credit application
+        await PendingCredits.findByIdAndDelete(id);
+        console.log(`✅ Pending credit record ${id} deleted after successful credit application`);
+        
+      } catch (creditError) {
+        console.error('Error applying credits:', creditError);
+        // Don't fail the approval if credit application fails
+        // The pending credit will remain for manual review
+      }
+      
       return res.json({
         success: true,
-        message: 'BPRND POC approval successful. Credit request fully approved and ready for processing.',
+        message: 'BPRND POC approval successful. Credits applied and pending request removed.',
         data: {
           id: pendingCredit._id,
           studentId: pendingCredit.studentId,
           admin_approved: pendingCredit.admin_approved,
           bprnd_poc_approved: pendingCredit.bprnd_poc_approved,
-          status: 'fully_approved'
+          status: 'approved',
+          creditsApplied: newCredits,
+          umbrellaField: fieldKey || null
         }
       });
     }
@@ -431,7 +529,7 @@ app.post('/api/bprnd/pending-credits/:id/accept', async (req, res) => {
         id: pendingCredit._id,
         admin_approved: pendingCredit.admin_approved,
         bprnd_poc_approved: pendingCredit.bprnd_poc_approved,
-        status: 'partially_approved'
+        status: 'poc_approved'
       }
     });
 
@@ -460,7 +558,10 @@ app.post('/api/bprnd/pending-credits/:id/reject', async (req, res) => {
     // Find and update the pending credit
     const pendingCredit = await PendingCredits.findByIdAndUpdate(
       id,
-      { bprnd_poc_approved: false },
+      { 
+        bprnd_poc_approved: false,
+        status: 'declined'
+      },
       { new: true }
     );
 
@@ -471,16 +572,16 @@ app.post('/api/bprnd/pending-credits/:id/reject', async (req, res) => {
       });
     }
 
-    res.json({
-      success: true,
-      message: 'BPRND POC rejection successful.',
-      data: {
-        id: pendingCredit._id,
-        admin_approved: pendingCredit.admin_approved,
-        bprnd_poc_approved: pendingCredit.bprnd_poc_approved,
-        status: 'rejected_by_poc'
-      }
-    });
+      res.json({
+        success: true,
+        message: 'BPRND POC rejection successful.',
+        data: {
+          id: pendingCredit._id,
+          admin_approved: pendingCredit.admin_approved,
+          bprnd_poc_approved: pendingCredit.bprnd_poc_approved,
+          status: 'declined'
+        }
+      });
 
   } catch (error) {
     console.error('Error rejecting pending credit:', error);
@@ -577,6 +678,7 @@ app.get('/api/bprnd/pending-credits/student/:studentId', async (req, res) => {
         pdf: pdfUrl,
         admin_approved: rec.admin_approved,
         bprnd_poc_approved: rec.bprnd_poc_approved,
+        status: rec.status || 'pending',
         acceptUrl,
         rejectUrl,
         createdAt: rec.createdAt,
@@ -619,170 +721,6 @@ app.get('/api/bprnd/values', async (req, res) => {
   }
 });
 
-// Apply pending credits: compute new credits from totalHours and add to student's Total_Credits
-// New: studentId as route parameter
-app.post('/api/bprnd/pending-credits/:studentId/apply', async (req, res) => {
-  try {
-    const { studentId } = req.params;
-    const {
-      name,
-      organization,
-      discipline,
-      totalHours,
-      noOfDays,
-      pdf,
-    } = req.body || {};
-
-    // Validate inputs
-    if (!studentId || !name || !organization || !discipline || totalHours === undefined || noOfDays === undefined) {
-      return res.status(400).json({
-        success: false,
-        message: 'studentId, name, organization, discipline, totalHours, and noOfDays are required',
-      });
-    }
-
-    const hoursNum = Number(totalHours);
-    const daysNum = Number(noOfDays);
-    if (Number.isNaN(hoursNum) || Number.isNaN(daysNum) || hoursNum < 0 || daysNum < 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'totalHours and noOfDays must be non-negative numbers',
-      });
-    }
-
-    // Compute new credits and always award at least 1 credit when hours > 0
-    const newCredits = hoursNum > 0 ? Math.ceil(hoursNum / 15) : 0;
-
-    // Find student and update Total_Credits
-    const student = await bprndStudents.findById(studentId);
-    if (!student) {
-      return res.status(404).json({ success: false, message: 'Student not found' });
-    }
-
-    const previousTotal = Number(student.Total_Credits || 0);
-
-    // Also increment the umbrella-specific field so breakdown reflects the change
-    const UMBRELLA_KEYS = [
-      'Cyber_Security',
-      'Criminology',
-      'Military_Law',
-      'Police_Administration',
-      'Forensic_Science',
-      'National_Security',
-      'International_Security',
-      'Counter_Terrorism',
-      'Intelligence_Studies',
-      'Emergency_Management',
-    ];
-    const normalize = (s) => String(s || '')
-      .toLowerCase()
-      .replace(/[_-]+/g, ' ')
-      .replace(/[^a-z\s]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    const normDiscipline = normalize(discipline);
-    let fieldKey = UMBRELLA_KEYS.find(
-      (k) => normalize(k.replace(/_/g, ' ')) === normDiscipline
-    );
-    if (!fieldKey) {
-      // Try partial includes match
-      fieldKey = UMBRELLA_KEYS.find(
-        (k) => normalize(k.replace(/_/g, ' ')).includes(normDiscipline) ||
-               normDiscipline.includes(normalize(k.replace(/_/g, ' ')))
-      );
-    }
-    if (!fieldKey && student && student.Umbrella) {
-      // Fallback to student's umbrella selection
-      const normStudentUmbrella = normalize(student.Umbrella);
-      fieldKey = UMBRELLA_KEYS.find(
-        (k) => normalize(k.replace(/_/g, ' ')) === normStudentUmbrella
-      ) || UMBRELLA_KEYS.find(
-        (k) => normalize(k.replace(/_/g, ' ')).includes(normStudentUmbrella)
-      );
-    }
-    if (fieldKey) {
-      await bprndStudents.updateOne(
-        { _id: studentId },
-        {
-          $inc: {
-            Total_Credits: newCredits,
-            [fieldKey]: newCredits,
-          },
-        }
-      );
-    } else {
-      await bprndStudents.updateOne(
-        { _id: studentId },
-        { $inc: { Total_Credits: newCredits } }
-      );
-    }
-
-    // Reload the student to get updated values
-    const updatedStudent = await bprndStudents.findById(studentId);
-
-    // Delete the corresponding pending credit record
-    // Match by studentId and the exact data submitted
-    const deleteResult = await PendingCredits.deleteOne({
-      studentId: studentId,
-      name: name,
-      organization: organization,
-      discipline: discipline,
-      totalHours: hoursNum,
-      noOfDays: daysNum
-    });
-
-    console.log(`Deleted ${deleteResult.deletedCount} pending credit record(s) for student ${studentId}`);
-
-    return res.status(200).json({
-      success: true,
-      message: 'Credits applied successfully and pending request removed',
-      data: {
-        studentId: student._id,
-        name,
-        organization,
-        discipline,
-        totalHours: hoursNum,
-        noOfDays: daysNum,
-        pdf: pdf || null,
-        newCredits,
-        updatedTotalCredits: updatedStudent ? updatedStudent.Total_Credits : previousTotal + newCredits,
-        updatedUmbrellaField: fieldKey || null,
-        updatedUmbrellaCredits: fieldKey && updatedStudent ? updatedStudent[fieldKey] : null,
-        previousTotalCredits: previousTotal,
-        deletedPendingRecords: deleteResult.deletedCount,
-      },
-    });
-  } catch (error) {
-    console.error('Error applying pending credits:', error);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
-
-// Backward compatibility: keep old route for now
-// app.post('/api/bprnd/pending-credits/apply', async (req, res) => {
-//   try {
-//     const {
-//       studentId,
-//       name,
-//       organization,
-//       discipline,
-//       totalHours,
-//       noOfDays,
-//       pdf,
-//     } = req.body || {};
-
-//     if (!studentId) {
-//       return res.status(400).json({ success: false, message: 'studentId is required' });
-//     }
-
-//     // Delegate to param route logic by reusing code path
-//     req.params.studentId = studentId;
-//     return app._router.handle(req, res, () => {});
-//   } catch (error) {
-//     console.error('Error applying pending credits (legacy route):', error);
-//     return res.status(500).json({ success: false, message: 'Internal server error' });
-//   }
-// });
 
 // ===== BPR&D Certification Claims (POC) =====
 const BprndClaim = require('./model3/bprnd_certification_claim');

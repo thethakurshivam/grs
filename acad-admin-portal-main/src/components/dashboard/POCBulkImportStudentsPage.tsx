@@ -183,16 +183,18 @@ const POCBulkImportStudentsPage: React.FC<POCBulkImportStudentsPageProps> = ({
           throw new Error('Authentication required');
         }
 
-        const response = await fetch(
-          `http://localhost:3002/api/poc/${pocUserId}/bulk-import-students`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${pocToken}`,
-            },
-            body: formData,
-          }
-        );
+        // Use different endpoints based on POC type
+        const apiUrl = type === 'bprnd' 
+          ? `http://localhost:3003/api/bprnd/students/upload`
+          : `http://localhost:3002/api/poc/${pocUserId}/bulk-import-students`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${pocToken}`,
+          },
+          body: formData,
+        });
 
         if (response.ok) {
           const data = await response.json();
@@ -232,25 +234,47 @@ const POCBulkImportStudentsPage: React.FC<POCBulkImportStudentsPageProps> = ({
   };
 
   const downloadTemplate = () => {
-    // Create a sample CSV template
-    const csvContent = `srNo,batchNo,rank,serialNumberRRU,enrollmentNumber,fullName,gender,dateOfBirth,birthPlace,birthState,country,aadharNo,mobileNumber,alternateNumber,email,address
+    if (isBPRND) {
+      // BPRND template format that matches the backend expectations
+      const csvContent = `Name,Designation,State,Training_Topic,Per_session_minutes,Theory_sessions,Practical_sessions,Theory_Hours,Practical_Hours,Total_Hours,Theory_Credits,Practical_Credits,Total_Credits,date_of_birth,email
+John Doe,Police Officer,Maharashtra,Cyber Security Basics,60,8,4,8,4,12,4,2,6,1995-03-15,john.doe@example.com
+Jane Smith,Detective,Delhi,Digital Forensics,90,6,6,9,9,18,6,3,9,1996-07-22,jane.smith@example.com`;
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'bprnd_students_template.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: 'BPRND Template Downloaded',
+        description: 'BPRND CSV template has been downloaded successfully',
+      });
+    } else {
+      // Regular POC template format
+      const csvContent = `srNo,batchNo,rank,serialNumberRRU,enrollmentNumber,fullName,gender,dateOfBirth,birthPlace,birthState,country,aadharNo,mobileNumber,alternateNumber,email,address
 1,BATCH2024-01,1,RRU001,ENR001,John Doe,Male,1995-03-15,Mumbai,Maharashtra,India,123456789012,9876543210,9876543211,john.doe@example.com,"123 Main Street, Mumbai, Maharashtra, India"
 2,BATCH2024-01,2,RRU002,ENR002,Jane Smith,Female,1996-07-22,Delhi,Delhi,India,123456789013,9876543212,9876543213,jane.smith@example.com,"456 Park Avenue, Delhi, Delhi, India"`;
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'poc_students_template.csv';
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'poc_students_template.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
 
-    toast({
-      title: 'Template Downloaded',
-      description: 'CSV template has been downloaded successfully',
-    });
+      toast({
+        title: 'Template Downloaded',
+        description: 'CSV template has been downloaded successfully',
+      });
+    }
   };
 
   return (
