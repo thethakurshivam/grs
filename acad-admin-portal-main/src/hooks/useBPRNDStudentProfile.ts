@@ -39,6 +39,7 @@ export const useBPRNDStudentProfile = (): UseBPRNDStudentProfileReturn => {
 
     try {
       console.log('Fetching BPRND student profile for ID:', studentId);
+      console.log('API URL:', `http://localhost:3004/student/${studentId}`);
 
       const response = await fetch(`http://localhost:3004/student/${studentId}`, {
         method: 'GET',
@@ -46,8 +47,12 @@ export const useBPRNDStudentProfile = (): UseBPRNDStudentProfileReturn => {
           'Content-Type': 'application/json',
         },
       });
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (response.ok && data.success) {
         setStudent(data.student);
@@ -63,6 +68,7 @@ export const useBPRNDStudentProfile = (): UseBPRNDStudentProfileReturn => {
         const errorMessage = data.message || 'Failed to fetch student profile';
         setError(errorMessage);
         console.error('BPRND profile fetch error:', errorMessage);
+        console.error('Response not OK:', response.status, response.statusText);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Network error occurred';

@@ -834,6 +834,70 @@ router.post('/internal/bprnd/claims/:claimId/finalize', async (req, res) => {
   }
 });
 
+// Get student profile by ID
+app.get('/student/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid student ID format'
+      });
+    }
+
+    // Find student in the bprndstudents collection
+    const student = await CreditCalculation.findById(id).lean();
+    
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+
+    // Return student profile data
+    return res.status(200).json({
+      success: true,
+      message: 'Student profile retrieved successfully',
+      student: {
+        _id: student._id,
+        Name: student.Name,
+        email: student.email,
+        Designation: student.Designation,
+        State: student.State,
+        Umbrella: student.Umbrella,
+        Department: student.Department,
+        EmployeeId: student.EmployeeId,
+        Phone: student.Phone,
+        JoiningDate: student.JoiningDate,
+        Total_Credits: student.Total_Credits,
+        // Include umbrella-specific credits
+        Cyber_Security: student.Cyber_Security,
+        Criminology: student.Criminology,
+        Military_Law: student.Military_Law,
+        Police_Administration: student.Police_Administration,
+        Forensic_Science: student.Forensic_Science,
+        National_Security: student.National_Security,
+        International_Security: student.International_Security,
+        Counter_Terrorism: student.Counter_Terrorism,
+        Intelligence_Studies: student.Intelligence_Studies,
+        Emergency_Management: student.Emergency_Management,
+        createdAt: student.createdAt,
+        updatedAt: student.updatedAt
+      }
+    });
+
+  } catch (error) {
+    console.error('Error retrieving student profile:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

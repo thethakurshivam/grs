@@ -34,7 +34,16 @@ export const BPRNDStudentDashboard: React.FC = () => {
   }, [refetch]);
 
   const handleProfileCardClick = () => {
-    navigate('/student/bprnd/profile-api');
+    if (studentId) {
+      console.log('Navigating to profile with student ID:', studentId);
+      navigate(`/student/bprnd/profile-api`);
+    } else {
+      console.error('No student ID available for profile navigation');
+      console.log('Available localStorage keys:', Object.keys(localStorage));
+      console.log('bprndStudentData:', localStorage.getItem('bprndStudentData'));
+      console.log('bprndStudentId:', localStorage.getItem('bprndStudentId'));
+      console.log('studentId:', localStorage.getItem('studentId'));
+    }
   };
   const handleCreditCardClick = () => {
     navigate('/student/bprnd/credit-bank');
