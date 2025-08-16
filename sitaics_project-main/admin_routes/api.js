@@ -775,15 +775,18 @@ app.post('/api/courses/update-completion-status', authenticateToken, asyncHandle
 // Route to get all pending credits that need approval (for admin)
 app.get('/api/pending-credits', authenticateToken, asyncHandler(async (req, res) => {
   try {
-    // Find all pending credits where either admin_approved is false OR bprnd_poc_approved is false OR both are false
+    console.log('🔍 Admin requesting pending credits for approval...');
+    
+    // Find all pending credits that need admin approval (admin_approved: false)
+    // This will show only credits that haven't been approved by admin yet
     const pendingCredits = await PendingCredits.find({
-      $or: [
-        { admin_approved: false },
-        { bprnd_poc_approved: false }
-      ]
+      admin_approved: false
     })
     .populate('studentId', 'Name email Designation State') // Populate student details
     .sort({ createdAt: -1 }); // Sort by newest first
+    
+    console.log(`📊 Found ${pendingCredits.length} pending credits that need admin approval`);
+    console.log('🔍 Query criteria: admin_approved: false');
 
     // Add approve and decline links to each pending credit document
     const pendingCreditsWithLinks = pendingCredits.map(pendingCredit => {
@@ -814,6 +817,9 @@ app.get('/api/pending-credits', authenticateToken, asyncHandler(async (req, res)
       count: pendingCreditsWithLinks.length,
       data: pendingCreditsWithLinks
     });
+    
+    console.log(`📋 Admin can see ${pendingCreditsWithLinks.length} pending credits that need approval`);
+    console.log(`💡 After admin approval, these credits will be visible to BPRND POC for final review`);
 
   } catch (error) {
     console.error('Error fetching pending credits:', error);
@@ -839,10 +845,12 @@ app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(asy
     }
 
     // Find and update the admin_approved field to true and update status
+    // Also ensure bprnd_poc_approved is explicitly set to false for POC to see it
     const pendingCredit = await PendingCredits.findByIdAndUpdate(
       id,
       { 
         admin_approved: true,
+        bprnd_poc_approved: false, // Explicitly set to false so POC can see it
         status: 'admin_approved'
       },
       { new: true }
@@ -863,6 +871,8 @@ app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(asy
     } else {
       // Waiting for BPRND POC approval
       console.log(`⏳ Pending credit ${id} approved by admin, waiting for BPRND POC approval`);
+      console.log(`📋 Pending credit ${id} details: admin_approved=${pendingCredit.admin_approved}, bprnd_poc_approved=${pendingCredit.bprnd_poc_approved}, status=${pendingCredit.status}`);
+      console.log(`🔍 This pending credit should now be visible to BPRND POC for review`);
     }
 
     res.json({

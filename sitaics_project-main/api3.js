@@ -336,11 +336,21 @@ app.post('/api/bprnd/poc/login', async (req, res) => {
 // Retrieve all pending credit records that need BPRND POC approval (including a public pdfUrl for the PDF)
 app.get('/api/bprnd/pending-credits', async (req, res) => {
   try {
+    console.log('🔍 BPRND POC requesting pending credits...');
+    
     // Only show credits that are admin approved but not yet POC approved
     const records = await PendingCredits.find({ 
       admin_approved: true,
       bprnd_poc_approved: false 
     }).sort({ createdAt: -1 }).lean();
+    
+    console.log(`📊 Found ${records.length} pending credits for BPRND POC review`);
+    console.log('🔍 Query criteria: admin_approved: true, bprnd_poc_approved: false');
+    
+    // Log each record for debugging
+    records.forEach((rec, index) => {
+      console.log(`📋 Record ${index + 1}: ID=${rec._id}, Student=${rec.name}, Admin Approved=${rec.admin_approved}, POC Approved=${rec.bprnd_poc_approved}, Status=${rec.status}`);
+    });
 
     const withUrls = records.map((rec) => {
       const fileName = rec?.pdf ? path.basename(rec.pdf) : '';

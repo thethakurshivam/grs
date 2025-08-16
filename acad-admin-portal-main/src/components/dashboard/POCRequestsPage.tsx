@@ -24,39 +24,42 @@ const POCRequestsPage: React.FC<Props> = ({ type = 'standard' }) => {
     totalHours: number;
     noOfDays: number;
     pdf: string | null;
+    acceptUrl?: string;
   }) => {
     try {
-      const studentId = item.studentId || '';
-      if (!studentId) {
-        toast({ title: 'Missing student ID', description: 'This request has no studentId. Please ensure the student submission included their ID.', variant: 'destructive' });
-        return;
-      }
+      // Use the acceptUrl provided by the backend, or construct it if not available
+      const acceptUrl = item.acceptUrl || `http://localhost:3003/api/bprnd/pending-credits/${item.id}/accept`;
+      
+      console.log('🔍 Accepting pending credit:', item.id);
+      console.log('🔗 Using accept URL:', acceptUrl);
 
-      const res = await fetch(`http://localhost:3003/api/bprnd/pending-credits/${encodeURIComponent(studentId)}/apply`, {
+      const res = await fetch(acceptUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: item.name,
-          organization: item.organization,
-          discipline: item.discipline,
-          totalHours: item.totalHours,
-          noOfDays: item.noOfDays,
-          pdf: item.pdf,
-        }),
+        // No body needed for accept - the backend will process the existing pending credit record
       });
 
       const json = await res.json().catch(() => ({}));
+      console.log('📡 Response from accept endpoint:', json);
+      
       if (!res.ok || json?.success === false) {
         throw new Error(json?.message || `Failed with status ${res.status}`);
       }
 
+      // Show success message with the actual response data
+      const creditsApplied = json?.data?.creditsApplied || 'Unknown';
+      const umbrellaField = json?.data?.umbrellaField || 'Unknown';
+      
       toast({
-        title: 'Credits applied',
-        description: `New credits: ${json?.data?.newCredits} | Total: ${json?.data?.updatedTotalCredits}`,
+        title: 'Credits approved successfully!',
+        description: `Applied ${creditsApplied} credits to ${umbrellaField} field. Pending request has been processed.`,
       });
       setActedIds((prev) => ({ ...prev, [item.id]: true }));
-      // Optional backend refetch to update list if needed
-      // refetch();
+      
+      // Refetch to update the list after successful approval
+      setTimeout(() => {
+        refetch();
+      }, 1000);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Network error applying credits';
       toast({ title: 'Error', description: message, variant: 'destructive' });
