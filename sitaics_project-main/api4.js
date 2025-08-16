@@ -898,6 +898,60 @@ app.get('/student/:id', async (req, res) => {
   }
 });
 
+// Get student certificates by ID
+app.get('/student/:id/certificates', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid student ID format'
+      });
+    }
+
+    // Find all certificates for the student
+    const certificates = await BprndCertificate.find({ studentId: id })
+      .sort({ issuedAt: -1 }) // Sort by most recent first
+      .lean();
+    
+    if (!certificates || certificates.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No certificates found for this student',
+        data: [],
+        count: 0
+      });
+    }
+
+    // Return certificates data
+    return res.status(200).json({
+      success: true,
+      message: 'Student certificates retrieved successfully',
+      data: certificates.map(cert => ({
+        _id: cert._id,
+        studentId: cert.studentId,
+        umbrellaKey: cert.umbrellaKey,
+        qualification: cert.qualification,
+        claimId: cert.claimId,
+        issuedAt: cert.issuedAt,
+        certificateNo: cert.certificateNo,
+        createdAt: cert.createdAt,
+        updatedAt: cert.updatedAt
+      })),
+      count: certificates.length
+    });
+
+  } catch (error) {
+    console.error('Error retrieving student certificates:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

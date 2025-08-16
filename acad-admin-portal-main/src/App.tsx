@@ -38,6 +38,7 @@ import EnrolledCoursesList from './pages/EnrolledCoursesList';
 import SectorTrainingFields from './pages/SectorTrainingFields';
 import FieldCourses from './pages/FieldCourses';
 import { BPRNDStudentDashboard } from './components/student/BPRNDStudentDashboard';
+import BPRNDStudentCertificates from './pages/BPRNDStudentCertificates';
 
 // POC Portal Components
 import POCPortalPage from './components/dashboard/POCPortalPage';
@@ -251,6 +252,10 @@ const App = () => (
           <Route
             path="/student/bprnd/credit-bank"
             element={<StudentCreditBank />}
+          />
+          <Route
+            path="/student/bprnd/certificates"
+            element={<BPRNDStudentCertificates />}
           />
           <Route
             path="/student/bprnd/previous-courses"

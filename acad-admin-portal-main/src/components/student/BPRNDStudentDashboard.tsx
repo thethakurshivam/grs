@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { UserCircle, CreditCard } from 'lucide-react';
+import { UserCircle, CreditCard, Award } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { StudentDashboardLayout } from './StudentDashboardLayout';
 import useBPRNDStudentCredits from '@/hooks/useBPRNDStudentCredits';
+import { useBPRNDStudentCertificates } from '@/hooks/useBPRNDStudentCertificates';
 
 export const BPRNDStudentDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -26,12 +27,20 @@ export const BPRNDStudentDashboard: React.FC = () => {
   }
   const studentId = derivedId || localStorage.getItem('bprndStudentId') || localStorage.getItem('studentId');
   const { totalCredits, isLoading, error, refetch } = useBPRNDStudentCredits(studentId);
+  const { certificates: studentCertificates, loading: certificatesLoading, fetchCertificates } = useBPRNDStudentCertificates();
 
   useEffect(() => {
     const onFocus = () => refetch();
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
   }, [refetch]);
+
+  // Fetch certificates when component mounts
+  useEffect(() => {
+    if (studentId) {
+      fetchCertificates(studentId);
+    }
+  }, [studentId, fetchCertificates]);
 
   const handleProfileCardClick = () => {
     if (studentId) {
@@ -49,6 +58,10 @@ export const BPRNDStudentDashboard: React.FC = () => {
     navigate('/student/bprnd/credit-bank');
   };
 
+  const handleCertificatesCardClick = () => {
+    navigate('/student/bprnd/certificates');
+  };
+
   return (
     <StudentDashboardLayout>
       <div className="space-y-6">
@@ -57,7 +70,7 @@ export const BPRNDStudentDashboard: React.FC = () => {
           <p className="text-lg text-black mt-2">Access your profile, credits and certifications.</p>
         </div>
 
-        <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card
             className="bg-white border border-[#0b2e63]/20 hover:border-[#0b2e63]/40 hover:shadow-xl transition-shadow cursor-pointer rounded-xl"
             onClick={handleProfileCardClick}
@@ -102,6 +115,37 @@ export const BPRNDStudentDashboard: React.FC = () => {
                   <p className="text-base">• Current Balance {isLoading ? 'Loading...' : typeof totalCredits === 'number' ? `${totalCredits} Credits` : 'N/A'}</p>
                   {error && (
                     <p className="text-sm text-red-600" title={error}>• Failed to load credits</p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="bg-white border border-[#0b2e63]/20 hover:border-[#0b2e63]/40 hover:shadow-xl transition-shadow cursor-pointer rounded-xl"
+            onClick={handleCertificatesCardClick}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-bold text-black">
+                Your Certificates
+              </CardTitle>
+              <div className="h-9 w-9 rounded-full bg-[#0b2e63]/10 flex items-center justify-center">
+                <Award className="h-5 w-5 text-[#0b2e63]" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg text-black">
+                <p className="opacity-80">View your earned certifications</p>
+                <div className="mt-3 space-y-1">
+                  <p className="text-base">• Total Certificates: {certificatesLoading ? 'Loading...' : studentCertificates?.length || 0}</p>
+                  {studentCertificates && studentCertificates.length > 0 && (
+                    <>
+                      <p className="text-base">• Latest: {studentCertificates[0]?.umbrellaKey?.replace(/_/g, ' ') || 'N/A'}</p>
+                      <p className="text-base">• Issued: {new Date(studentCertificates[0]?.issuedAt).getFullYear()}</p>
+                    </>
+                  )}
+                  {(!studentCertificates || studentCertificates.length === 0) && (
+                    <p className="text-base">• No certificates yet</p>
                   )}
                 </div>
               </div>
