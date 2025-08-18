@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { UserCircle, CreditCard, Award } from 'lucide-react';
+import { UserCircle, CreditCard, Award, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { StudentDashboardLayout } from './StudentDashboardLayout';
 import useBPRNDStudentCredits from '@/hooks/useBPRNDStudentCredits';
@@ -62,6 +62,10 @@ export const BPRNDStudentDashboard: React.FC = () => {
     navigate('/student/bprnd/certificates');
   };
 
+  const handlePendingCreditsCardClick = () => {
+    navigate('/student/bprnd/pending-credits');
+  };
+
   return (
     <StudentDashboardLayout>
       <div className="space-y-6">
@@ -70,7 +74,7 @@ export const BPRNDStudentDashboard: React.FC = () => {
           <p className="text-lg text-black mt-2">Access your profile, credits and certifications.</p>
         </div>
 
-        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card
             className="bg-white border border-[#0b2e63]/20 hover:border-[#0b2e63]/40 hover:shadow-xl transition-shadow cursor-pointer rounded-xl"
             onClick={handleProfileCardClick}
@@ -147,6 +151,30 @@ export const BPRNDStudentDashboard: React.FC = () => {
                   {(!studentCertificates || studentCertificates.length === 0) && (
                     <p className="text-base">• No certificates yet</p>
                   )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="bg-white border border-[#0b2e63]/20 hover:border-[#0b2e63]/40 hover:shadow-xl transition-shadow cursor-pointer rounded-xl"
+            onClick={handlePendingCreditsCardClick}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-bold text-black">
+                Pending Credit Requests
+              </CardTitle>
+              <div className="h-9 w-9 rounded-full bg-[#0b2e63]/10 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-[#0b2e63]" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg text-black">
+                <p className="opacity-80">Track your credit request status</p>
+                <div className="mt-3 space-y-1">
+                  <p className="text-base">• View approval progress</p>
+                  <p className="text-base">• Check request timeline</p>
+                  <p className="text-base">• Monitor status updates</p>
                 </div>
               </div>
             </CardContent>
