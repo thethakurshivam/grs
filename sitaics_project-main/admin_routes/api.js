@@ -97,6 +97,36 @@ const sanitizeInput = (input) => {
   return input;
 };
 
+// Utility function to recalculate cumulative counts for a student's discipline
+const recalculateCumulativeCounts = async (studentId, discipline) => {
+  try {
+    const allCoursesInDiscipline = await CourseHistory.find({
+      studentId: new mongoose.Types.ObjectId(studentId),
+      discipline: discipline
+    }).sort({ createdAt: 1 }); // Oldest first
+
+    let cumulativeCount = 0;
+    for (const course of allCoursesInDiscipline) {
+      if (course.certificateContributed) {
+        // For contributed courses, count only the remaining credits
+        const remainingCredits = course.creditsEarned - (course.contributedToCertificate?.creditsContributed || 0);
+        cumulativeCount += remainingCredits;
+      } else {
+        // For non-contributed courses, count all credits
+        cumulativeCount += course.creditsEarned;
+      }
+      course.count = cumulativeCount;
+      await course.save();
+    }
+
+    console.log(`✅ Recalculated cumulative counts for student ${studentId} in discipline ${discipline}`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Error recalculating counts for student ${studentId} in discipline ${discipline}:`, error);
+    return false;
+  }
+};
+
 // Async error handler wrapper
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -2177,6 +2207,7 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
 
     let remainingCredits = requiredCredits;
     const markedCourses = [];
+    let totalCreditsContributed = 0;
 
     for (const course of coursesToMark) {
       if (remainingCredits <= 0) break;
@@ -2200,7 +2231,11 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
       });
       
       remainingCredits -= creditsToContribute;
+      totalCreditsContributed += creditsToContribute;
     }
+
+    // Recalculate cumulative counts for all courses in this discipline
+    await recalculateCumulativeCounts(claim.studentId, claim.umbrellaKey);
 
     // Mark claim as finalized
     claim.status = 'approved';
