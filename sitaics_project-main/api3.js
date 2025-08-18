@@ -4,14 +4,15 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const pocbprnd = require('./model3/pocbprnd');
 const PendingCredits = require('./model3/pendingcredits');
+const CourseHistory = require('./model3/course_history');
 const Value = require('./model3/value');
 const path = require('path');
-// Add these imports at the top of api3.js after existing imports
 const multer = require('multer');
 const xlsx = require('xlsx');
 const nodemailer = require('nodemailer');
 const bprndStudents = require('./model3/bprndstudents');
 const umbrella = require('./model3/umbrella');
+const bprnd_certification_claim = require('./model3/bprnd_certification_claim');
 const emailConfig = require('./email-config');
 require('dotenv').config();
 
@@ -20,33 +21,12 @@ const fetch = global.fetch || ((...args) => import('node-fetch').then(({ default
 
 const app = express();
 
-// CORS Configuration
+// CORS Configuration - Allow all origins for development
 const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:8080',
-      'http://localhost:8081',
-      'http://127.0.0.1:5173',
-    ];
-
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-
-    if (
-      allowedOrigins.indexOf(origin) !== -1 ||
-      process.env.NODE_ENV !== 'production'
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // Allow all origins for development
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
 };
 
 // Apply CORS middleware
@@ -86,10 +66,10 @@ const upload = multer({
 
 // Configure nodemailer
 const transporter = nodemailer.createTransport({
-  service: emailConfig.EMAIL_SERVICE, // or your email service
+  service: emailConfig.EMAIL_SERVICE,
   auth: {
-    user: emailConfig.EMAIL_USER, // your email
-    pass: emailConfig.EMAIL_PASS, // your email password or app password
+    user: emailConfig.EMAIL_USER,
+    pass: emailConfig.EMAIL_PASS,
   },
 });
 
@@ -108,6 +88,7 @@ transporter.verify(function(error, success) {
   }
 });
 
+// Bulk import BPRND students from Excel file
 app.post(
   '/api/bprnd/students/upload',
   upload.single('excelFile'),
@@ -116,156 +97,113 @@ app.post(
       if (!req.file) {
         return res.status(400).json({
           success: false,
-          message: 'No Excel file uploaded',
+          message: 'No file uploaded',
         });
       }
 
-      const umbrellaName = req.body.umbrella;
-      if (!umbrellaName) {
-        return res.status(400).json({
-          success: false,
-          message: 'Umbrella field is required',
-        });
-      }
-
-      // Convert umbrella name to match schema field name (replace spaces with underscores)
-      const umbrellaField = umbrellaName.replace(/\s+/g, '_');
-
-      // Parse Excel file
       const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = xlsx.utils.sheet_to_json(worksheet);
+      const data = xlsx.utils.sheet_to_json(worksheet);
 
-      if (jsonData.length === 0) {
+      if (!data || data.length === 0) {
         return res.status(400).json({
           success: false,
-          message: 'Excel file is empty',
+          message: 'No data found in Excel file',
         });
       }
 
-      const savedStudents = [];
-      const emailPromises = [];
+      const results = [];
+      const errors = [];
 
-      // Process each row of data
-      for (const row of jsonData) {
+      for (const row of data) {
         try {
-          // Check if student already exists
-          const existingStudent = await bprndStudents.findOne({
-            email: row.email,
+          // Validate required fields
+          if (!row.Name || !row.Email) {
+            errors.push({
+              row: row,
+              error: 'Missing required fields: Name and Email are required',
+            });
+            continue;
+          }
+
+          // Check if user already exists
+          const existingUser = await bprndStudents.findOne({
+            email: row.Email.toLowerCase().trim(),
           });
 
-          if (existingStudent) {
-            // Increment umbrella credit if already exists
-            existingStudent[umbrellaField] =
-              (existingStudent[umbrellaField] || 0) + row.Total_Credits;
-            existingStudent.Umbrella = umbrellaName; // Update umbrella field
-            await existingStudent.save();
-            savedStudents.push(existingStudent);
-          } else {
-            // Create new student
-            const studentData = {
-              Name: row.Name,
-              Designation: row.Designation,
-              State: row.State,
-              Training_Topic: row.Training_Topic,
-              Per_session_minutes: row.Per_session_minutes,
-              Theory_sessions: row.Theory_sessions,
-              Practical_sessions: row.Practical_sessions,
-              Theory_Hours: row.Theory_Hours,
-              Practical_Hours: row.Practical_Hours,
-              Total_Hours: row.Total_Hours,
-              Theory_Credits: row.Theory_Credits,
-              Practical_Credits: row.Practical_Credits,
-              Total_Credits: row.Total_Credits,
-              date_of_birth: new Date(row.date_of_birth),
-              email: row.email,
-              password: 'password123',
-              Umbrella: umbrellaName,
-              [umbrellaField]: row.Total_Credits, // set credit for the selected umbrella field
+          if (existingUser) {
+            errors.push({
+              row: row,
+              error: 'User with this email already exists',
+            });
+            continue;
+          }
+
+          // Create new user
+          const newUser = new bprndStudents({
+            Name: row.Name,
+            Email: row.Email.toLowerCase().trim(),
+            Designation: row.Designation || '',
+            State: row.State || '',
+            Organization: row.Organization || '',
+            Umbrella: row.Umbrella || '',
+            Total_Credits: 0,
+          });
+
+          await newUser.save();
+          results.push({
+            name: row.Name,
+            email: row.Email,
+            status: 'created',
+          });
+
+          // Send welcome email
+          try {
+            const mailOptions = {
+              from: emailConfig.EMAIL_USER,
+              to: row.Email,
+              subject: 'RRU Portal Login Credentials',
+              html: `
+                <h2>Welcome to RRU Portal!</h2>
+                <p>Hello ${row.Name},</p>
+                <p>Your account has been created successfully in the RRU Portal.</p>
+                <p>You can now login to the RRU portal with the following credentials:</p>
+                <ul>
+                  <li><strong>Email:</strong> ${row.Email}</li>
+                  <li><strong>Password:</strong> Your registered password</li>
+                </ul>
+                <p>Please login and change your password after first login.</p>
+                <p>Best regards,<br>RRU Portal Team</p>
+              `,
             };
 
-            const student = new bprndStudents(studentData);
-            const savedStudent = await student.save();
-            savedStudents.push(savedStudent);
+            await transporter.sendMail(mailOptions);
+            console.log(`✅ Welcome email sent to ${row.Email}`);
+          } catch (emailError) {
+            console.error(`❌ Failed to send welcome email to ${row.Email}:`, emailError);
           }
-
-          // Prepare email
-          const mailOptions = {
-            from: emailConfig.EMAIL_USER,
-            to: row.email,
-            subject: 'RRU Portal Login Credentials',
-            html: `
-            <h2>Welcome to RRU Portal</h2>
-            <p>Dear ${row.Name},</p>
-            <p>You can now login to the RRU portal with the following credentials:</p>
-            <ul>
-              <li><strong>Username:</strong> ${row.email}</li>
-              <li><strong>Password:</strong> password123</li>
-            </ul>
-            <p>Please login and change your password after first login.</p>
-            <br>
-            <p>Best regards,</p>
-            <p>RRU Portal Team</p>
-          `,
-          };
-
-          // Create a more robust email sending promise with error handling
-          const emailPromise = transporter.sendMail(mailOptions)
-            .then((info) => {
-              console.log(`✅ Email sent successfully to ${row.email}:`, info.messageId);
-              return { success: true, email: row.email, messageId: info.messageId };
-            })
-            .catch((error) => {
-              console.error(`❌ Failed to send email to ${row.email}:`, error.message);
-              return { success: false, email: row.email, error: error.message };
-            });
-          
-          emailPromises.push(emailPromise);
         } catch (error) {
-          console.error(`Error processing student ${row.email}:`, error);
+          errors.push({
+            row: row,
+            error: error.message,
+          });
         }
-      }
-
-      // Send all emails with detailed logging
-      console.log(`Attempting to send ${emailPromises.length} emails...`);
-      try {
-        const emailResults = await Promise.allSettled(emailPromises);
-        let successCount = 0;
-        let failureCount = 0;
-        
-        emailResults.forEach((result, index) => {
-          if (result.status === 'fulfilled') {
-            successCount++;
-            console.log(`✅ Email ${index + 1} sent successfully:`, result.value);
-          } else {
-            failureCount++;
-            console.error(`❌ Email ${index + 1} failed:`, result.reason);
-          }
-        });
-        
-        console.log(`Email sending completed: ${successCount} successful, ${failureCount} failed`);
-        
-        if (failureCount > 0) {
-          console.error('Some emails failed to send. Check the logs above for details.');
-        }
-      } catch (emailError) {
-        console.error('Critical error in email sending:', emailError);
       }
 
       res.status(200).json({
         success: true,
-        message: `Successfully processed ${savedStudents.length} students and sent emails`,
+        message: `Bulk import completed. ${results.length} users created, ${errors.length} errors.`,
         data: {
-          totalProcessed: savedStudents.length,
-          studentsData: savedStudents,
+          created: results,
+          errors: errors,
         },
       });
     } catch (error) {
-      console.error('Excel upload error:', error);
+      console.error('Bulk import error:', error);
       res.status(500).json({
         success: false,
-        message: 'Error processing Excel file',
+        message: 'Bulk import failed',
         error: error.message,
       });
     }
@@ -311,7 +249,7 @@ app.post('/api/bprnd/poc/login', async (req, res) => {
         userId: user._id,
         email: user.email,
       },
-      process.env.JWT_SECRET || 'your-secret-key', // Use environment variable
+      process.env.JWT_SECRET || 'your-secret-key',
       {
         expiresIn: '24h',
       }
@@ -333,19 +271,19 @@ app.post('/api/bprnd/poc/login', async (req, res) => {
   }
 });
 
-// Retrieve all pending credit records that need BPRND POC approval (including a public pdfUrl for the PDF)
+// Retrieve all pending credit records that need BPRND POC approval
 app.get('/api/bprnd/pending-credits', async (req, res) => {
   try {
     console.log('🔍 BPRND POC requesting pending credits...');
     
-    // Only show credits that are admin approved but not yet POC approved
+    // Only show credits that are initial requests (neither admin nor POC approved yet)
     const records = await PendingCredits.find({ 
-      admin_approved: true,
+      admin_approved: false,
       bprnd_poc_approved: false 
     }).sort({ createdAt: -1 }).lean();
     
-    console.log(`📊 Found ${records.length} pending credits for BPRND POC review`);
-    console.log('🔍 Query criteria: admin_approved: true, bprnd_poc_approved: false');
+    console.log(`📊 Found ${records.length} initial pending credits for BPRND POC review`);
+    console.log('🔍 Query criteria: admin_approved: false, bprnd_poc_approved: false');
     
     // Log each record for debugging
     records.forEach((rec, index) => {
@@ -414,6 +352,15 @@ app.post('/api/bprnd/pending-credits/:id/accept', async (req, res) => {
       },
       { new: true }
     );
+    
+    console.log(`🔍 POC Approval Debug:`, {
+      pendingCreditId: id,
+      adminApproved: pendingCredit.admin_approved,
+      pocApproved: pendingCredit.bprnd_poc_approved,
+      status: pendingCredit.status,
+      discipline: pendingCredit.discipline,
+      totalHours: pendingCredit.totalHours
+    });
 
     if (!pendingCredit) {
       return res.status(404).json({
@@ -422,115 +369,8 @@ app.post('/api/bprnd/pending-credits/:id/accept', async (req, res) => {
       });
     }
 
-    // Check if both approvals are complete
-    if (pendingCredit.admin_approved && pendingCredit.bprnd_poc_approved) {
-      // Both approved - update status to approved and process the credit application
-      await PendingCredits.findByIdAndUpdate(id, { status: 'approved' });
-      
-      // Apply credits to student's credit bank and umbrella field
-      let newCredits = 0;
-      let fieldKey = null;
-      
-      try {
-        // Calculate credits: 15 hours = 1 credit
-        const totalHours = Number(pendingCredit.totalHours || 0);
-        newCredits = totalHours > 0 ? Math.ceil(totalHours / 15) : 0;
-        
-        if (newCredits > 0) {
-          // Find student and update Total_Credits
-          const student = await bprndStudents.findById(pendingCredit.studentId);
-          if (student) {
-            // Define umbrella field keys
-            const UMBRELLA_KEYS = [
-              'Cyber_Security',
-              'Criminology',
-              'Military_Law',
-              'Police_Administration',
-              'Forensic_Science',
-              'National_Security',
-              'International_Security',
-              'Counter_Terrorism',
-              'Intelligence_Studies',
-              'Emergency_Management',
-            ];
-            
-            // Normalize discipline for matching
-            const normalize = (s) => String(s || '')
-              .toLowerCase()
-              .replace(/[_-]+/g, ' ')
-              .replace(/[^a-z\s]/g, '')
-              .replace(/\s+/g, ' ')
-              .trim();
-            
-            const normDiscipline = normalize(pendingCredit.discipline);
-            fieldKey = UMBRELLA_KEYS.find(
-              (k) => normalize(k.replace(/_/g, ' ')) === normDiscipline
-            );
-            
-            if (!fieldKey) {
-              // Try partial includes match
-              fieldKey = UMBRELLA_KEYS.find(
-                (k) => normalize(k.replace(/_/g, ' ')).includes(normDiscipline) ||
-                       normDiscipline.includes(normalize(k.replace(/_/g, ' ')))
-              );
-            }
-            
-            if (!fieldKey && student.Umbrella) {
-              // Fallback to student's umbrella selection
-              const normStudentUmbrella = normalize(student.Umbrella);
-              fieldKey = UMBRELLA_KEYS.find(
-                (k) => normalize(k.replace(/_/g, ' ')) === normStudentUmbrella
-              ) || UMBRELLA_KEYS.find(
-                (k) => normalize(k.replace(/_/g, ' ')).includes(normStudentUmbrella)
-              );
-            }
-            
-            // Update student credits
-            if (fieldKey) {
-              await bprndStudents.updateOne(
-                { _id: pendingCredit.studentId },
-                {
-                  $inc: {
-                    Total_Credits: newCredits,
-                    [fieldKey]: newCredits,
-                  },
-                }
-              );
-            } else {
-              await bprndStudents.updateOne(
-                { _id: pendingCredit.studentId },
-                { $inc: { Total_Credits: newCredits } }
-              );
-            }
-            
-            console.log(`✅ Credits applied: ${newCredits} credits added to student ${pendingCredit.studentId} (${fieldKey || 'Total_Credits only'})`);
-          }
-        }
-        
-        // Delete the pending credit record after successful credit application
-        await PendingCredits.findByIdAndDelete(id);
-        console.log(`✅ Pending credit record ${id} deleted after successful credit application`);
-        
-      } catch (creditError) {
-        console.error('Error applying credits:', creditError);
-        // Don't fail the approval if credit application fails
-        // The pending credit will remain for manual review
-      }
-      
-      return res.json({
-        success: true,
-        message: 'BPRND POC approval successful. Credits applied and pending request removed.',
-        data: {
-          id: pendingCredit._id,
-          studentId: pendingCredit.studentId,
-          admin_approved: pendingCredit.admin_approved,
-          bprnd_poc_approved: pendingCredit.bprnd_poc_approved,
-          status: 'approved',
-          creditsApplied: newCredits,
-          umbrellaField: fieldKey || null
-        }
-      });
-    }
+    // POC approval successful - waiting for admin approval
+    console.log(`✅ POC approval successful for pending credit ${id}`);
 
     res.json({
       success: true,
@@ -582,16 +422,16 @@ app.post('/api/bprnd/pending-credits/:id/reject', async (req, res) => {
       });
     }
 
-      res.json({
-        success: true,
-        message: 'BPRND POC rejection successful.',
-        data: {
-          id: pendingCredit._id,
-          admin_approved: pendingCredit.admin_approved,
-          bprnd_poc_approved: pendingCredit.bprnd_poc_approved,
-          status: 'declined'
-        }
-      });
+    res.json({
+      success: true,
+      message: 'BPRND POC rejection successful.',
+      data: {
+        id: pendingCredit._id,
+        admin_approved: pendingCredit.admin_approved,
+        bprnd_poc_approved: pendingCredit.bprnd_poc_approved,
+        status: 'declined'
+      }
+    });
 
   } catch (error) {
     console.error('Error rejecting pending credit:', error);
@@ -606,7 +446,7 @@ app.post('/api/bprnd/pending-credits/:id/reject', async (req, res) => {
 app.get('/api/bprnd/pending-credits/count', async (req, res) => {
   try {
     const count = await PendingCredits.countDocuments({ 
-      admin_approved: true,
+      admin_approved: false,
       bprnd_poc_approved: false 
     });
 
@@ -628,34 +468,12 @@ app.get('/api/bprnd/pending-credits/count', async (req, res) => {
   }
 });
 
-// Get all umbrellas route
-app.get('/api/bprnd/umbrellas', async (req, res) => {
-  try {
-    // Retrieve all umbrellas from the database
-    const umbrellas = await umbrella.find({}).sort({ name: 1 }); // Sort by name alphabetically
-
-    res.status(200).json({
-      success: true,
-      message: 'Umbrellas retrieved successfully',
-      data: umbrellas,
-      count: umbrellas.length,
-    });
-  } catch (error) {
-    console.error('Error retrieving umbrellas:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error retrieving umbrellas',
-      error: error.message,
-    });
-  }
-});
-
-// Get pending credits for a specific student (BPRND POC view)
+// Get pending credits for a specific student
 app.get('/api/bprnd/pending-credits/student/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
     
-    // Validate MongoDB ObjectId format
+    // Validate student ID format
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
       return res.status(400).json({
         success: false,
@@ -663,12 +481,20 @@ app.get('/api/bprnd/pending-credits/student/:studentId', async (req, res) => {
       });
     }
 
-    // Find pending credits for the specific student
+    // Find pending credits for the specific student (initial requests)
     const records = await PendingCredits.find({ 
       studentId: studentId,
-      admin_approved: true,
+      admin_approved: false,
       bprnd_poc_approved: false 
     }).sort({ createdAt: -1 }).lean();
+    
+    if (!records || records.length === 0) {
+      return res.status(404).json({
+        success: true,
+        message: 'No pending credits found for this student',
+        data: []
+      });
+    }
 
     const withUrls = records.map((rec) => {
       const fileName = rec?.pdf ? path.basename(rec.pdf) : '';
@@ -677,6 +503,7 @@ app.get('/api/bprnd/pending-credits/student/:studentId', async (req, res) => {
         : null;
       const acceptUrl = `${req.protocol}://${req.get('host')}/api/bprnd/pending-credits/${rec._id}/accept`;
       const rejectUrl = `${req.protocol}://${req.get('host')}/api/bprnd/pending-credits/${rec._id}/reject`;
+      
       return {
         id: rec._id,
         studentId: rec.studentId,
@@ -696,142 +523,184 @@ app.get('/api/bprnd/pending-credits/student/:studentId', async (req, res) => {
       };
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      message: `Found ${withUrls.length} pending credits for student`,
-      data: {
-        studentId: studentId,
-        count: withUrls.length,
-        pendingCredits: withUrls
-      }
+      message: `Found ${records.length} pending credits for student`,
+      data: withUrls
     });
 
   } catch (error) {
-    console.error('Error retrieving pending credits for student:', error);
-    return res.status(500).json({
+    console.error('Error fetching pending credits:', error);
+    res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Error fetching pending credits',
+      error: error.message
     });
   }
 });
 
-// Get all value mappings (credit → qualification)
-app.get('/api/bprnd/values', async (req, res) => {
-  try {
-    const values = await Value.find({}).sort({ credit: 1 }).lean();
-    return res.status(200).json({
-      success: true,
-      message: 'Values retrieved successfully',
-      data: values,
-      count: values.length,
-    });
-  } catch (error) {
-    console.error('Error retrieving values:', error);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
-
-
-// ===== BPR&D Certification Claims (POC) =====
-const BprndClaim = require('./model3/bprnd_certification_claim');
-
-const pocAuth = (req, res, next) => {
-  try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ success: false, error: 'Access token required' });
-    jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
-      if (err) return res.status(403).json({ success: false, error: 'Invalid token' });
-      req.user = user; next();
-    });
-  } catch {
-    return res.status(401).json({ success: false, error: 'Unauthorized' });
-  }
-};
-
-app.get('/api/bprnd/claims', pocAuth, async (req, res) => {
+// Get BPRND certification claims for POC review
+app.get('/api/bprnd/claims', async (req, res) => {
   try {
     const { status } = req.query;
     
-    // If specific status requested, use it; otherwise show only claims needing POC approval
-    const filter = status ? { status } : { 
-      status: { $in: ['pending', 'admin_approved'] } 
+    // POC sees only initial requests (neither POC nor admin approved yet)
+    let query = { 
+      poc_approved: { $ne: true },  // POC has not approved yet
+      admin_approved: { $ne: true }  // Admin has not approved yet
     };
     
-    const claims = await BprndClaim.find(filter).sort({ createdAt: -1 }).lean();
-    res.json({ success: true, count: claims.length, data: claims });
-  } catch (e) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    if (status) {
+      query.status = status;
+    }
+
+    const claims = await bprnd_certification_claim.find(query)
+      .populate('studentId', 'Name Email Designation State Organization')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Enhance claims with additional information
+    const enhancedClaims = claims.map(claim => {
+      const umbrellaLabel = claim.umbrellaKey ? claim.umbrellaKey.replace(/_/g, ' ') : 'Unknown';
+      const courseCount = claim.courses ? claim.courses.length : 0;
+      const totalCreditsFromCourses = claim.courses ? 
+        claim.courses.reduce((sum, course) => sum + (course.creditsEarned || 0), 0) : 0;
+
+      return {
+        ...claim,
+        umbrellaLabel,
+        courseCount,
+        totalCreditsFromCourses,
+        courses: claim.courses || []
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'BPRND claims retrieved successfully',
+      data: enhancedClaims
+    });
+
+  } catch (error) {
+    console.error('Error retrieving BPRND claims:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving BPRND claims',
+      error: error.message
+    });
   }
 });
 
-app.post('/api/bprnd/claims/:claimId/approve', pocAuth, async (req, res) => {
+// Approve BPRND certification claim
+app.post('/api/bprnd/claims/:claimId/approve', async (req, res) => {
   try {
     const { claimId } = req.params;
-    const claim = await BprndClaim.findById(claimId);
-    if (!claim) return res.status(404).json({ success: false, error: 'Claim not found' });
-
-    if (claim.status === 'declined' || claim.status === 'approved') {
-      return res.json({ success: true, message: `Claim already ${claim.status}` });
+    
+    if (!mongoose.Types.ObjectId.isValid(claimId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid claim ID format'
+      });
     }
 
-    claim.pocApproval = { by: req.user?.email || 'bprnd-poc', at: new Date(), decision: 'approved' };
-    claim.status = claim.adminApproval?.decision === 'approved' ? 'approved' : 'poc_approved';
-    await claim.save();
+    const claim = await bprnd_certification_claim.findByIdAndUpdate(
+      claimId,
+      { 
+        status: 'poc_approved',
+        poc_approved: true,
+        poc_approved_at: new Date()
+      },
+      { new: true }
+    );
 
-    if (claim.status === 'approved') {
-      try {
-        const finalizeUrl = `http://localhost:3004/internal/bprnd/claims/${claim._id}/finalize`;
-        const resp = await fetch(finalizeUrl, { method: 'POST' });
-        const json = await resp.json().catch(() => ({}));
-        if (!resp.ok || json?.success === false) {
-          return res.status(502).json({ success: false, error: json?.message || `Finalize failed: ${resp.status}` });
-        }
-        return res.json({ success: true, message: 'Approved and finalized', data: json?.data });
-      } catch (err) {
-        return res.status(502).json({ success: false, error: 'Finalize request failed' });
-      }
+    if (!claim) {
+      return res.status(404).json({
+        success: false,
+        message: 'Claim not found'
+      });
     }
 
-    res.json({ success: true, message: 'POC approved' });
-  } catch (e) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    // POC approval successful - waiting for admin approval
+    console.log(`✅ POC approval successful for claim ${claimId}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Claim approved by POC. Waiting for admin approval.',
+      data: claim
+    });
+
+  } catch (error) {
+    console.error('Error approving claim:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error approving claim',
+      error: error.message
+    });
   }
 });
 
-app.post('/api/bprnd/claims/:claimId/decline', pocAuth, async (req, res) => {
+// Decline BPRND certification claim
+app.post('/api/bprnd/claims/:claimId/decline', async (req, res) => {
   try {
     const { claimId } = req.params;
-    const claim = await BprndClaim.findById(claimId);
-    if (!claim) return res.status(404).json({ success: false, error: 'Claim not found' });
+    const { reason } = req.body;
+    
+    if (!mongoose.Types.ObjectId.isValid(claimId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid claim ID format'
+      });
+    }
 
-    claim.pocApproval = { by: req.user?.email || 'bprnd-poc', at: new Date(), decision: 'declined' };
-    claim.status = 'declined';
-    await claim.save();
-    res.json({ success: true, message: 'POC declined' });
-  } catch (e) {
-    res.status(500).json({ success: false, error: 'Server error' });
+    const claim = await bprnd_certification_claim.findByIdAndUpdate(
+      claimId,
+      { 
+        status: 'declined',
+        poc_approved: false,
+        declined_reason: reason,
+        declined_at: new Date()
+      },
+      { new: true }
+    );
+
+    if (!claim) {
+      return res.status(404).json({
+        success: false,
+        message: 'Claim not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Claim declined successfully',
+      data: claim
+    });
+
+  } catch (error) {
+    console.error('Error declining claim:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error declining claim',
+      error: error.message
+    });
   }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  if (err.name === 'UnauthorizedError') {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid token',
-    });
-  }
   if (err.message === 'Not allowed by CORS') {
     return res.status(403).json({
       success: false,
       message: 'CORS error: Origin not allowed',
+      error: err.message
     });
   }
+
+  console.error('Unhandled error:', err);
   res.status(500).json({
     success: false,
     message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
   });
 });
 

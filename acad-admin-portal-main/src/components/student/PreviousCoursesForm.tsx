@@ -24,7 +24,15 @@ const PreviousCoursesForm: React.FC = () => {
   const [discipline, setDiscipline] = useState('');
   const [totalHours, setTotalHours] = useState<string>('');
   const [noOfDays, setNoOfDays] = useState<string>('');
-  const { data: umbrellas, isLoading: umbrellasLoading, error: umbrellasError } = useBPRNDUmbrellas();
+  const { umbrellas, isLoading: umbrellasLoading, error: umbrellasError } = useBPRNDUmbrellas();
+  
+  // Debug logging for troubleshooting
+  console.log('🔍 PreviousCoursesForm Debug:', {
+    umbrellas,
+    umbrellasLoading,
+    umbrellasError,
+    umbrellasCount: umbrellas?.length || 0
+  });
   // Resolve BPRND student ID from localStorage
   const storedBprnd = typeof window !== 'undefined' ? localStorage.getItem('bprndStudentData') : null;
   let derivedStudentId: string | null = null;
@@ -175,6 +183,12 @@ const PreviousCoursesForm: React.FC = () => {
               </select>
               {umbrellasError && (
                 <p className="text-sm text-red-700">Failed to load disciplines: {umbrellasError}</p>
+              )}
+              {!umbrellasLoading && !umbrellasError && (!umbrellas || umbrellas.length === 0) && (
+                <p className="text-sm text-yellow-700">No disciplines available. Please refresh the page or contact support.</p>
+              )}
+              {!umbrellasLoading && umbrellas && umbrellas.length > 0 && (
+                <p className="text-sm text-green-700">✓ {umbrellas.length} disciplines loaded successfully</p>
               )}
             </div>
 

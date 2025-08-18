@@ -6,6 +6,7 @@ const nodemailer = require('nodemailer');
 const cors = require('cors');
 const multer = require('multer');
 const XLSX = require('xlsx');
+const path = require('path');
 require('dotenv').config();
 
 // Polyfill fetch in Node if not available
@@ -18,6 +19,9 @@ console.log('Current working directory:', process.cwd());
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Serve static files from the uploads directory
+app.use('/files', express.static(path.join(__dirname, '..', 'uploads', 'pdfs')));
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -39,24 +43,10 @@ const transporter = nodemailer.createTransport({
 
 // Middleware
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl requests)
-    if(!origin) return callback(null, true);
-    
-    const allowedOrigins = process.env.FRONTEND_URL ? 
-      [process.env.FRONTEND_URL] : 
-      ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080', 'http://localhost:8081'];
-    
-    if(allowedOrigins.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked request from:', origin);
-      callback(null, true); // Allow all origins for now to debug
-    }
-  },
+  origin: true, // Allow all origins for development
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept']
 }));
 app.use(express.json({ limit: '10mb' })); // Added size limit for security
 
@@ -91,10 +81,13 @@ const PendingAdmin = require('../models/pendingAdmin');
 // Use the existing Student model for candidates/participants
 const Candidate = require('../models1/student');
 const Student = require('../models1/student'); // Import the correct Student model
-const BprndClaim = require('../model3/bprnd_certification_claim');
 const PendingCredits = require('../model3/pendingcredits');
 const CreditCalculation = require('../model3/bprndstudents');
 const bprnd_certification_claim = require('../model3/bprnd_certification_claim');
+const bprndStudents = require('../model3/bprndstudents');
+const CourseHistory = require('../model3/course_history');
+const umbrella = require('../model3/umbrella');
+const BprndCertificate = require('../model3/bprnd_certificate');
 
 // Input sanitization helper
 const sanitizeInput = (input) => {
@@ -777,9 +770,10 @@ app.get('/api/pending-credits', authenticateToken, asyncHandler(async (req, res)
   try {
     console.log('🔍 Admin requesting pending credits for approval...');
     
-    // Find all pending credits that need admin approval (admin_approved: false)
-    // This will show only credits that haven't been approved by admin yet
+    // Find all pending credits that need admin approval (POC approved first, then admin)
+    // This will show only credits that have been approved by POC but not by admin yet
     const pendingCredits = await PendingCredits.find({
+      bprnd_poc_approved: true,
       admin_approved: false
     })
     .populate('studentId', 'Name email Designation State') // Populate student details
@@ -819,7 +813,7 @@ app.get('/api/pending-credits', authenticateToken, asyncHandler(async (req, res)
     });
     
     console.log(`📋 Admin can see ${pendingCreditsWithLinks.length} pending credits that need approval`);
-    console.log(`💡 After admin approval, these credits will be visible to BPRND POC for final review`);
+    console.log(`💡 These credits have been approved by POC and are now waiting for admin approval`);
 
   } catch (error) {
     console.error('Error fetching pending credits:', error);
@@ -845,12 +839,11 @@ app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(asy
     }
 
     // Find and update the admin_approved field to true and update status
-    // Also ensure bprnd_poc_approved is explicitly set to false for POC to see it
+    // Keep bprnd_poc_approved as true (POC already approved)
     const pendingCredit = await PendingCredits.findByIdAndUpdate(
       id,
       { 
         admin_approved: true,
-        bprnd_poc_approved: false, // Explicitly set to false so POC can see it
         status: 'admin_approved'
       },
       { new: true }
@@ -868,6 +861,130 @@ app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(asy
       // Both approved - this pending credit is now fully approved
       await PendingCredits.findByIdAndUpdate(id, { status: 'approved' });
       console.log(`✅ Pending credit ${id} is now fully approved by both admin and BPRND POC`);
+      
+      // Now apply credits and save to course_history
+      try {
+        // Calculate credits: 15 hours = 1 credit
+        const totalHours = Number(pendingCredit.totalHours || 0);
+        const newCredits = totalHours > 0 ? Math.ceil(totalHours / 15) : 0;
+        
+        if (newCredits > 0) {
+          // Find student and update Total_Credits
+          const student = await bprndStudents.findById(pendingCredit.studentId);
+          if (student) {
+            // Dynamically fetch umbrella fields from database
+            const umbrellaFields = await umbrella.find({}).lean();
+            if (!umbrellaFields || umbrellaFields.length === 0) {
+              console.log('⚠️ No umbrella fields found in database, only updating Total_Credits');
+              await bprndStudents.updateOne(
+                { _id: pendingCredit.studentId },
+                { $inc: { Total_Credits: newCredits } }
+              );
+            } else {
+              // Convert umbrella names to field keys (e.g., "Cyber Security" -> "Cyber_Security")
+              const UMBRELLA_KEYS = umbrellaFields.map(u => u.name.replace(/\s+/g, '_'));
+              
+              console.log(`🔍 Available umbrella fields: ${UMBRELLA_KEYS.join(', ')}`);
+              
+              // Normalize discipline for matching
+              const normalize = (s) => String(s || '')
+                .toLowerCase()
+                .replace(/[_-]+/g, ' ')
+                .replace(/[^a-z\s]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+              
+              const normDiscipline = normalize(pendingCredit.discipline);
+              console.log(`🔍 Normalized discipline: "${normDiscipline}"`);
+              
+              // Find matching umbrella field
+              let fieldKey = UMBRELLA_KEYS.find(
+                (k) => normalize(k.replace(/_/g, ' ')) === normDiscipline
+              );
+              
+              if (!fieldKey) {
+                // Try partial includes match
+                fieldKey = UMBRELLA_KEYS.find(
+                  (k) => normalize(k.replace(/_/g, ' ')).includes(normDiscipline) ||
+                         normDiscipline.includes(normalize(k.replace(/_/g, ' ')))
+                );
+              }
+              
+              if (!fieldKey && student.Umbrella) {
+                // Fallback to student's umbrella selection
+                const normStudentUmbrella = normalize(student.Umbrella);
+                fieldKey = UMBRELLA_KEYS.find(
+                  (k) => normalize(k.replace(/_/g, ' ')) === normStudentUmbrella
+                ) || UMBRELLA_KEYS.find(
+                  (k) => normalize(k.replace(/_/g, ' ')).includes(normStudentUmbrella)
+                );
+              }
+              
+              // Update student credits
+              if (fieldKey) {
+                await bprndStudents.updateOne(
+                  { _id: pendingCredit.studentId },
+                  {
+                    $inc: {
+                      Total_Credits: newCredits,
+                      [fieldKey]: newCredits,
+                    },
+                  }
+                );
+                console.log(`✅ Credits applied: ${newCredits} credits added to student ${pendingCredit.studentId} in field: ${fieldKey}`);
+              } else {
+                await bprndStudents.updateOne(
+                  { _id: pendingCredit.studentId },
+                  { $inc: { Total_Credits: newCredits } }
+                );
+                console.log(`⚠️ No matching umbrella field found for discipline "${pendingCredit.discipline}", only Total_Credits updated`);
+              }
+            }
+          }
+        }
+        
+        // Save course information to course_history
+        try {
+          // Find the last entry in course_history for this student and discipline
+          const lastEntry = await CourseHistory.findOne({
+            studentId: pendingCredit.studentId,
+            discipline: pendingCredit.discipline
+          }).sort({ createdAt: -1 });
+          
+          // Calculate the new count: last count + new credits earned
+          const lastCount = lastEntry ? lastEntry.count : 0;
+          const newCount = lastCount + newCredits;
+          
+          console.log(`🔍 Count calculation: Last count (${lastCount}) + New credits (${newCredits}) = New count (${newCount})`);
+          
+          const courseHistoryEntry = new CourseHistory({
+            studentId: pendingCredit.studentId,
+            name: pendingCredit.name,
+            organization: pendingCredit.organization,
+            discipline: pendingCredit.discipline,
+            totalHours: pendingCredit.totalHours,
+            noOfDays: pendingCredit.noOfDays,
+            creditsEarned: newCredits,
+            count: newCount
+          });
+          
+          await courseHistoryEntry.save();
+          console.log(`✅ Course history saved for student ${pendingCredit.studentId}: ${pendingCredit.name} - ${newCredits} credits | Total count: ${newCount}`);
+        } catch (historyError) {
+          console.error('Error saving to course history:', historyError);
+          // Don't fail the approval if course history saving fails
+        }
+        
+        // Delete the pending credit record after successful credit application
+        await PendingCredits.findByIdAndDelete(id);
+        console.log(`✅ Pending credit record ${id} deleted after successful credit application`);
+        
+      } catch (creditError) {
+        console.error('Error applying credits:', creditError);
+        // Don't fail the approval if credit application fails
+        // The pending credit will remain for manual review
+      }
+      
     } else {
       // Waiting for BPRND POC approval
       console.log(`⏳ Pending credit ${id} approved by admin, waiting for BPRND POC approval`);
@@ -1930,15 +2047,59 @@ app.post('/api/students/previous-courses', authenticateToken, asyncHandler(async
 
 // List all BPR&D certification claims (basic listing; add auth as needed)
 app.get('/api/bprnd/claims', authenticateToken, asyncHandler(async (req, res) => {
+  console.log('🚀 Admin route /api/bprnd/claims called');
   const { status } = req.query;
+  console.log('📝 Query parameters:', { status });
   
-  // If specific status requested, use it; otherwise show only claims needing Admin approval
+  // If specific status requested, use it; otherwise show only claims that POC has approved but admin hasn't
   const filter = status ? { status } : { 
-    status: { $in: ['pending', 'poc_approved'] } 
+    poc_approved: true,        // POC has approved
+    admin_approved: { $ne: true }  // Admin has not approved yet
   };
+  console.log('🔍 Filter applied:', filter);
   
-  const claims = await bprnd_certification_claim.find(filter).sort({ createdAt: -1 }).lean();
-  res.json({ success: true, count: claims.length, data: claims });
+  try {
+    const claims = await bprnd_certification_claim.find(filter).sort({ createdAt: -1 }).lean();
+    console.log(`📊 Found ${claims.length} claims in database`);
+    
+    // Log each claim's basic info
+    claims.forEach((claim, index) => {
+      console.log(`📋 Claim ${index + 1}:`, {
+        id: claim._id,
+        umbrella: claim.umbrellaKey,
+        status: claim.status,
+        hasCourses: !!claim.courses,
+        coursesCount: claim.courses ? claim.courses.length : 0
+      });
+    });
+    
+    // Enhance claims with student details and course information
+    const enhancedClaims = claims.map(claim => {
+      console.log(`🔍 Processing claim ${claim._id}:`, {
+        hasCourses: !!claim.courses,
+        coursesLength: claim.courses ? claim.courses.length : 0,
+        coursesData: claim.courses,
+        umbrellaKey: claim.umbrellaKey,
+        status: claim.status
+      });
+      
+      return {
+        ...claim,
+        umbrellaLabel: claim.umbrellaKey.replace(/_/g, ' '), // Convert back to readable format
+        courseCount: claim.courses ? claim.courses.length : 0,
+        totalCreditsFromCourses: claim.courses ? claim.courses.reduce((sum, course) => sum + course.creditsEarned, 0) : 0,
+        courses: claim.courses || [] // Include full course details
+      };
+    });
+    
+    console.log(`📋 Admin can see ${enhancedClaims.length} BPRND certification claims`);
+    console.log(`💡 Each claim includes detailed course breakdown for transparency`);
+    
+    res.json({ success: true, count: enhancedClaims.length, data: enhancedClaims });
+  } catch (error) {
+    console.error('❌ Error in admin route:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
 }));
 
 // Approve a claim as Admin
@@ -1951,32 +2112,93 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
     return res.json({ success: true, message: `Claim already ${claim.status}` });
   }
 
-  claim.adminApproval = { by: req.user?.email || 'admin', at: new Date(), decision: 'approved' };
-  claim.status = claim.pocApproval?.decision === 'approved' ? 'approved' : 'admin_approved';
-  await claim.save();
-
-  if (claim.status === 'approved') {
-    // both approved; finalize via api4
-    try {
-      const finalizeUrl = `http://localhost:3004/internal/bprnd/claims/${claim._id}/finalize`;
-      const resp = await fetch(finalizeUrl, { method: 'POST' });
-      const json = await resp.json().catch(() => ({}));
-      if (!resp.ok || json?.success === false) {
-        return res.status(502).json({ success: false, error: json?.message || `Finalize failed: ${resp.status}` });
-      }
-      return res.json({ success: true, message: 'Approved and finalized', data: json?.data });
-    } catch (err) {
-      return res.status(502).json({ success: false, error: 'Finalize request failed' });
-    }
+  // Check if POC has already approved
+  if (!claim.poc_approved) {
+    return res.status(400).json({ success: false, error: 'POC must approve first before admin can approve' });
   }
 
-  res.json({ success: true, message: 'Admin approved' });
+  // Set admin approval
+  claim.admin_approved = true;
+  claim.admin_approved_at = new Date();
+  claim.admin_approved_by = req.user?.email || 'admin';
+  
+  // Only set status to approved if POC has approved AND we successfully process the claim
+  // For now, keep it as admin_approved until we process everything
+  claim.status = 'admin_approved';
+  await claim.save();
+
+  console.log(`✅ Admin approved claim ${claimId} for ${claim.umbrellaKey} - ${claim.qualification}`);
+
+  // Now both POC and Admin have approved - process the claim
+  try {
+    // Deduct credits from student's credit bank
+    const student = await bprndStudents.findById(claim.studentId);
+    if (!student) {
+      return res.status(404).json({ success: false, error: 'Student not found' });
+    }
+
+    const umbrellaField = claim.umbrellaKey;
+    const requiredCredits = claim.requiredCredits || 0;
+    const currentCredits = Number(student[umbrellaField] || 0);
+    const currentTotalCredits = Number(student.Total_Credits || 0);
+
+    if (currentCredits < requiredCredits) {
+      claim.status = 'declined';
+      claim.declined_reason = 'Insufficient credits';
+      await claim.save();
+      return res.status(400).json({ 
+        success: false, 
+        error: `Insufficient credits. Required: ${requiredCredits}, Available: ${currentCredits}` 
+      });
+    }
+
+    // Deduct credits
+    student[umbrellaField] = Math.max(0, currentCredits - requiredCredits);
+    student.Total_Credits = Math.max(0, currentTotalCredits - requiredCredits);
+    await student.save();
+
+    // Create certificate
+    const certificate = new BprndCertificate({
+      studentId: claim.studentId,
+      umbrellaKey: claim.umbrellaKey,
+      qualification: claim.qualification,
+      claimId: claim._id,
+      certificateNo: `CERT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      issuedAt: new Date()
+    });
+    await certificate.save();
+
+    // Mark claim as finalized
+    claim.status = 'approved';
+    claim.finalized_at = new Date();
+    await claim.save();
+
+    console.log(`🎉 Claim finalized: ${requiredCredits} credits deducted, certificate issued`);
+
+    return res.json({ 
+      success: true, 
+      message: 'Claim approved and finalized. Credits deducted and certificate issued.',
+      data: {
+        claim,
+        certificate,
+        creditsDeducted: requiredCredits,
+        remainingCredits: {
+          umbrella: student[umbrellaField],
+          total: student.Total_Credits
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error finalizing claim:', error);
+    return res.status(500).json({ success: false, error: 'Error finalizing claim' });
+  }
 }));
 
 // Decline a claim as Admin
 app.post('/api/bprnd/claims/:claimId/decline', authenticateToken, asyncHandler(async (req, res) => {
   const { claimId } = req.params;
-  const claim = await BprndClaim.findById(claimId);
+  const claim = await bprnd_certification_claim.findById(claimId);
   if (!claim) return res.status(404).json({ success: false, error: 'Claim not found' });
 
   claim.adminApproval = { by: req.user?.email || 'admin', at: new Date(), decision: 'declined' };
@@ -1999,8 +2221,12 @@ app.get('/api/pending-credits/:studentId', authenticateToken, asyncHandler(async
       });
     }
 
-    // Find all pending credits documents for the given student ID
-    const pendingCredits = await PendingCredits.find({ studentId: studentId }).sort({ createdAt: -1 });
+    // Find pending credits for the given student ID (POC approved first, then admin)
+    const pendingCredits = await PendingCredits.find({ 
+      studentId: studentId,
+      bprnd_poc_approved: true,
+      admin_approved: false
+    }).sort({ createdAt: -1 });
     
     if (!pendingCredits || pendingCredits.length === 0) {
       return res.status(404).json({

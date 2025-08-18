@@ -12,38 +12,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl requests)
-    if(!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'http://localhost:5173',  // Vite dev server
-      'http://localhost:3000',  // React dev server
-      'http://localhost:8080',  // Alternative dev server
-      'http://localhost:8081',  // Alternative dev server
-      'http://127.0.0.1:5173',  // Vite with IP
-      'http://127.0.0.1:3000',  // React with IP
-      'http://127.0.0.1:8080',  // Alternative with IP
-      'http://127.0.0.1:8081'   // Alternative with IP
-    ];
-    
-    // Add custom frontend URL from environment if provided
-    if (process.env.FRONTEND_URL) {
-      allowedOrigins.push(process.env.FRONTEND_URL);
-    }
-    
-    if(allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked request from:', origin);
-      // For development, allow all origins
-      if (process.env.NODE_ENV === 'development') {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    }
-  },
+  origin: true, // Allow all origins for development
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [

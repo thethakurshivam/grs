@@ -1,16 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+// Dynamic interface that will be built based on actual umbrella fields
 export interface BprndCreditBreakdown {
-  Cyber_Security: number;
-  Criminology: number;
-  Military_Law: number;
-  Police_Administration: number;
-  Forensic_Science: number;
-  National_Security: number;
-  International_Security: number;
-  Counter_Terrorism: number;
-  Intelligence_Studies: number;
-  Emergency_Management: number;
+  [key: string]: number;
 }
 
 interface UseBPRNDCreditBreakdownResult {

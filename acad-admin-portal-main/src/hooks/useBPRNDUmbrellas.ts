@@ -1,38 +1,58 @@
 import { useCallback, useEffect, useState } from 'react';
 
-export interface UmbrellaItem {
+interface Umbrella {
   _id: string;
   name: string;
 }
 
-export function useBPRNDUmbrellas() {
-  const [data, setData] = useState<UmbrellaItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+interface UseBPRNDUmbrellasResult {
+  umbrellas: Umbrella[];
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => void;
+}
+
+export function useBPRNDUmbrellas(): UseBPRNDUmbrellasResult {
+  const [umbrellas, setUmbrellas] = useState<Umbrella[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchUmbrellas = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+
     const controller = new AbortController();
     try {
-      const res = await fetch('http://localhost:3003/api/bprnd/umbrellas', { signal: controller.signal });
-      const contentType = res.headers.get('content-type') || '';
+      const response = await fetch('http://localhost:3004/umbrellas', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+      });
+
+      const contentType = response.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
-        const text = await res.text();
-        throw new Error(text?.slice(0, 160) || 'Unexpected non-JSON response');
+        const text = await response.text();
+        throw new Error(
+          response.status === 404
+            ? 'Umbrellas not found'
+            : text?.slice(0, 120) || 'Unexpected non-JSON response'
+        );
       }
-      const json = await res.json();
-      if (!res.ok || !json?.success) {
-        throw new Error(json?.message || 'Failed to load umbrellas');
+
+      const json = await response.json();
+      if (!response.ok || !json?.success) {
+        throw new Error(json?.message || 'Failed to fetch umbrellas');
       }
-      setData(Array.isArray(json.data) ? json.data : []);
+
+      setUmbrellas(json.data || []);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Network error fetching umbrellas';
       setError(message);
-      setData([]);
+      setUmbrellas([]);
     } finally {
       setIsLoading(false);
     }
+
     return () => controller.abort();
   }, []);
 
@@ -40,7 +60,7 @@ export function useBPRNDUmbrellas() {
     fetchUmbrellas();
   }, [fetchUmbrellas]);
 
-  return { data, isLoading, error, refetch: fetchUmbrellas };
+  return { umbrellas, isLoading, error, refetch: fetchUmbrellas };
 }
 
 export default useBPRNDUmbrellas;

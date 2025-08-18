@@ -25,6 +25,10 @@ const creditCalculationSchema = new mongoose.Schema(
     Criminology: { type: Number, default: 0 },
     Military_Law: { type: Number, default: 0 },
     Police_Administration: { type: Number, default: 0 },
+    Defence: { type: Number, default: 0 },
+    Forensics: { type: Number, default: 0 },
+    
+    // Legacy fields (kept for backward compatibility)
     Forensic_Science: { type: Number, default: 0 },
     National_Security: { type: Number, default: 0 },
     International_Security: { type: Number, default: 0 },

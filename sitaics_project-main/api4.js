@@ -11,6 +11,7 @@ const umbrella = require('./model3/umbrella');
 const Credit = require('./model3/credit');
 const multer = require('multer');
 const PendingCredits = require('./model3/pendingcredits'); // Import your schema
+const CourseHistory = require('./model3/course_history');
 
 const BprndClaim = require('./model3/bprnd_certification_claim');
 const BprndCertificate = require('./model3/bprnd_certificate');
@@ -32,6 +33,9 @@ try {
 } catch (e) {
   console.warn('⚠️ Could not ensure uploads dir:', e?.message);
 }
+
+// Serve static files from the uploads directory
+app.use('/files', express.static(uploadsDir));
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -325,19 +329,23 @@ router.get('/student/:id/credits/breakdown', async (req, res) => {
       });
     }
 
-    // Project only the umbrella credit fields for efficiency
-    const projection = {
-      Cyber_Security: 1,
-      Criminology: 1,
-      Military_Law: 1,
-      Police_Administration: 1,
-      Forensic_Science: 1,
-      National_Security: 1,
-      International_Security: 1,
-      Counter_Terrorism: 1,
-      Intelligence_Studies: 1,
-      Emergency_Management: 1,
-    };
+    // First, get all available umbrella fields from the database
+    const umbrellas = await umbrella.find({}).sort({ name: 1 });
+    
+    if (!umbrellas || umbrellas.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No umbrella fields found in database',
+      });
+    }
+
+    // Build dynamic projection based on actual umbrella fields
+    const projection = { Total_Credits: 1 };
+    umbrellas.forEach(u => {
+      // Convert umbrella name to field key format (e.g., "Cyber Security" -> "Cyber_Security")
+      const fieldKey = u.name.replace(/\s+/g, '_');
+      projection[fieldKey] = 1;
+    });
 
     const student = await CreditCalculation.findById(id).select(projection);
 
@@ -348,19 +356,21 @@ router.get('/student/:id/credits/breakdown', async (req, res) => {
       });
     }
 
-    // Ensure all fields are numbers (fallback to 0 if undefined)
-    const data = {
-      Cyber_Security: Number(student.Cyber_Security || 0),
-      Criminology: Number(student.Criminology || 0),
-      Military_Law: Number(student.Military_Law || 0),
-      Police_Administration: Number(student.Police_Administration || 0),
-      Forensic_Science: Number(student.Forensic_Science || 0),
-      National_Security: Number(student.National_Security || 0),
-      International_Security: Number(student.International_Security || 0),
-      Counter_Terrorism: Number(student.Counter_Terrorism || 0),
-      Intelligence_Studies: Number(student.Intelligence_Studies || 0),
-      Emergency_Management: Number(student.Emergency_Management || 0),
-    };
+    // Build dynamic data object based on actual umbrella fields
+    const data = {};
+    umbrellas.forEach(u => {
+      const fieldKey = u.name.replace(/\s+/g, '_');
+      const fieldValue = student[fieldKey];
+      data[fieldKey] = Number(fieldValue || 0);
+    });
+
+    // Also include total credits if available
+    if (student.Total_Credits !== undefined) {
+      data.Total_Credits = Number(student.Total_Credits || 0);
+    }
+
+    console.log(`📊 Credits breakdown for student ${id}:`, data);
+    console.log(`🔍 Available umbrella fields:`, umbrellas.map(u => u.name));
 
     return res.status(200).json({
       success: true,
@@ -375,6 +385,75 @@ router.get('/student/:id/credits/breakdown', async (req, res) => {
       });
     }
     console.error('Error fetching credits breakdown:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+});
+
+// Get course history for a specific student and umbrella field
+router.get('/student/:id/course-history/:umbrella', async (req, res) => {
+  try {
+    const { id, umbrella } = req.params;
+
+    if (!id || !umbrella) {
+      return res.status(400).json({
+        success: false,
+        message: 'Student ID and umbrella field are required',
+      });
+    }
+
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid student ID format',
+      });
+    }
+
+    console.log(`🔍 Fetching course history for student ${id} in umbrella: ${umbrella}`);
+
+    // Find all course history records for this student and discipline
+    // Note: discipline in coursehistories matches umbrella name from database
+    const courseHistory = await CourseHistory.find({
+      studentId: new mongoose.Types.ObjectId(id),
+      discipline: { $regex: new RegExp(umbrella, 'i') } // Case-insensitive match
+    })
+    .sort({ createdAt: -1 }) // Sort by newest first
+    .lean();
+
+    console.log(`📊 Found ${courseHistory.length} course history records for ${umbrella}`);
+
+    // Calculate summary statistics
+    const totalCredits = courseHistory.reduce((sum, course) => sum + (course.creditsEarned || 0), 0);
+    const totalHours = courseHistory.reduce((sum, course) => sum + (course.totalHours || 0), 0);
+    const totalDays = courseHistory.reduce((sum, course) => sum + (course.noOfDays || 0), 0);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Course history retrieved successfully',
+      data: {
+        umbrella: umbrella,
+        studentId: id,
+        courses: courseHistory,
+        summary: {
+          totalCourses: courseHistory.length,
+          totalCredits,
+          totalHours,
+          totalDays
+        }
+      }
+    });
+
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid student ID format',
+      });
+    }
+    console.error('Error fetching course history:', error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -414,7 +493,7 @@ router.post('/pending-credits', upload.single('pdf'), async (req, res) => {
       noOfDays,
       pdf: req.file.path, // Store the file path
       admin_approved: false, // Explicitly set default value
-      bprnd_poc_approved: false // Explicitly set default value
+       bprnd_poc_approved: false // Explicitly set default value
     });
 
     // Save to database
@@ -502,19 +581,19 @@ router.get('/student/:id/certifications', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
 
-    // Umbrella credit fields in the student document
-    const UMBRELLA_FIELDS = [
-      'Cyber_Security',
-      'Criminology',
-      'Military_Law',
-      'Police_Administration',
-      'Forensic_Science',
-      'National_Security',
-      'International_Security',
-      'Counter_Terrorism',
-      'Intelligence_Studies',
-      'Emergency_Management',
-    ];
+    // Dynamically fetch umbrella fields from database
+    const umbrellaFields = await umbrella.find({}).lean();
+    if (!umbrellaFields || umbrellaFields.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'No umbrella fields found in database' 
+      });
+    }
+
+    // Convert umbrella names to field keys (e.g., "Cyber Security" -> "Cyber_Security")
+    const UMBRELLA_FIELDS = umbrellaFields.map(u => u.name.replace(/\s+/g, '_'));
+    
+    console.log(`🔍 Available umbrella fields for certification: ${UMBRELLA_FIELDS.join(', ')}`);
 
     // Build a working copy of umbrella credits
     const creditsByField = {};
@@ -621,20 +700,24 @@ router.post('/student/:id/umbrella/:umbrella/redeem/:qualification', async (req,
 
     // Map umbrella name to field key (spaces -> underscores) and validate exists
     const fieldKey = decodeURIComponent(String(umbrella)).replace(/\s+/g, '_');
-    const UMBRELLA_FIELDS = new Set([
-      'Cyber_Security',
-      'Criminology',
-      'Military_Law',
-      'Police_Administration',
-      'Forensic_Science',
-      'National_Security',
-      'International_Security',
-      'Counter_Terrorism',
-      'Intelligence_Studies',
-      'Emergency_Management',
-    ]);
+    
+    // Dynamically fetch and validate umbrella fields from database
+    const umbrellaFields = await umbrella.find({}).lean();
+    if (!umbrellaFields || umbrellaFields.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'No umbrella fields found in database' 
+      });
+    }
+    
+    const UMBRELLA_FIELDS = new Set(umbrellaFields.map(u => u.name.replace(/\s+/g, '_')));
+    console.log(`🔍 Available umbrella fields for credit redemption: ${Array.from(UMBRELLA_FIELDS).join(', ')}`);
+    
     if (!UMBRELLA_FIELDS.has(fieldKey)) {
-      return res.status(400).json({ success: false, message: `Unknown umbrella field: ${fieldKey}` });
+      return res.status(400).json({ 
+        success: false, 
+        message: `Unknown umbrella field: ${fieldKey}. Available fields: ${Array.from(UMBRELLA_FIELDS).join(', ')}` 
+      });
     }
 
     // Fetch student
@@ -689,11 +772,24 @@ router.post('/student/:id/certifications/request', async (req, res) => {
 
     // Normalize umbrella key from label or key
     const key = String(umbrellaKey).replace(/\s+/g, '_');
-    const UMBRELLA_FIELDS = new Set([
-      'Cyber_Security','Criminology','Military_Law','Police_Administration','Forensic_Science','National_Security','International_Security','Counter_Terrorism','Intelligence_Studies','Emergency_Management',
-    ]);
+    
+    // Dynamically fetch and validate umbrella fields from database
+    const umbrellaFields = await umbrella.find({}).lean();
+    if (!umbrellaFields || umbrellaFields.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'No umbrella fields found in database' 
+      });
+    }
+    
+    const UMBRELLA_FIELDS = new Set(umbrellaFields.map(u => u.name.replace(/\s+/g, '_')));
+    console.log(`🔍 Available umbrella fields for certification request: ${Array.from(UMBRELLA_FIELDS).join(', ')}`);
+    
     if (!UMBRELLA_FIELDS.has(key)) {
-      return res.status(400).json({ success: false, message: `Unknown umbrella field: ${key}` });
+      return res.status(400).json({ 
+        success: false, 
+        message: `Unknown umbrella field: ${key}. Available fields: ${Array.from(UMBRELLA_FIELDS).join(', ')}` 
+      });
     }
 
     // Validate eligibility at request time (has at least required credits now)
@@ -710,12 +806,58 @@ router.post('/student/:id/certifications/request', async (req, res) => {
       return res.status(409).json({ success: false, message: 'A similar claim is already in progress' });
     }
 
+    // Query coursehistories to get contributing courses for this certification
+    const courseHistory = await CourseHistory.find({
+      studentId: new mongoose.Types.ObjectId(id),
+      discipline: key
+    }).sort({ createdAt: 1 }).lean(); // Sort by oldest first for FIFO
+
+    // Calculate which courses contribute to this certification
+    const contributingCourses = [];
+    let accumulatedCredits = 0;
+    
+    for (const course of courseHistory) {
+      if (accumulatedCredits >= requiredCredits) break;
+      
+      const courseCredits = course.creditsEarned || 0;
+      if (accumulatedCredits + courseCredits <= requiredCredits) {
+        // This course fully contributes to the certification
+        contributingCourses.push({
+          courseName: course.name,
+          organization: course.organization,
+          hoursEarned: course.hoursEarned,
+          creditsEarned: course.creditsEarned,
+          completionDate: course.completionDate ? new Date(course.completionDate) : new Date(),
+          courseId: course._id
+        });
+        accumulatedCredits += courseCredits;
+      } else {
+        // This course partially contributes (if needed)
+        const remainingCredits = requiredCredits - accumulatedCredits;
+        if (remainingCredits > 0) {
+          contributingCourses.push({
+            courseName: course.name,
+            organization: course.organization,
+            hoursEarned: Math.ceil(remainingCredits * 15), // Convert back to hours
+            creditsEarned: remainingCredits,
+            completionDate: course.completionDate ? new Date(course.completionDate) : new Date(),
+            courseId: course._id
+          });
+          accumulatedCredits = requiredCredits;
+        }
+        break;
+      }
+    }
+
+    console.log(`🔍 Certification request: ${accumulatedCredits}/${requiredCredits} credits from ${contributingCourses.length} courses`);
+
     const claim = await BprndClaim.create({
       studentId: id,
       umbrellaKey: key,
       qualification: q,
       requiredCredits,
       status: 'pending',
+      courses: contributingCourses // Include the contributing courses
     });
 
     return res.status(201).json({ success: true, message: 'Certification request submitted', data: claim });
@@ -729,7 +871,7 @@ router.post('/student/:id/certifications/request', async (req, res) => {
 router.get('/student/:id/claims', async (req, res) => {
   try {
     const { id } = req.params;
-    const claims = await BprndClaim.find({ studentId: id }).sort({ createdAt: -1 }).lean();
+    const claims = await BprndClaim.find({ studentId: new mongoose.Types.ObjectId(id) }).sort({ createdAt: -1 }).lean();
     return res.status(200).json({ success: true, data: claims });
   } catch (error) {
     console.error('Error listing claims:', error);
@@ -751,7 +893,7 @@ router.get('/student/:id/certificates', async (req, res) => {
     }
 
     // Retrieve all certificates for the student
-    const certificates = await BprndCertificate.find({ studentId: id })
+    const certificates = await BprndCertificate.find({ studentId: new mongoose.Types.ObjectId(id) })
       .sort({ issuedAt: -1 }) // Sort by most recent first
       .lean();
 
@@ -792,8 +934,8 @@ router.post('/internal/bprnd/claims/:claimId/finalize', async (req, res) => {
       });
     }
 
-    // Require both approvals regardless of current claim.status text
-    const bothApproved = claim.adminApproval?.decision === 'approved' && claim.pocApproval?.decision === 'approved';
+    // Require both approvals using the new boolean fields
+    const bothApproved = claim.admin_approved === true && claim.poc_approved === true;
     if (!bothApproved) return res.status(400).json({ success: false, message: 'Both approvals required' });
 
     // Deduct credits atomically with minimal race window
@@ -873,17 +1015,18 @@ app.get('/student/:id', async (req, res) => {
         Phone: student.Phone,
         JoiningDate: student.JoiningDate,
         Total_Credits: student.Total_Credits,
-        // Include umbrella-specific credits
-        Cyber_Security: student.Cyber_Security,
-        Criminology: student.Criminology,
-        Military_Law: student.Military_Law,
-        Police_Administration: student.Police_Administration,
-        Forensic_Science: student.Forensic_Science,
-        National_Security: student.National_Security,
-        International_Security: student.International_Security,
-        Counter_Terrorism: student.Counter_Terrorism,
-        Intelligence_Studies: student.Intelligence_Studies,
-        Emergency_Management: student.Emergency_Management,
+        // Include umbrella-specific credits (dynamically based on available umbrella fields)
+        ...(await (async () => {
+          const umbrellaFields = await umbrella.find({}).lean();
+          const credits = {};
+          if (umbrellaFields && umbrellaFields.length > 0) {
+            umbrellaFields.forEach(u => {
+              const fieldKey = u.name.replace(/\s+/g, '_');
+              credits[fieldKey] = student[fieldKey] || 0;
+            });
+          }
+          return credits;
+        })()),
         createdAt: student.createdAt,
         updatedAt: student.updatedAt
       }

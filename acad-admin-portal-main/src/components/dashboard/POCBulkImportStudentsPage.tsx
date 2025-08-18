@@ -45,7 +45,7 @@ const POCBulkImportStudentsPage: React.FC<POCBulkImportStudentsPageProps> = ({
     error: coursesError,
   } = usePOCCoursesForDropdown();
   const {
-    data: umbrellas,
+    umbrellas,
     isLoading: umbrellasLoading,
     error: umbrellasError,
   } = useBPRNDUmbrellas();
@@ -63,6 +63,10 @@ const POCBulkImportStudentsPage: React.FC<POCBulkImportStudentsPageProps> = ({
   console.log('Courses loading:', coursesLoading);
   console.log('Courses error:', coursesError);
   console.log('Total courses available:', courses.length);
+  console.log('Umbrellas in dropdown:', umbrellas);
+  console.log('Umbrellas loading:', umbrellasLoading);
+  console.log('Umbrellas error:', umbrellasError);
+  console.log('Total umbrellas available:', umbrellas?.length || 0);
 
   // Close dropdown when clicking outside
   useEffect(() => {
