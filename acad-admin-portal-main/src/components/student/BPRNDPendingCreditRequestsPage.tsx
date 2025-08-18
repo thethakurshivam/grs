@@ -66,7 +66,7 @@ const BPRNDPendingCreditRequestsPage: React.FC = () => {
     }
   }, [studentId]);
 
-
+  useEffect(() => { fetchPendingCreditRequests(); }, [fetchPendingCreditRequests]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
