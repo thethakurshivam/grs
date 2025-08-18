@@ -2168,12 +2168,46 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
     });
     await certificate.save();
 
+    // Mark courses as contributed to this certificate (FIFO method)
+    const coursesToMark = await CourseHistory.find({
+      studentId: claim.studentId,
+      discipline: claim.umbrellaKey,
+      certificateContributed: false
+    }).sort({ createdAt: 1 }); // Oldest first
+
+    let remainingCredits = requiredCredits;
+    const markedCourses = [];
+
+    for (const course of coursesToMark) {
+      if (remainingCredits <= 0) break;
+      
+      const creditsToContribute = Math.min(course.creditsEarned, remainingCredits);
+      
+      course.certificateContributed = true;
+      course.contributedToCertificate = {
+        certificateId: certificate._id,
+        certificateNo: certificate.certificateNo,
+        qualification: certificate.qualification,
+        contributedAt: new Date(),
+        creditsContributed: creditsToContribute
+      };
+      
+      await course.save();
+      markedCourses.push({
+        courseId: course._id,
+        courseName: course.name,
+        creditsContributed: creditsToContribute
+      });
+      
+      remainingCredits -= creditsToContribute;
+    }
+
     // Mark claim as finalized
     claim.status = 'approved';
     claim.finalized_at = new Date();
     await claim.save();
 
-    console.log(`🎉 Claim finalized: ${requiredCredits} credits deducted, certificate issued`);
+    console.log(`🎉 Claim finalized: ${requiredCredits} credits deducted, certificate issued, ${markedCourses.length} courses marked as contributed`);
 
     return res.json({ 
       success: true, 
@@ -2185,7 +2219,9 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
         remainingCredits: {
           umbrella: student[umbrellaField],
           total: student.Total_Credits
-        }
+        },
+        markedCourses: markedCourses,
+        coursesContributed: markedCourses.length
       }
     });
 

@@ -416,9 +416,11 @@ router.get('/student/:id/course-history/:umbrella', async (req, res) => {
 
     // Find all course history records for this student and discipline
     // Note: discipline in coursehistories matches umbrella name from database
+    // Exclude courses that have already contributed to certificates
     const courseHistory = await CourseHistory.find({
       studentId: new mongoose.Types.ObjectId(id),
-      discipline: { $regex: new RegExp(umbrella, 'i') } // Case-insensitive match
+      discipline: { $regex: new RegExp(umbrella, 'i') }, // Case-insensitive match
+      certificateContributed: { $ne: true } // Exclude courses that have contributed to certificates
     })
     .sort({ createdAt: -1 }) // Sort by newest first
     .lean();
@@ -807,9 +809,11 @@ router.post('/student/:id/certifications/request', async (req, res) => {
     }
 
     // Query coursehistories to get contributing courses for this certification
+    // Exclude courses that have already contributed to certificates
     const courseHistory = await CourseHistory.find({
       studentId: new mongoose.Types.ObjectId(id),
-      discipline: key
+      discipline: key,
+      certificateContributed: { $ne: true } // Exclude courses that have contributed to certificates
     }).sort({ createdAt: 1 }).lean(); // Sort by oldest first for FIFO
 
     // Calculate which courses contribute to this certification
@@ -911,73 +915,6 @@ router.get('/student/:id/certificates', async (req, res) => {
     });
   }
 });
-
-// List student pending credit requests
-router.get('/student/:id/pending-credits', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // Validate student ID format
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid student ID format' 
-      });
-    }
-
-    // Retrieve all pending credit requests for the student
-    const pendingCredits = await PendingCredits.find({ studentId: new mongoose.Types.ObjectId(id) })
-      .sort({ createdAt: -1 }) // Sort by most recent first
-      .lean();
-
-    // Add status labels and format dates
-    const formattedRequests = pendingCredits.map(request => ({
-      ...request,
-      statusLabel: getStatusLabel(request.status),
-      statusColor: getStatusColor(request.status),
-      formattedCreatedAt: new Date(request.createdAt).toLocaleDateString('en-IN'),
-      formattedPocApprovedAt: request.poc_approved_at ? new Date(request.poc_approved_at).toLocaleDateString('en-IN') : null,
-      formattedAdminApprovedAt: request.admin_approved_at ? new Date(request.admin_approved_at).toLocaleDateString('en-IN') : null,
-      formattedDeclinedAt: request.declined_at ? new Date(request.declined_at).toLocaleDateString('en-IN') : null
-    }));
-
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Pending credit requests retrieved successfully',
-      count: pendingCredits.length,
-      data: formattedRequests 
-    });
-  } catch (error) {
-    console.error('Error listing student pending credit requests:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Internal server error' 
-    });
-  }
-});
-
-// Helper functions for status formatting
-function getStatusLabel(status) {
-  const statusMap = {
-    'pending': 'Pending POC Approval',
-    'poc_approved': 'POC Approved - Waiting for Admin',
-    'admin_approved': 'Admin Approved - Finalized',
-    'declined': 'Declined',
-    'approved': 'Approved'
-  };
-  return statusMap[status] || status;
-}
-
-function getStatusColor(status) {
-  const colorMap = {
-    'pending': 'bg-yellow-100 text-yellow-800',
-    'poc_approved': 'bg-blue-100 text-blue-800',
-    'admin_approved': 'bg-green-100 text-green-800',
-    'declined': 'bg-red-100 text-red-800',
-    'approved': 'bg-green-100 text-green-800'
-  };
-  return colorMap[status] || 'bg-gray-100 text-gray-800';
-}
 
 // Internal finalize: called by admin/POC APIs once both approved; idempotent
 router.post('/internal/bprnd/claims/:claimId/finalize', async (req, res) => {

@@ -39,6 +39,20 @@ const courseHistorySchema = new mongoose.Schema(
       required: true,
       min: [0, 'Count cannot be negative'],
       default: 0
+    },
+    certificateContributed: {
+      type: Boolean,
+      default: false
+    },
+    contributedToCertificate: {
+      certificateId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'BprndCertificate'
+      },
+      certificateNo: String,
+      qualification: String,
+      contributedAt: Date,
+      creditsContributed: Number
     }
   },
   {

@@ -115,3 +115,28 @@ MOUs found: 0
 📊 Found 0 claims in database
 📋 Admin can see 0 BPRND certification claims
 💡 Each claim includes detailed course breakdown for transparency
+Fetching courses with status: completed
+Fetching courses with status: upcoming
+Fetching courses with status: ongoing
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+🔍 Admin requesting pending credits for approval...
+📊 Found 1 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 1 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+Found courses: 0
+Sample course: undefined
