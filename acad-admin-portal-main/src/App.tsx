@@ -60,6 +60,7 @@ import POCBPRNDClaimsPage from './components/dashboard/POCBPRNDClaimsPage';
 import BPRNDStudentClaimsPage from './components/student/BPRNDStudentClaimsPage';
 import BPRNDCertificationRequestPage from './components/dashboard/BPRNDCertificationRequestPage';
 import BPRNDPendingCreditsPage from './components/dashboard/BPRNDPendingCreditsPage';
+import BPRNDPendingCreditRequestsPage from './components/student/BPRNDPendingCreditRequestsPage';
 
 const queryClient = new QueryClient();
 
@@ -244,6 +245,10 @@ const App = () => (
           <Route
             path="/student/bprnd/claims"
             element={<BPRNDStudentClaimsPage />}
+          />
+          <Route
+            path="/student/bprnd/pending-credits"
+            element={<BPRNDPendingCreditRequestsPage />}
           />
           <Route
             path="/student/bprnd/training-calendar"
