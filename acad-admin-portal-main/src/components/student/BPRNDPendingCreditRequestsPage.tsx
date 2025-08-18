@@ -17,14 +17,13 @@ import { toast } from 'sonner';
 interface PendingCreditRequest {
   _id: string;
   studentId: string;
-  name?: string; // Course name from API
-  courseName?: string; // Alternative field name
+  name?: string; // Student name from API (not displayed)
   organization: string;
   totalHours?: number; // Hours from API
   hours?: number; // Alternative field name
   credits?: number;
   completionDate?: string;
-  discipline?: string; // Umbrella/discipline from API
+  discipline?: string; // Training area/course from API
   umbrellaKey?: string; // Alternative field name
   status: string;
   statusLabel: string;
@@ -190,7 +189,7 @@ const BPRNDPendingCreditRequestsPage: React.FC = () => {
                       <div className="flex items-center space-x-2">
                         <Award className="w-4 h-4 text-blue-600" />
                         <span className="font-semibold text-[#1e3a8a]">
-                          {request.name || request.courseName || 'Course Name'}
+                          {request.discipline ? request.discipline.replace(/_/g, ' ') : 'Training Area'}
                         </span>
                       </div>
                       
@@ -210,11 +209,11 @@ const BPRNDPendingCreditRequestsPage: React.FC = () => {
                         </div>
                       </div>
                       
-                      {request.discipline && (
+                      {request.organization && (
                         <div className="flex items-center space-x-2">
                           <Calendar className="w-4 h-4 text-gray-600" />
                           <span className="text-sm text-gray-700">
-                            Discipline: {request.discipline.replace(/_/g, ' ')}
+                            Organization: {request.organization}
                           </span>
                         </div>
                       )}
