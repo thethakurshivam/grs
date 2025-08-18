@@ -17,11 +17,15 @@ import { toast } from 'sonner';
 interface PendingCreditRequest {
   _id: string;
   studentId: string;
-  courseName: string;
+  name?: string; // Course name from API
+  courseName?: string; // Alternative field name
   organization: string;
-  hours: number;
-  credits: number;
-  completionDate: string;
+  totalHours?: number; // Hours from API
+  hours?: number; // Alternative field name
+  credits?: number;
+  completionDate?: string;
+  discipline?: string; // Umbrella/discipline from API
+  umbrellaKey?: string; // Alternative field name
   status: string;
   statusLabel: string;
   statusColor: string;
@@ -34,6 +38,7 @@ interface PendingCreditRequest {
   declined_at?: string;
   declined_reason?: string;
   supportingDocument?: string;
+  pdf?: string; // PDF path from API
   createdAt: string;
   updatedAt: string;
 }
@@ -184,7 +189,9 @@ const BPRNDPendingCreditRequestsPage: React.FC = () => {
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2">
                         <Award className="w-4 h-4 text-blue-600" />
-                        <span className="font-semibold text-[#1e3a8a]">{request.courseName || 'Course Name'}</span>
+                        <span className="font-semibold text-[#1e3a8a]">
+                          {request.name || request.courseName || 'Course Name'}
+                        </span>
                       </div>
                       
                       <div className="flex items-center space-x-2">
@@ -195,7 +202,7 @@ const BPRNDPendingCreditRequestsPage: React.FC = () => {
                       <div className="flex items-center space-x-4 text-sm">
                         <div className="flex items-center space-x-1">
                           <Clock className="w-4 h-4 text-gray-600" />
-                          <span>{request.hours || 0} hours</span>
+                          <span>{request.totalHours || request.hours || 0} hours</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Award className="w-4 h-4 text-green-600" />
@@ -203,11 +210,11 @@ const BPRNDPendingCreditRequestsPage: React.FC = () => {
                         </div>
                       </div>
                       
-                      {request.completionDate && (
+                      {request.discipline && (
                         <div className="flex items-center space-x-2">
                           <Calendar className="w-4 h-4 text-gray-600" />
                           <span className="text-sm text-gray-700">
-                            Completed: {formatDate(request.completionDate)}
+                            Discipline: {request.discipline.replace(/_/g, ' ')}
                           </span>
                         </div>
                       )}
@@ -253,12 +260,12 @@ const BPRNDPendingCreditRequestsPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  {request.supportingDocument && (
+                  {(request.supportingDocument || request.pdf) && (
                     <div className="mt-3 pt-3 border-t border-blue-200">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => viewDocument(request.supportingDocument!)}
+                        onClick={() => viewDocument(request.pdf || request.supportingDocument!)}
                         className="flex items-center space-x-2 text-xs"
                       >
                         <FileText className="w-3 h-3" />
