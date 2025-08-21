@@ -170,7 +170,7 @@ const AddCourseForm = () => {
 
       // API call to backend add course endpoint
       console.log('Making API request to create course');
-      const response = await fetch('http://localhost:3000/api/courses', {
+              const response = await fetch('http://localhost:3002/api/courses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

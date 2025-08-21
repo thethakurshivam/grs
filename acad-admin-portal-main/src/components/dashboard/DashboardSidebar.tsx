@@ -13,6 +13,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { 
   FileText, 
   Upload, 
@@ -25,6 +26,7 @@ import {
   Send
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import useAdminRequestCounts from "@/hooks/useAdminRequestCounts";
 
 const sidebarItems = [
   {
@@ -61,6 +63,12 @@ export function DashboardSidebar() {
   const { toast } = useToast();
   const userName = localStorage.getItem("userName") || "Admin";
   const collapsed = state === "collapsed";
+  
+  // Fetch request counts for badges
+  const { data: requestCounts, isLoading: countsLoading } = useAdminRequestCounts();
+  
+  // Debug logging
+  console.log('🔍 DashboardSidebar: Hook data:', { requestCounts, countsLoading });
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
@@ -84,8 +92,8 @@ export function DashboardSidebar() {
           </div>
           {!collapsed && (
             <div>
-              <h2 className="font-semibold">University Admin</h2>
-              <p className="text-sm opacity-80">Management Panel</p>
+              <h2 className="font-semibold text-black">University Admin</h2>
+              <p className="text-sm text-black">Management Panel</p>
             </div>
           )}
         </div>
@@ -144,13 +152,32 @@ export function DashboardSidebar() {
                 <SidebarMenuButton asChild>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start hover:bg-accent"
+                    className="w-full justify-start hover:bg-accent relative"
                     onClick={() =>
                       navigate('/dashboard/bprnd-certification-request')
                     }
                   >
                     <Send className="h-4 w-4" />
-                    {!collapsed && <span className="ml-2">BPR&D Certification Request</span>}
+                    {!collapsed && (
+                      <span className="ml-2 flex items-center gap-2">
+                        BPR&D Certification Request
+                        {!countsLoading && requestCounts?.pendingCertificationCount > 0 && (
+                          <Badge variant="notification" className="ml-auto">
+                            {requestCounts.pendingCertificationCount}
+                          </Badge>
+                        )}
+
+                      </span>
+                    )}
+                    {/* Show badge even when collapsed */}
+                    {!countsLoading && requestCounts?.pendingCertificationCount > 0 && (
+                      <Badge 
+                        variant="notification" 
+                        className={`absolute -top-1 -right-1 min-w-[20px] h-5 text-xs ${collapsed ? 'block' : 'hidden'}`}
+                      >
+                        {requestCounts.pendingCertificationCount}
+                      </Badge>
+                    )}
                   </Button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -160,13 +187,32 @@ export function DashboardSidebar() {
                 <SidebarMenuButton asChild>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start hover:bg-accent"
+                    className="w-full justify-start hover:bg-accent relative"
                     onClick={() =>
                       navigate('/dashboard/bprnd-pending-credits')
                     }
                   >
                     <FileText className="h-4 w-4" />
-                    {!collapsed && <span className="ml-2">BPR&D Pending Credits</span>}
+                    {!collapsed && (
+                      <span className="ml-2 flex items-center gap-2">
+                        BPR&D Pending Credits
+                        {!countsLoading && requestCounts?.pendingCreditsCount > 0 && (
+                          <Badge variant="notification" className="ml-auto">
+                            {requestCounts.pendingCreditsCount}
+                          </Badge>
+                        )}
+
+                      </span>
+                    )}
+                    {/* Show badge even when collapsed */}
+                    {!countsLoading && requestCounts?.pendingCreditsCount > 0 && (
+                      <Badge 
+                        variant="notification" 
+                        className={`absolute -top-1 -right-1 min-w-[20px] h-5 text-xs ${collapsed ? 'block' : 'hidden'}`}
+                      >
+                        {requestCounts.pendingCreditsCount}
+                      </Badge>
+                    )}
                   </Button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -179,8 +225,8 @@ export function DashboardSidebar() {
         <div className="p-4">
           {!collapsed && (
             <div className="mb-3">
-              <p className="text-sm font-medium">Welcome back,</p>
-              <p className="text-sm text-muted-foreground">{userName}</p>
+              <p className="text-sm font-medium text-black">Welcome back,</p>
+              <p className="text-sm text-black">{userName}</p>
             </div>
           )}
           <Button

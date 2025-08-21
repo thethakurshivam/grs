@@ -1,10 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Award, Calendar, Hash, Shield } from 'lucide-react';
+import { Award, Calendar, Hash, Shield, Download } from 'lucide-react';
 import { useBPRNDStudentCertificates } from '../../hooks/useBPRNDStudentCertificates';
+import { useToast } from '@/hooks/use-toast';
 
 export const BPRNDCertificatesPage: React.FC = () => {
   const { certificates, loading, error, fetchCertificates, clearError } = useBPRNDStudentCertificates();
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Use the same logic as the dashboard to get student ID
@@ -79,6 +82,54 @@ export const BPRNDCertificatesPage: React.FC = () => {
     return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
+  const handleDownloadCertificate = async (certificateId: string) => {
+    setDownloadingId(certificateId);
+    try {
+      const response = await fetch(`http://localhost:3004/student/certificate/${certificateId}/pdf`, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        // Create a blob from the PDF data
+        const blob = await response.blob();
+        
+        // Create a download link
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `bprnd-certificate-${certificateId}.pdf`;
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        // Show success notification
+        toast({
+          title: "Download Started",
+          description: "Certificate PDF is being downloaded to your device.",
+          duration: 3000,
+        });
+      } else {
+        console.error('Failed to download certificate:', response.statusText);
+        toast({
+          title: "Download Failed",
+          description: "Failed to download certificate. Please try again.",
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+              alert("Error downloading certificate. Please try again.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -126,9 +177,28 @@ export const BPRNDCertificatesPage: React.FC = () => {
                     <p className="font-medium text-gray-900 text-sm">{formatDate(certificate.issuedAt)}</p>
                   </div>
                   <div className="pt-2 border-t border-gray-100">
-                    <div className="flex items-center gap-2 text-xs text-[#0b2e63]">
-                      <Hash className="w-3 h-3" />
-                      <span className="font-medium">ID: {certificate._id.slice(-8)}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs text-[#0b2e63]">
+                        <Hash className="w-3 h-3" />
+                        <span className="font-medium">ID: {certificate._id.slice(-8)}</span>
+                      </div>
+                      <button
+                        onClick={() => handleDownloadCertificate(certificate._id)}
+                        disabled={downloadingId === certificate._id}
+                        className="px-3 py-1 bg-[#0b2e63] text-white text-xs rounded-md hover:bg-[#0b2e63]/90 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {downloadingId === certificate._id ? (
+                          <>
+                            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Downloading...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-3 h-3" />
+                            Download
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>

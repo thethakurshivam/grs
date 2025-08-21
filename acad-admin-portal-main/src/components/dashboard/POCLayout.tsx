@@ -11,6 +11,8 @@ import {
   Home,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import usePOCRequestCounts from '@/hooks/usePOCRequestCounts';
 
 interface POCLayoutProps {
   type?: 'standard' | 'bprnd';
@@ -19,6 +21,9 @@ interface POCLayoutProps {
 const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Fetch request counts for badges (only for BPRND POC)
+  const { data: requestCounts, isLoading: countsLoading } = usePOCRequestCounts();
 
   const basePath = type === 'bprnd' ? '/poc-portal/bprnd' : '/poc-portal';
 
@@ -123,7 +128,7 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
             <button
               key={index}
               onClick={() => navigate(item.path)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors relative ${
                 isActive(item.path)
                   ? type === 'bprnd'
                     ? 'bg-blue-600 text-white border border-blue-500'
@@ -144,7 +149,37 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
                     : item.color
                 }`}
               />
-              <span className="font-medium">{item.title}</span>
+              <span className="font-medium flex items-center gap-2">
+                {item.title}
+                {/* Show badge for Requests button when there are pending requests */}
+                {type === 'bprnd' && item.title === 'Requests' && !countsLoading && (
+                  <>
+                    {requestCounts?.pendingCreditsCount > 0 && (
+                      <Badge variant="notification" className="ml-auto text-xs">
+                        {requestCounts.pendingCreditsCount}
+                      </Badge>
+                    )}
+                    {requestCounts?.pendingCertificationCount > 0 && (
+                      <Badge variant="notification" className="ml-auto text-xs">
+                        {requestCounts.pendingCertificationCount}
+                      </Badge>
+                    )}
+                  </>
+                )}
+              </span>
+              {/* Show total count badge in top-right corner for collapsed view */}
+              {type === 'bprnd' && item.title === 'Requests' && !countsLoading && (
+                <>
+                  {(requestCounts?.pendingCreditsCount > 0 || requestCounts?.pendingCertificationCount > 0) && (
+                    <Badge 
+                      variant="notification" 
+                      className="absolute -top-1 -right-1 min-w-[20px] h-5 text-xs"
+                    >
+                      {(requestCounts?.pendingCreditsCount || 0) + (requestCounts?.pendingCertificationCount || 0)}
+                    </Badge>
+                  )}
+                </>
+              )}
             </button>
           ))}
         </nav>

@@ -25,7 +25,7 @@ export const useMOUOrganizations = (): UseMOUOrganizationsReturn => {
         return;
       }
 
-      const response = await fetch('http://localhost:3000/api/mous/organizations', {
+      const response = await fetch('http://localhost:3002/api/mous/organizations', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

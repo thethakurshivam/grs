@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { User, Briefcase, GraduationCap, Phone, List } from 'lucide-react';
+import { User, Briefcase, GraduationCap, Phone } from 'lucide-react';
 import { useBPRNDStudentProfile } from '../../hooks/useBPRNDStudentProfile';
 
 export const BPRNDProfileAPIPage: React.FC = () => {
@@ -135,7 +135,7 @@ export const BPRNDProfileAPIPage: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-4xl font-extrabold text-[#0b2e63]">BPR&D Student Profile</h1>
-        <p className="text-lg text-black mt-2">Your complete profile information and credit breakdown</p>
+        <p className="text-lg text-black mt-2">Your complete profile information</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -231,31 +231,7 @@ export const BPRNDProfileAPIPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Credit Breakdown */}
-        <Card className="border border-[#0b2e63]/20 bg-white hover:shadow-lg transition-shadow rounded-xl lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[#0b2e63] text-base font-semibold">
-              <List className="w-4 h-4 text-[#0b2e63]" />
-              Credit Breakdown by Umbrella
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {Object.entries(student).map(([key, value]) => {
-                // Only show umbrella credit fields
-                if (key.includes('_') && key !== 'Total_Credits' && key !== 'createdAt' && key !== 'updatedAt' && key !== '_id') {
-                  return (
-                    <div key={key} className="p-3 rounded-lg border border-[#0b2e63]/20 bg-[#0b2e63]/5 hover:bg-[#0b2e63]/10 transition-colors">
-                      <p className="text-xs font-medium text-[#0b2e63] uppercase tracking-wide">{key.replace(/_/g, ' ')}</p>
-                      <p className="mt-1 text-lg font-semibold text-black">{value || 0} Credits</p>
-                    </div>
-                  );
-                }
-                return null;
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Credit Breakdown by umbrella intentionally removed per requirements */}
       </div>
     </div>
   );

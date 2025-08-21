@@ -416,21 +416,79 @@ router.get('/student/:id/course-history/:umbrella', async (req, res) => {
 
     // Find all course history records for this student and discipline
     // Note: discipline in coursehistories matches umbrella name from database
-    // Exclude courses that have already contributed to certificates
+    // Filter out courses that have contributed to certificates
     const courseHistory = await CourseHistory.find({
       studentId: new mongoose.Types.ObjectId(id),
       discipline: { $regex: new RegExp(umbrella, 'i') }, // Case-insensitive match
-      certificateContributed: { $ne: true } // Exclude courses that have contributed to certificates
+      certificateContributed: { $ne: true } // Only show courses not contributed to certificates
     })
     .sort({ createdAt: -1 }) // Sort by newest first
     .lean();
 
     console.log(`📊 Found ${courseHistory.length} course history records for ${umbrella}`);
 
-    // Calculate summary statistics
-    const totalCredits = courseHistory.reduce((sum, course) => sum + (course.creditsEarned || 0), 0);
-    const totalHours = courseHistory.reduce((sum, course) => sum + (course.totalHours || 0), 0);
-    const totalDays = courseHistory.reduce((sum, course) => sum + (course.noOfDays || 0), 0);
+    // Get the student's current stored credits for this umbrella
+    const student = await CreditCalculation.findById(id).lean();
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found',
+      });
+    }
+
+    // Convert umbrella name to field key format (e.g., "Police Administration" -> "Police_Administration")
+    const umbrellaFieldKey = umbrella.replace(/\s+/g, '_');
+    const currentStoredCredits = Number(student[umbrellaFieldKey] || 0);
+
+    console.log(`💰 Current stored credits for ${umbrella}: ${currentStoredCredits}`);
+
+    // Calculate remaining credits for each course based on current stored credits
+    let remainingCreditsToDistribute = currentStoredCredits;
+    const coursesWithRemainingCredits = [];
+
+    for (const course of courseHistory) {
+      const courseTotalCredits = (course.theoryCredits || 0) + (course.practicalCredits || 0);
+      
+      if (remainingCreditsToDistribute > 0) {
+        // Calculate how many credits from this course are still available
+        const creditsFromThisCourse = Math.min(courseTotalCredits, remainingCreditsToDistribute);
+        remainingCreditsToDistribute -= creditsFromThisCourse;
+        
+        coursesWithRemainingCredits.push({
+          ...course,
+          originalTheoryCredits: course.theoryCredits || 0,
+          originalPracticalCredits: course.practicalCredits || 0,
+          originalTotalCredits: courseTotalCredits,
+          remainingTheoryCredits: Math.min(course.theoryCredits || 0, creditsFromThisCourse),
+          remainingPracticalCredits: Math.min(course.practicalCredits || 0, creditsFromThisCourse),
+          remainingTotalCredits: creditsFromThisCourse,
+          creditsUsed: courseTotalCredits - creditsFromThisCourse,
+          isFullyAvailable: creditsFromThisCourse === courseTotalCredits
+        });
+      } else {
+        // No more credits available, course is fully used
+        coursesWithRemainingCredits.push({
+          ...course,
+          originalTheoryCredits: course.theoryCredits || 0,
+          originalPracticalCredits: course.practicalCredits || 0,
+          originalTotalCredits: courseTotalCredits,
+          remainingTheoryCredits: 0,
+          remainingPracticalCredits: 0,
+          remainingTotalCredits: 0,
+          creditsUsed: courseTotalCredits,
+          isFullyAvailable: false
+        });
+      }
+    }
+
+    // Calculate summary statistics using REMAINING credits (not total earned)
+    const totalRemainingTheoryCredits = coursesWithRemainingCredits.reduce((sum, course) => sum + (course.remainingTheoryCredits || 0), 0);
+    const totalRemainingPracticalCredits = coursesWithRemainingCredits.reduce((sum, course) => sum + (course.remainingPracticalCredits || 0), 0);
+    const totalRemainingCredits = totalRemainingTheoryCredits + totalRemainingPracticalCredits;
+    const totalHours = coursesWithRemainingCredits.reduce((sum, course) => sum + (course.totalHours || 0), 0);
+    const totalDays = coursesWithRemainingCredits.reduce((sum, course) => sum + (course.noOfDays || 0), 0);
+
+    console.log(`📊 Summary for ${umbrella}: ${totalRemainingCredits} remaining credits (${totalRemainingTheoryCredits} theory + ${totalRemainingPracticalCredits} practical)`);
 
     return res.status(200).json({
       success: true,
@@ -438,12 +496,16 @@ router.get('/student/:id/course-history/:umbrella', async (req, res) => {
       data: {
         umbrella: umbrella,
         studentId: id,
-        courses: courseHistory,
+        courses: coursesWithRemainingCredits,
         summary: {
-          totalCourses: courseHistory.length,
-          totalCredits,
+          totalCourses: coursesWithRemainingCredits.length,
+          totalCredits: totalRemainingCredits, // This now matches the credit bank card!
+          totalTheoryCredits: totalRemainingTheoryCredits,
+          totalPracticalCredits: totalRemainingPracticalCredits,
           totalHours,
-          totalDays
+          totalDays,
+          currentStoredCredits, // Include for reference
+          note: `Course history shows remaining credits (${totalRemainingCredits}) that can still contribute to future certifications. This matches your credit bank card.`
         }
       }
     });
@@ -467,21 +529,22 @@ router.get('/student/:id/course-history/:umbrella', async (req, res) => {
 router.post('/pending-credits', upload.single('pdf'), async (req, res) => {
   try {
     const { name, organization, discipline, studentId } = req.body;
-    const totalHours = Number(req.body?.totalHours);
+    const theoryHours = Number(req.body?.theoryHours);
+    const practicalHours = Number(req.body?.practicalHours);
     const noOfDays = Number(req.body?.noOfDays);
 
     // Validate required fields
-    if (!studentId || !name || !organization || !discipline || Number.isNaN(totalHours) || Number.isNaN(noOfDays) || !req.file) {
+    if (!studentId || !name || !organization || !discipline || Number.isNaN(theoryHours) || Number.isNaN(practicalHours) || Number.isNaN(noOfDays) || !req.file) {
       return res.status(400).json({
         success: false,
-        message: 'studentId, name, organization, discipline, totalHours, noOfDays, and PDF file are required'
+        message: 'studentId, name, organization, discipline, theoryHours, practicalHours, noOfDays, and PDF file are required'
       });
     }
 
-    if (totalHours < 0 || noOfDays < 0) {
+    if (theoryHours < 0 || practicalHours < 0 || noOfDays < 0) {
       return res.status(400).json({
         success: false,
-        message: 'totalHours and noOfDays must be non-negative numbers'
+        message: 'theoryHours, practicalHours, and noOfDays must be non-negative numbers'
       });
     }
 
@@ -491,11 +554,12 @@ router.post('/pending-credits', upload.single('pdf'), async (req, res) => {
       name: String(name),
       organization: String(organization),
       discipline: String(discipline),
-      totalHours,
+      theoryHours,
+      practicalHours,
       noOfDays,
       pdf: req.file.path, // Store the file path
       admin_approved: false, // Explicitly set default value
-       bprnd_poc_approved: false // Explicitly set default value
+      bprnd_poc_approved: false // Explicitly set default value
     });
 
     // Save to database
@@ -516,8 +580,71 @@ router.post('/pending-credits', upload.single('pdf'), async (req, res) => {
   }
 });
 
+// Get pending credits for a specific student
+app.get('/api/bprnd/pending-credits/student/:studentId', async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    
+    // Validate student ID format
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid student ID format'
+      });
+    }
 
+    // Find pending credits for the specific student
+    const records = await PendingCredits.find({ 
+      studentId: studentId
+    }).sort({ createdAt: -1 }).lean();
+    
+    if (!records || records.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No pending credits found for this student',
+        data: []
+      });
+    }
 
+    const withUrls = records.map((rec) => {
+      const fileName = rec?.pdf ? path.basename(rec.pdf) : '';
+      const pdfUrl = fileName
+        ? `${req.protocol}://${req.get('host')}/files/${fileName}`
+        : null;
+      
+      return {
+        id: rec._id,
+        studentId: rec.studentId,
+        name: rec.name,
+        organization: rec.organization,
+        discipline: rec.discipline,
+        theoryHours: rec.theoryHours,
+        practicalHours: rec.practicalHours,
+        totalHours: rec.totalHours,
+        calculatedCredits: rec.calculatedCredits,
+        noOfDays: rec.noOfDays,
+        pdf: pdfUrl,
+        status: rec.status || 'pending',
+        admin_approved: rec.admin_approved,
+        bprnd_poc_approved: rec.bprnd_poc_approved,
+        createdAt: rec.createdAt,
+        updatedAt: rec.updatedAt
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Pending credits retrieved successfully',
+      data: withUrls,
+    });
+  } catch (error) {
+    console.error('Error retrieving pending credits for student:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+});
 
 // Mount router
 app.use('/', router);
@@ -620,6 +747,55 @@ router.get('/student/:id/certifications', async (req, res) => {
       }
     }
 
+    // Now calculate credits from course history for ALL umbrellas to ensure consistency
+    console.log('🔄 Calculating credits from course history for consistency...');
+    const calculatedCredits = {};
+
+    for (const umbrella of umbrellaFields) {
+      try {
+        // Get course history for this umbrella (only non-contributed courses)
+        const courseHistoryResponse = await fetch(
+          `http://localhost:3004/student/${id}/course-history/${encodeURIComponent(umbrella.name)}`,
+          {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+
+        if (courseHistoryResponse.ok) {
+          const courseHistoryData = await courseHistoryResponse.json();
+          if (courseHistoryData.success) {
+            // Calculate total credits from available courses (not contributed to certificates)
+            const totalCredits = courseHistoryData.data.summary.totalCredits || 0;
+            
+            // Convert umbrella name to field key format (e.g., "Cyber Security" -> "Cyber_Security")
+            const fieldKey = umbrella.name.replace(/\s+/g, '_');
+            // Round credits to whole numbers for better display
+            calculatedCredits[fieldKey] = Math.round(totalCredits);
+          } else {
+            // If no courses found, set to 0
+            const fieldKey = umbrella.name.replace(/\s+/g, '_');
+            calculatedCredits[fieldKey] = 0;
+          }
+        } else {
+          // If API call fails, set to 0
+          const fieldKey = umbrella.name.replace(/\s+/g, '_');
+          calculatedCredits[fieldKey] = 0;
+        }
+      } catch (umbrellaError) {
+        // If individual umbrella fails, set to 0 and continue
+        const fieldKey = umbrella.name.replace(/\s+/g, '_');
+        calculatedCredits[fieldKey] = 0;
+        console.warn(`Failed to fetch course history for ${umbrella.name}:`, umbrellaError);
+      }
+    }
+
+    console.log('📊 Calculated credits from course history:', calculatedCredits);
+    
+    // For certification eligibility, use STORED credits (what's available to spend)
+    // Course history is for display purposes only
+    console.log('📊 Using stored credits for certification eligibility:', creditsByField);
+    
     const results = [];
     for (const key of UMBRELLA_FIELDS) {
       const credits = Number(creditsByField[key] || 0);
@@ -809,12 +985,119 @@ router.post('/student/:id/certifications/request', async (req, res) => {
     }
 
     // Query coursehistories to get contributing courses for this certification
-    // Exclude courses that have already contributed to certificates
+    // Filter out courses that have already contributed to certificates
+    // Convert umbrellaKey back to proper format for course history query
+    // e.g., "Police_Administration" -> "Police Administration"
+    const disciplineForQuery = key.replace(/_/g, ' ');
+    
+    console.log(`🔍 Querying course history for discipline: "${disciplineForQuery}" (converted from umbrellaKey: "${key}")`);
+    
     const courseHistory = await CourseHistory.find({
       studentId: new mongoose.Types.ObjectId(id),
-      discipline: key,
-      certificateContributed: { $ne: true } // Exclude courses that have contributed to certificates
+      discipline: disciplineForQuery,
+      certificateContributed: { $ne: true } // Only consider courses not already contributed
     }).sort({ createdAt: 1 }).lean(); // Sort by oldest first for FIFO
+    
+    console.log(`📊 Found ${courseHistory.length} course history records for discipline: "${disciplineForQuery}"`);
+
+    // TEST: Simple log to verify execution
+    console.log(`🚨 TEST: PDF lookup section is being executed!`);
+    
+    // Fetch PDF information from pending credits for these courses
+    console.log(`🔍 Starting PDF lookup for discipline: "${disciplineForQuery}"`);
+    
+    let pendingCreditsWithPDFs = [];
+    try {
+      const courseIds = courseHistory.map(course => course._id);
+      pendingCreditsWithPDFs = await PendingCredits.find({
+        studentId: new mongoose.Types.ObjectId(id),
+        discipline: disciplineForQuery
+      }).lean();
+      
+      console.log(`📄 PDF lookup step 1: Found ${pendingCreditsWithPDFs.length} pending credits`);
+    } catch (error) {
+      console.error(`❌ Error in PDF lookup step 1:`, error);
+      pendingCreditsWithPDFs = []; // Fallback to empty array
+    }
+    
+    // Create a map of course name + organization to PDF info for easier lookup
+    let pdfMap = new Map();
+    try {
+      pendingCreditsWithPDFs.forEach(pending => {
+        const key = `${pending.name}|${pending.organization}`;
+        pdfMap.set(key, {
+          pdfPath: pending.pdf,
+          pdfFileName: pending.pdf ? pending.pdf.split('/').pop() : null
+        });
+      });
+      
+      console.log(`📄 PDF lookup step 2: Created PDF map with ${pdfMap.size} entries`);
+    } catch (error) {
+      console.error(`❌ Error in PDF lookup step 2:`, error);
+      pdfMap = new Map(); // Fallback to empty map
+    }
+    
+    console.log(`📄 Found ${pendingCreditsWithPDFs.length} pending credits with PDFs for discipline: "${disciplineForQuery}"`);
+    
+    // Also check if any courses in courseHistory have PDF information directly
+    try {
+      courseHistory.forEach(course => {
+        if (course.pdfPath || course.pdf) {
+          const key = `${course.name}|${course.organization}`;
+          if (!pdfMap.has(key)) {
+            pdfMap.set(key, {
+              pdfPath: course.pdfPath || course.pdf,
+              pdfFileName: (course.pdfPath || course.pdf) ? (course.pdfPath || course.pdf).split('/').pop() : null
+            });
+          }
+        }
+      });
+      
+      console.log(`📄 PDF lookup step 3: Added course history PDFs to map`);
+    } catch (error) {
+      console.error(`❌ Error in PDF lookup step 3:`, error);
+    }
+    
+    // Prioritize PDF information from course history over pending credits
+    // (since we're now storing PDFs in course history)
+    try {
+      courseHistory.forEach(course => {
+        const key = `${course.name}|${course.organization}`;
+        if (course.pdfPath || course.pdf) {
+          pdfMap.set(key, {
+            pdfPath: course.pdfPath || course.pdf,
+            pdfFileName: (course.pdfPath || course.pdf) ? (course.pdfPath || course.pdf).split('/').pop() : null
+          });
+        }
+      });
+      
+      console.log(`📄 PDF lookup step 4: Prioritized course history PDFs`);
+    } catch (error) {
+      console.error(`❌ Error in PDF lookup step 4:`, error);
+    }
+    
+    try {
+      console.log(`📄 Total PDF mappings available: ${pdfMap.size}`);
+      console.log(`📄 PDF mappings:`, Array.from(pdfMap.entries()).map(([key, value]) => ({
+        courseKey: key,
+        pdfPath: value.pdfPath,
+        fileName: value.pdfFileName
+      })));
+      
+      // Debug: Check what's in courseHistory
+      console.log(`🔍 Course History PDF Check for discipline: "${disciplineForQuery}":`);
+      courseHistory.forEach((course, index) => {
+        console.log(`  Course ${index + 1}: "${course.name}" by "${course.organization}"`);
+        console.log(`    - Has pdfPath: ${!!course.pdfPath}`);
+        console.log(`    - Has pdf field: ${!!course.pdf}`);
+        console.log(`    - pdfPath value: ${course.pdfPath || 'null'}`);
+        console.log(`    - pdf value: ${course.pdf || 'null'}`);
+      });
+      
+      console.log(`📄 PDF lookup step 5: Final logging completed`);
+    } catch (error) {
+      console.error(`❌ Error in PDF lookup step 5:`, error);
+    }
 
     // Calculate which courses contribute to this certification
     const contributingCourses = [];
@@ -823,30 +1106,117 @@ router.post('/student/:id/certifications/request', async (req, res) => {
     for (const course of courseHistory) {
       if (accumulatedCredits >= requiredCredits) break;
       
-      const courseCredits = course.creditsEarned || 0;
+      // Calculate course credits from theory + practical (new logic)
+      const courseCredits = (course.theoryCredits || 0) + (course.practicalCredits || 0);
       if (accumulatedCredits + courseCredits <= requiredCredits) {
         // This course fully contributes to the certification
+        // Look up PDF information
+        const pdfKey = `${course.name}|${course.organization}`;
+        const pdfInfo = pdfMap.get(pdfKey) || { pdfPath: null, pdfFileName: null };
+        
+        console.log(`🔍 Course "${course.name}" PDF lookup:`, {
+          courseKey: pdfKey,
+          pdfFound: !!pdfInfo.pdfPath,
+          pdfPath: pdfInfo.pdfPath,
+          fileName: pdfInfo.pdfFileName,
+          pdfMapSize: pdfMap.size,
+          pdfMapKeys: Array.from(pdfMap.keys())
+        });
+        
         contributingCourses.push({
-          courseName: course.name,
+          _id: course._id,
+          name: course.name,
           organization: course.organization,
-          hoursEarned: course.hoursEarned,
-          creditsEarned: course.creditsEarned,
+          discipline: course.discipline,
+          theoryHours: course.theoryHours || 0,
+          practicalHours: course.practicalHours || 0,
+          theoryCredits: course.theoryCredits || 0,
+          practicalCredits: course.practicalCredits || 0,
+          totalHours: course.totalHours,
+          creditsEarned: courseCredits, // Use calculated credits
+          noOfDays: course.noOfDays || 0,
           completionDate: course.completionDate ? new Date(course.completionDate) : new Date(),
-          courseId: course._id
+          courseId: course._id,
+          // Add PDF information from pending credits
+          pdfPath: pdfInfo.pdfPath ? `${req.protocol}://${req.get('host')}/files/${pdfInfo.pdfFileName}` : null,
+          pdfFileName: pdfInfo.pdfFileName
         });
         accumulatedCredits += courseCredits;
       } else {
         // This course partially contributes (if needed)
         const remainingCredits = requiredCredits - accumulatedCredits;
         if (remainingCredits > 0) {
-          contributingCourses.push({
-            courseName: course.name,
-            organization: course.organization,
-            hoursEarned: Math.ceil(remainingCredits * 15), // Convert back to hours
-            creditsEarned: remainingCredits,
-            completionDate: course.completionDate ? new Date(course.completionDate) : new Date(),
-            courseId: course._id
+          // For partial contribution, we need to calculate proportional credits
+          const totalCourseCredits = courseCredits;
+          const theoryRatio = totalCourseCredits > 0 ? (course.theoryCredits || 0) / totalCourseCredits : 0;
+          const practicalRatio = totalCourseCredits > 0 ? (course.practicalCredits || 0) / totalCourseCredits : 0;
+          
+          // Calculate the credits that will be contributed
+          const contributedTheoryCredits = remainingCredits * theoryRatio;
+          const contributedPracticalCredits = remainingCredits * practicalRatio;
+          
+          // Calculate the credits that will remain
+          const remainingTheoryCredits = (course.theoryCredits || 0) - contributedTheoryCredits;
+          const remainingPracticalCredits = (course.practicalCredits || 0) - contributedPracticalCredits;
+          
+          // Look up PDF information for this course
+          const pdfKey = `${course.name}|${course.organization}`;
+          const pdfInfo = pdfMap.get(pdfKey) || { pdfPath: null, pdfFileName: null };
+          
+          console.log(`🔍 Partial Course "${course.name}" PDF lookup:`, {
+            courseKey: pdfKey,
+            pdfFound: !!pdfInfo.pdfPath,
+            pdfPath: pdfInfo.pdfPath,
+            fileName: pdfInfo.pdfFileName
           });
+          
+          contributingCourses.push({
+            _id: course._id,
+            name: course.name,
+            organization: course.organization,
+            discipline: course.discipline,
+            theoryHours: Math.round((course.theoryHours || 0) * (remainingCredits / totalCourseCredits)),
+            practicalHours: Math.round((course.practicalHours || 0) * (remainingCredits / totalCourseCredits)),
+            theoryCredits: contributedTheoryCredits,
+            practicalCredits: contributedPracticalCredits,
+            totalHours: Math.ceil(remainingCredits * 15), // Convert back to hours
+            creditsEarned: remainingCredits,
+            noOfDays: course.noOfDays || 0,
+            completionDate: course.completionDate ? new Date(course.completionDate) : new Date(),
+            courseId: course._id,
+            // Add PDF information from pending credits
+            pdfPath: pdfInfo.pdfPath ? `${req.protocol}://${req.get('host')}/files/${pdfInfo.pdfFileName}` : null,
+            pdfFileName: pdfInfo.pdfFileName
+          });
+          
+          // Create a new course entry for the remaining credits
+          if (remainingTheoryCredits > 0 || remainingPracticalCredits > 0) {
+            const remainingCourse = new CourseHistory({
+              studentId: course.studentId,
+              name: `${course.name} (Remaining Credits)`,
+              organization: course.organization,
+              discipline: course.discipline,
+              theoryHours: Math.round((course.theoryHours || 0) * ((remainingTheoryCredits + remainingPracticalCredits) / totalCourseCredits)),
+              practicalHours: Math.round((course.practicalHours || 0) * ((remainingTheoryCredits + remainingPracticalCredits) / totalCourseCredits)),
+              theoryCredits: remainingTheoryCredits,
+              practicalCredits: remainingPracticalCredits,
+              creditsEarned: remainingTheoryCredits + remainingPracticalCredits,
+              totalHours: Math.ceil((remainingTheoryCredits + remainingPracticalCredits) * 15),
+              noOfDays: course.noOfDays || 0,
+              completionDate: course.completionDate ? new Date(course.completionDate) : new Date(),
+              certificateContributed: false, // Available for future certifications
+              originalCourseId: course._id, // Track which course this came from
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              // Add PDF information from the original course
+              pdfPath: course.pdfPath || course.pdf || null,
+              pdfFileName: (course.pdfPath || course.pdf) ? (course.pdfPath || course.pdf).split('/').pop() : null
+            });
+            
+            await remainingCourse.save();
+            console.log(`✅ Created remaining credits course: ${remainingCourse.name} with ${remainingTheoryCredits + remainingPracticalCredits} credits`);
+          }
+          
           accumulatedCredits = requiredCredits;
         }
         break;
@@ -854,6 +1224,21 @@ router.post('/student/:id/certifications/request', async (req, res) => {
     }
 
     console.log(`🔍 Certification request: ${accumulatedCredits}/${requiredCredits} credits from ${contributingCourses.length} courses`);
+    console.log(`📚 Contributing courses details:`, contributingCourses.map(c => ({
+      name: c.name,
+      discipline: c.discipline,
+      credits: c.creditsEarned
+    })));
+    
+    // Debug: Check PDF information in contributingCourses
+    console.log(`🔍 PDF Debug: Contributing courses with PDF info:`);
+    contributingCourses.forEach((course, index) => {
+      console.log(`  Course ${index + 1}: "${course.name}" by "${course.organization}"`);
+      console.log(`    - Has pdfPath: ${!!course.pdfPath}`);
+      console.log(`    - Has pdfFileName: ${!!course.pdfFileName}`);
+      console.log(`    - pdfPath value: ${course.pdfPath || 'null'}`);
+      console.log(`    - pdfFileName value: ${course.pdfFileName || 'null'}`);
+    });
 
     const claim = await BprndClaim.create({
       studentId: id,
@@ -862,6 +1247,15 @@ router.post('/student/:id/certifications/request', async (req, res) => {
       requiredCredits,
       status: 'pending',
       courses: contributingCourses // Include the contributing courses
+    });
+    
+    console.log(`✅ Certification claim created successfully:`, {
+      claimId: claim._id,
+      studentId: claim.studentId,
+      umbrellaKey: claim.umbrellaKey,
+      qualification: claim.qualification,
+      coursesCount: claim.courses.length,
+      totalCredits: claim.courses.reduce((sum, c) => sum + c.creditsEarned, 0)
     });
 
     return res.status(201).json({ success: true, message: 'Certification request submitted', data: claim });
@@ -1096,6 +1490,118 @@ app.get('/student/:id/certificates', async (req, res) => {
       success: false,
       message: 'Internal server error'
     });
+  }
+});
+
+// Generate PDF certificate for download
+router.get('/student/certificate/:id/pdf', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid certificate id' });
+    }
+
+    // Fetch certificate by id
+    const cert = await BprndCertificate.findById(id)
+      .populate('studentId', 'Name email EmployeeId Designation State Department') // Populate student details from credit_calculations
+      .populate('claimId', 'umbrellaKey qualification requiredCredits') // Populate claim details
+      .lean();
+
+    if (!cert) {
+      return res.status(404).json({ error: 'Certificate not found' });
+    }
+
+    // Prepare response headers for file download
+    const fileName = `bprnd-certificate-${cert.umbrellaKey}-${cert.certificateNo || cert._id}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+    // Create PDF and pipe to response
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    doc.pipe(res);
+
+    // --- Certificate layout ---
+    // Header
+    doc.fontSize(22).text('BPR&D Certificate', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(12).text('Issued by Rashtriya Raksha University', { align: 'center' });
+    doc.moveDown(1.5);
+
+    // Divider
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+    doc.moveDown(1);
+
+    // Student Information
+    doc.fontSize(16).text('Student Information', { underline: true });
+    doc.moveDown(0.5);
+    
+    const student = cert.studentId;
+    if (student) {
+      doc.fontSize(12)
+        .text(`Name: ${student.Name || 'N/A'}`)
+        .text(`Employee ID: ${student.EmployeeId || 'N/A'}`)
+        .text(`Designation: ${student.Designation || 'N/A'}`)
+        .text(`State: ${student.State || 'N/A'}`)
+        .text(`Department: ${student.Department || 'N/A'}`);
+    }
+    doc.moveDown(1);
+
+    // Certificate Details
+    doc.fontSize(16).text('Certificate Details', { underline: true });
+    doc.moveDown(0.5);
+
+    doc.fontSize(12)
+      .text(`Certificate ID: ${cert._id}`)
+      .text(`Umbrella: ${cert.umbrellaKey.replace(/_/g, ' ')}`)
+      .text(`Qualification: ${cert.qualification}`)
+      .text(`Certificate No: ${cert.certificateNo || 'N/A'}`)
+      .text(`Issued Date: ${new Date(cert.issuedAt).toLocaleDateString()}`);
+
+    doc.moveDown(1);
+
+    // Claim Information (if available)
+    if (cert.claimId) {
+      doc.fontSize(16).text('Training Information', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(12)
+        .text(`Required Credits: ${cert.claimId.requiredCredits || 'N/A'}`)
+        .text(`Discipline: ${cert.claimId.umbrellaKey || cert.umbrellaKey}`);
+      doc.moveDown(1);
+    }
+
+    // Signature area
+    doc.moveDown(2);
+    doc.text('______________________________', { align: 'right' });
+    doc.text('Authorized Signatory', { align: 'right' });
+    doc.moveDown(0.5);
+    doc.text('Rashtriya Raksha University', { align: 'right' });
+
+    // Footer
+    doc.moveDown(2);
+    doc.fontSize(10).text('This certificate is issued upon successful completion of the training program.', {
+      align: 'center',
+    });
+
+    // Finalize and end stream
+    doc.end();
+  } catch (err) {
+    console.error('PDF generation error:', err);
+    console.error('Error details:', {
+      message: err.message,
+      stack: err.stack,
+      certificateId: req.params.id
+    });
+    // If headers already sent (e.g., while streaming), we cannot send JSON
+    if (!res.headersSent) {
+      return res.status(500).json({ 
+        error: 'Failed to generate certificate PDF',
+        details: err.message 
+      });
+    }
+    // If streaming already began, just destroy the connection
+    res.end();
   }
 });
 

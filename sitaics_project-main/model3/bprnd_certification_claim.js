@@ -34,12 +34,22 @@ const BprndCertificationClaimSchema = new mongoose.Schema({
   finalized_at: { type: Date },
   
   courses: [{
-    courseName: { type: String, required: true },
-    organization: { type: String, required: true },
-    hoursEarned: { type: Number, required: true },
+    _id: { type: mongoose.Schema.Types.ObjectId },
+    name: { type: String, default: 'Course' }, // Made optional with default
+    organization: { type: String, default: 'Organization' }, // Made optional with default
+    discipline: { type: String, default: 'Discipline' }, // Made optional with default
+    theoryHours: { type: Number, default: 0 },
+    practicalHours: { type: Number, default: 0 },
+    theoryCredits: { type: Number, default: 0 },
+    practicalCredits: { type: Number, default: 0 },
+    totalHours: { type: Number, default: 0 }, // Made optional with default
     creditsEarned: { type: Number, required: true },
+    noOfDays: { type: Number, default: 0 },
     completionDate: { type: Date, required: true },
-    courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'course_history' } // Reference to original course
+    courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'course_history' }, // Reference to original course
+    // Add PDF information fields
+    pdfPath: { type: String, required: false },
+    pdfFileName: { type: String, required: false }
   }],
 }, { timestamps: true });
 

@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-// Dynamic interface that will be built based on actual umbrella fields
 export interface BprndCreditBreakdown {
   [key: string]: number;
 }
@@ -12,62 +11,66 @@ interface UseBPRNDCreditBreakdownResult {
   refetch: () => void;
 }
 
-export function useBPRNDCreditBreakdown(studentId: string | null | undefined): UseBPRNDCreditBreakdownResult {
+export function useBPRNDCreditBreakdown(studentId: string): UseBPRNDCreditBreakdownResult {
   const [data, setData] = useState<BprndCreditBreakdown | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canFetch = useMemo(() => Boolean(studentId && studentId.trim().length > 0), [studentId]);
-
-  const fetchBreakdown = useCallback(async () => {
-    if (!canFetch) {
-      setError('Missing student ID');
-      return;
-    }
-
+  const fetchCreditBreakdown = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     const controller = new AbortController();
     try {
-      const response = await fetch(`http://localhost:3004/student/${studentId}/credits/breakdown`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-      });
+      // Fetch stored credits from the credits/breakdown endpoint
+      console.log('🔍 Fetching stored credits from /credits/breakdown endpoint...');
+      const storedCreditsResponse = await fetch(
+        `http://localhost:3004/student/${studentId}/credits/breakdown`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+        }
+      );
 
-      const contentType = response.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        const text = await response.text();
-        throw new Error(
-          response.status === 404
-            ? 'Student not found'
-            : text?.slice(0, 120) || 'Unexpected non-JSON response'
-        );
+      if (storedCreditsResponse.ok) {
+        const storedCreditsData = await storedCreditsResponse.json();
+        if (storedCreditsData.success && storedCreditsData.data) {
+          console.log('✅ Found stored credits:', storedCreditsData.data);
+          
+          // Use only stored credits (available credits) for display
+          const creditBreakdown: BprndCreditBreakdown = {};
+          Object.keys(storedCreditsData.data).forEach(key => {
+            if (key !== 'Total_Credits' && key !== 'totalCredits') {
+              // Round credits to whole numbers for better display
+              creditBreakdown[key] = Math.round(Number(storedCreditsData.data[key] || 0));
+            }
+          });
+          
+          console.log('📊 Stored credits (available credits):', creditBreakdown);
+          setData(creditBreakdown);
+          return;
+        }
       }
-
-      const json = await response.json();
-      if (!response.ok || !json?.success) {
-        throw new Error(json?.message || 'Failed to fetch credits breakdown');
-      }
-
-      setData(json.data as BprndCreditBreakdown);
+      
+      console.log('⚠️ No stored credits found, setting to empty');
+      setData({});
+      
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Network error fetching credits breakdown';
+      const message = err instanceof Error ? err.message : 'Network error fetching credit breakdown';
       setError(message);
       setData(null);
     } finally {
       setIsLoading(false);
     }
-
     return () => controller.abort();
-  }, [studentId, canFetch]);
+  }, [studentId]);
 
   useEffect(() => {
-    fetchBreakdown();
-  }, [fetchBreakdown]);
+    fetchCreditBreakdown();
+  }, [fetchCreditBreakdown]);
 
-  return { data, isLoading, error, refetch: fetchBreakdown };
+  return { data, isLoading, error, refetch: fetchCreditBreakdown };
 }
 
 export default useBPRNDCreditBreakdown;

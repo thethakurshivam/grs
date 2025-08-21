@@ -1,16 +1,26 @@
 EMAIL_USER: trinayan.1303@gmail.com
 EMAIL_PASS: LOADED
 Current working directory: /Users/trinayanmahato/grs/sitaics_project-main
-Server is running on port 3000
-API endpoints available at http://localhost:3000/api
+Server is running on port 3002
+API endpoints available at http://localhost:3002/api
 Connected to MongoDB at mongodb://localhost:27017/sitaics
-Fetching courses with status: upcoming
-Fetching courses with status: ongoing
 Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
 Found courses: 0
 Sample course: undefined
 Found courses: 0
 Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Fetching courses with status: upcoming
 Found courses: 0
 Sample course: undefined
 MOUs found: 0
@@ -19,35 +29,26 @@ MOUs found: 0
 🔍 Query criteria: admin_approved: false
 📋 Admin can see 1 pending credits that need approval
 💡 These credits have been approved by POC and are now waiting for admin approval
-Fetching courses with status: completed
-Fetching courses with status: ongoing
-Fetching courses with status: upcoming
-MOUs found: 0
-Found courses: 0
-Sample course: undefined
-Found courses: 0
-Sample course: undefined
-Found courses: 0
-Sample course: undefined
-🔍 Admin requesting pending credits for approval...
-📊 Found 2 pending credits that need admin approval
-🔍 Query criteria: admin_approved: false
-📋 Admin can see 2 pending credits that need approval
-💡 These credits have been approved by POC and are now waiting for admin approval
-✅ Pending credit 68a3044b0851b7f59f0de3aa is now fully approved by both admin and BPRND POC
+✅ Pending credit 68a644a1b512f73fcbbbb0d8 is now fully approved by both admin and BPRND POC
+📊 Credit calculation: Theory 300h (10.00 credits) + Practical 150h (10.00 credits) = 20 total credits
+📊 Detailed breakdown: Theory 10.00 credits, Practical 10.00 credits
+🔍 Found student: Test Student (teststudent@example.com)
 🔍 Available umbrella fields: Cyber_Security, Military_Law, Forensics, Criminology, Police_Administration, Defence
-🔍 Normalized discipline: "defence"
-✅ Credits applied: 34 credits added to student 68a06e29b24bd983a3e92d55 in field: Defence
-🔍 Count calculation: Last count (0) + New credits (34) = New count (34)
-✅ Course history saved for student 68a06e29b24bd983a3e92d55: aman - 34 credits | Total count: 34
-✅ Pending credit record 68a3044b0851b7f59f0de3aa deleted after successful credit application
+🔍 Normalized discipline: "forensics"
+✅ Credits applied: 20 credits added to student Test Student in field: Forensics
+🔍 Count calculation: Last count (28) + New credits (20) = New count (48)
+✅ Course history saved for student 68a4edc7b2dcfedf6f1dcfac: aman
+   📊 Theory: 300h = 10.00 credits
+   📊 Practical: 150h = 10.00 credits
+   📊 Total: 20.00 credits | Cumulative count: 48
+✅ Pending credit record 68a644a1b512f73fcbbbb0d8 deleted after successful credit application
 🔍 Admin requesting pending credits for approval...
-📊 Found 1 pending credits that need admin approval
+📊 Found 0 pending credits that need admin approval
 🔍 Query criteria: admin_approved: false
-📋 Admin can see 1 pending credits that need approval
+📋 Admin can see 0 pending credits that need approval
 💡 These credits have been approved by POC and are now waiting for admin approval
-Fetching courses with status: completed
 Fetching courses with status: ongoing
+Fetching courses with status: completed
 Fetching courses with status: upcoming
 Found courses: 0
 Sample course: undefined
@@ -59,56 +60,186 @@ MOUs found: 0
 🚀 Admin route /api/bprnd/claims called
 📝 Query parameters: { status: undefined }
 🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
-📊 Found 0 claims in database
-📋 Admin can see 0 BPRND certification claims
+📊 Found 2 claims in database
+📋 Claim 1: {
+  id: new ObjectId("68a644e0b512f73fcbbbb0f6"),
+  umbrella: 'Forensics',
+  status: 'poc_approved',
+  hasCourses: true,
+  coursesCount: 1
+}
+📋 Claim 2: {
+  id: new ObjectId("68a63886012d686ec9633f0f"),
+  umbrella: 'Cyber_Security',
+  status: 'poc_approved',
+  hasCourses: true,
+  coursesCount: 2
+}
+🔍 Processing claim 68a644e0b512f73fcbbbb0f6: {
+  hasCourses: true,
+  coursesLength: 1,
+  coursesData: [
+    {
+      _id: new ObjectId("68a644cd23fd21d5ffb2c35f"),
+      name: 'aman',
+      organization: 'i4c',
+      discipline: 'Forensics',
+      theoryHours: 300,
+      practicalHours: 150,
+      theoryCredits: 10,
+      practicalCredits: 10,
+      totalHours: 450,
+      creditsEarned: 20,
+      noOfDays: 86,
+      completionDate: 2025-08-20T21:57:52.396Z,
+      courseId: new ObjectId("68a644cd23fd21d5ffb2c35f"),
+      pdfPath: 'http://localhost:3004/files/pdf-1755727009635-171812444.pdf',
+      pdfFileName: 'pdf-1755727009635-171812444.pdf'
+    }
+  ],
+  umbrellaKey: 'Forensics',
+  status: 'poc_approved'
+}
+🔍 Processing claim 68a63886012d686ec9633f0f: {
+  hasCourses: true,
+  coursesLength: 2,
+  coursesData: [
+    {
+      _id: new ObjectId("68a621c5d8945f0372ead21e"),
+      name: 'aman (Remaining Credits)',
+      organization: 'i4c',
+      discipline: 'Cyber Security',
+      theoryHours: 47,
+      practicalHours: 24,
+      theoryCredits: 1.58,
+      practicalCredits: 1.58,
+      totalHours: 48,
+      creditsEarned: 3.16,
+      noOfDays: 46,
+      completionDate: 2025-08-20T21:05:10.186Z,
+      courseId: new ObjectId("68a621c5d8945f0372ead21e")
+    },
+    {
+      _id: new ObjectId("68a6385720f01d7f5641772d"),
+      name: 'aman',
+      organization: 'nsg',
+      discipline: 'Cyber Security',
+      theoryHours: 257,
+      practicalHours: 124,
+      theoryCredits: 8.562711864406781,
+      practicalCredits: 8.27728813559322,
+      totalHours: 253,
+      creditsEarned: 16.84,
+      noOfDays: 47,
+      completionDate: 2025-08-20T21:05:10.187Z,
+      courseId: new ObjectId("68a6385720f01d7f5641772d")
+    }
+  ],
+  umbrellaKey: 'Cyber_Security',
+  status: 'poc_approved'
+}
+📋 Admin can see 2 BPRND certification claims
 💡 Each claim includes detailed course breakdown for transparency
-Fetching courses with status: completed
-Fetching courses with status: upcoming
-Fetching courses with status: ongoing
-Found courses: 0
-Sample course: undefined
-Found courses: 0
-Sample course: undefined
-Found courses: 0
-Sample course: undefined
-MOUs found: 0
-🔍 Admin requesting pending credits for approval...
-📊 Found 1 pending credits that need admin approval
-🔍 Query criteria: admin_approved: false
-📋 Admin can see 1 pending credits that need approval
-💡 These credits have been approved by POC and are now waiting for admin approval
+🔄 Admin processing claim 68a644e0b512f73fcbbbb0f6 for Forensics - certificate
+💰 Credit deduction completed:
+  Umbrella field: Forensics
+  Previous credits: 23
+  Required credits: 20
+  New credits: 3
+  Total credits: 9689.933333333332 → 9669.933333333332
+🔍 Admin approval: Querying course history for discipline: "Forensics" (converted from umbrellaKey: "Forensics")
+📊 Admin approval: Found 1 course history records for discipline: "Forensics"
+✅ Marked 1 contributing courses as certificateContributed: true
+📋 Marked course IDs: [ new ObjectId("68a644cd23fd21d5ffb2c35f") ]
+✅ Recalculated cumulative counts for student 68a4edc7b2dcfedf6f1dcfac in discipline Forensics
+🎉 Claim finalized: 20 credits deducted, certificate issued, 1 courses marked as contributed
+🗑️ Claim 68a644e0b512f73fcbbbb0f6 deleted from database after successful approval
 🚀 Admin route /api/bprnd/claims called
 📝 Query parameters: { status: undefined }
 🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
 📊 Found 1 claims in database
 📋 Claim 1: {
-  id: new ObjectId("68a304920851b7f59f0de3bf"),
-  umbrella: 'Defence',
+  id: new ObjectId("68a63886012d686ec9633f0f"),
+  umbrella: 'Cyber_Security',
   status: 'poc_approved',
   hasCourses: true,
-  coursesCount: 1
+  coursesCount: 2
 }
-🔍 Processing claim 68a304920851b7f59f0de3bf: {
+🔍 Processing claim 68a63886012d686ec9633f0f: {
   hasCourses: true,
-  coursesLength: 1,
+  coursesLength: 2,
   coursesData: [
     {
-      courseName: 'aman',
-      organization: 'bprnd',
-      hoursEarned: 450,
-      creditsEarned: 30,
-      completionDate: 2025-08-18T10:46:42.870Z,
-      courseId: new ObjectId("68a304800ef0d188ae048610"),
-      _id: new ObjectId("68a304920851b7f59f0de3c0")
+      _id: new ObjectId("68a621c5d8945f0372ead21e"),
+      name: 'aman (Remaining Credits)',
+      organization: 'i4c',
+      discipline: 'Cyber Security',
+      theoryHours: 47,
+      practicalHours: 24,
+      theoryCredits: 1.58,
+      practicalCredits: 1.58,
+      totalHours: 48,
+      creditsEarned: 3.16,
+      noOfDays: 46,
+      completionDate: 2025-08-20T21:05:10.186Z,
+      courseId: new ObjectId("68a621c5d8945f0372ead21e")
+    },
+    {
+      _id: new ObjectId("68a6385720f01d7f5641772d"),
+      name: 'aman',
+      organization: 'nsg',
+      discipline: 'Cyber Security',
+      theoryHours: 257,
+      practicalHours: 124,
+      theoryCredits: 8.562711864406781,
+      practicalCredits: 8.27728813559322,
+      totalHours: 253,
+      creditsEarned: 16.84,
+      noOfDays: 47,
+      completionDate: 2025-08-20T21:05:10.187Z,
+      courseId: new ObjectId("68a6385720f01d7f5641772d")
     }
   ],
-  umbrellaKey: 'Defence',
+  umbrellaKey: 'Cyber_Security',
   status: 'poc_approved'
 }
 📋 Admin can see 1 BPRND certification claims
 💡 Each claim includes detailed course breakdown for transparency
-✅ Admin approved claim 68a304920851b7f59f0de3bf for Defence - diploma
-🎉 Claim finalized: 30 credits deducted, certificate issued
+🔄 Admin processing claim 68a63886012d686ec9633f0f for Cyber_Security - certificate
+💰 Credit deduction completed:
+  Umbrella field: Cyber_Security
+  Previous credits: 20.666666666666664
+  Required credits: 20
+  New credits: 0.6666666666666643
+  Total credits: 9669.933333333332 → 9649.933333333332
+🔍 Admin approval: Querying course history for discipline: "Cyber Security" (converted from umbrellaKey: "Cyber_Security")
+📊 Admin approval: Found 3 course history records for discipline: "Cyber Security"
+✅ Marked 2 contributing courses as certificateContributed: true
+📋 Marked course IDs: [
+  new ObjectId("68a621c5d8945f0372ead21e"),
+  new ObjectId("68a6385720f01d7f5641772d")
+]
+✅ Recalculated cumulative counts for student 68a4edc7b2dcfedf6f1dcfac in discipline Cyber Security
+🎉 Claim finalized: 20 credits deducted, certificate issued, 2 courses marked as contributed
+🗑️ Claim 68a63886012d686ec9633f0f deleted from database after successful approval
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 0 claims in database
+📋 Admin can see 0 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 0 claims in database
+📋 Admin can see 0 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 0 claims in database
+📋 Admin can see 0 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
 🚀 Admin route /api/bprnd/claims called
 📝 Query parameters: { status: undefined }
 🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
@@ -116,8 +247,285 @@ MOUs found: 0
 📋 Admin can see 0 BPRND certification claims
 💡 Each claim includes detailed course breakdown for transparency
 Fetching courses with status: completed
-Fetching courses with status: upcoming
 Fetching courses with status: ongoing
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 0 claims in database
+📋 Admin can see 0 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 0 claims in database
+📋 Admin can see 0 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 0 claims in database
+📋 Admin can see 0 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 0 claims in database
+📋 Admin can see 0 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 0 claims in database
+📋 Admin can see 0 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 0 claims in database
+📋 Admin can see 0 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+Found courses: 0
+Sample course: undefined
+🔍 Admin requesting pending credits for approval...
+📊 Found 1 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 1 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+✅ Pending credit 68a6f68c8a2caae22e648167 is now fully approved by both admin and BPRND POC
+📊 Credit calculation: Theory 300h (10.00 credits) + Practical 150h (10.00 credits) = 20 total credits
+📊 Detailed breakdown: Theory 10.00 credits, Practical 10.00 credits
+🔍 Found student: Test Student (teststudent@example.com)
+🔍 Available umbrella fields: Cyber_Security, Military_Law, Forensics, Criminology, Police_Administration, Defence
+🔍 Normalized discipline: "cyber security"
+✅ Credits applied: 20 credits added to student Test Student in field: Cyber_Security
+🔍 Count calculation: Last count (2.8266666666666644) + New credits (20) = New count (22.826666666666664)
+✅ Course history saved for student 68a4edc7b2dcfedf6f1dcfac: aman
+   📊 Theory: 300h = 10.00 credits
+   📊 Practical: 150h = 10.00 credits
+   📊 Total: 20.00 credits | Cumulative count: 22.826666666666664
+✅ Pending credit record 68a6f68c8a2caae22e648167 deleted after successful credit application
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+Found courses: 0
+Sample course: undefined
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 1 claims in database
+📋 Claim 1: {
+  id: new ObjectId("68a6f7a68a2caae22e6482d0"),
+  umbrella: 'Cyber_Security',
+  status: 'poc_approved',
+  hasCourses: true,
+  coursesCount: 2
+}
+🔍 Processing claim 68a6f7a68a2caae22e6482d0: {
+  hasCourses: true,
+  coursesLength: 2,
+  coursesData: [
+    {
+      _id: new ObjectId("68a63886012d686ec9633f0d"),
+      name: 'aman (Remaining Credits)',
+      organization: 'nsg',
+      discipline: 'Cyber Security',
+      theoryHours: 43,
+      practicalHours: 21,
+      theoryCredits: 1.437288135593219,
+      practicalCredits: 1.3893785310734454,
+      totalHours: 43,
+      creditsEarned: 2.8266666666666644,
+      noOfDays: 47,
+      completionDate: 2025-08-21T10:40:38.670Z,
+      courseId: new ObjectId("68a63886012d686ec9633f0d"),
+      pdfPath: null,
+      pdfFileName: null
+    },
+    {
+      _id: new ObjectId("68a6f74623fd21d5ffb2c3dc"),
+      name: 'aman',
+      organization: 'i4c',
+      discipline: 'Cyber Security',
+      theoryHours: 258,
+      practicalHours: 129,
+      theoryCredits: 8.586666666666668,
+      practicalCredits: 8.586666666666668,
+      totalHours: 258,
+      creditsEarned: 17.173333333333336,
+      noOfDays: 56,
+      completionDate: 2025-08-21T10:40:38.670Z,
+      courseId: new ObjectId("68a6f74623fd21d5ffb2c3dc"),
+      pdfPath: 'http://localhost:3004/files/pdf-1755772556967-190169700.pdf',
+      pdfFileName: 'pdf-1755772556967-190169700.pdf'
+    }
+  ],
+  umbrellaKey: 'Cyber_Security',
+  status: 'poc_approved'
+}
+📋 Admin can see 1 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
+🔄 Admin processing claim 68a6f7a68a2caae22e6482d0 for Cyber_Security - certificate
+💰 Credit deduction completed:
+  Umbrella field: Cyber_Security
+  Previous credits: 20.666666666666664
+  Required credits: 20
+  New credits: 0.6666666666666643
+  Total credits: 9669.933333333332 → 9649.933333333332
+🔍 Admin approval: Querying course history for discipline: "Cyber Security" (converted from umbrellaKey: "Cyber_Security")
+📊 Admin approval: Found 3 course history records for discipline: "Cyber Security"
+✅ Marked 2 contributing courses as certificateContributed: true
+📋 Marked course IDs: [
+  new ObjectId("68a63886012d686ec9633f0d"),
+  new ObjectId("68a6f74623fd21d5ffb2c3dc")
+]
+✅ Recalculated cumulative counts for student 68a4edc7b2dcfedf6f1dcfac in discipline Cyber Security
+🎉 Claim finalized: 20 credits deducted, certificate issued, 2 courses marked as contributed
+🗑️ Claim 68a6f7a68a2caae22e6482d0 deleted from database after successful approval
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 0 claims in database
+📋 Admin can see 0 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
 Found courses: 0
 Sample course: undefined
 Found courses: 0
@@ -130,6 +538,110 @@ MOUs found: 0
 🔍 Query criteria: admin_approved: false
 📋 Admin can see 1 pending credits that need approval
 💡 These credits have been approved by POC and are now waiting for admin approval
+✅ Pending credit 68a6f9668a2caae22e6482fa is now fully approved by both admin and BPRND POC
+📊 Credit calculation: Theory 300h (10.00 credits) + Practical 148h (9.87 credits) = 19.866666666666667 total credits
+📊 Detailed breakdown: Theory 10.00 credits, Practical 9.87 credits
+🔍 Found student: Test Student (teststudent@example.com)
+🔍 Available umbrella fields: Cyber_Security, Military_Law, Forensics, Criminology, Police_Administration, Defence
+🔍 Normalized discipline: "cyber security"
+✅ Credits applied: 19.866666666666667 credits added to student Test Student in field: Cyber_Security
+🔍 Count calculation: Last count (2.8266666666666644) + New credits (19.866666666666667) = New count (22.69333333333333)
+✅ Course history saved for student 68a4edc7b2dcfedf6f1dcfac: aman
+   📊 Theory: 300h = 10.00 credits
+   📊 Practical: 148h = 9.87 credits
+   📊 Total: 19.87 credits | Cumulative count: 22.69333333333333
+✅ Pending credit record 68a6f9668a2caae22e6482fa deleted after successful credit application
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Found courses: 0
+Sample course: undefined
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 0 claims in database
+📋 Admin can see 0 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+Fetching courses with status: completed
+Fetching courses with status: upcoming
+Fetching courses with status: ongoing
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+MOUs found: 0
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
 Fetching courses with status: completed
 Fetching courses with status: ongoing
 Fetching courses with status: upcoming
@@ -140,3 +652,135 @@ Sample course: undefined
 MOUs found: 0
 Found courses: 0
 Sample course: undefined
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 0 claims in database
+📋 Admin can see 0 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+Fetching courses with status: ongoing
+Fetching courses with status: completed
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+🔍 Admin requesting pending credits for approval...
+📊 Found 1 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 1 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+✅ Pending credit 68a726ff8a2caae22e648356 is now fully approved by both admin and BPRND POC
+📊 Credit calculation: Theory 300h (10.00 credits) + Practical 148h (9.87 credits) = 19.866666666666667 total credits
+📊 Detailed breakdown: Theory 10.00 credits, Practical 9.87 credits
+🔍 Found student: Test Student (teststudent@example.com)
+🔍 Available umbrella fields: Cyber_Security, Military_Law, Forensics, Criminology, Police_Administration, Defence
+🔍 Normalized discipline: "forensics"
+✅ Credits applied: 19.866666666666667 credits added to student Test Student in field: Forensics
+🔍 Count calculation: Last count (48) + New credits (19.866666666666667) = New count (67.86666666666667)
+✅ Course history saved for student 68a4edc7b2dcfedf6f1dcfac: aman
+   📊 Theory: 300h = 10.00 credits
+   📊 Practical: 148h = 9.87 credits
+   📊 Total: 19.87 credits | Cumulative count: 67.86666666666667
+✅ Pending credit record 68a726ff8a2caae22e648356 deleted after successful credit application
+🔍 Admin requesting pending credits for approval...
+📊 Found 0 pending credits that need admin approval
+🔍 Query criteria: admin_approved: false
+📋 Admin can see 0 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+Fetching courses with status: completed
+Fetching courses with status: ongoing
+Found courses: 0
+Sample course: undefined
+Found courses: 0
+Sample course: undefined
+Fetching courses with status: upcoming
+Found courses: 0
+Sample course: undefined
+MOUs found: 0
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 1 claims in database
+📋 Claim 1: {
+  id: new ObjectId("68a727728a2caae22e648382"),
+  umbrella: 'Forensics',
+  status: 'poc_approved',
+  hasCourses: true,
+  coursesCount: 1
+}
+🔍 Processing claim 68a727728a2caae22e648382: {
+  hasCourses: true,
+  coursesLength: 1,
+  coursesData: [
+    {
+      _id: new ObjectId("68a7274423fd21d5ffb2c47d"),
+      name: 'aman',
+      organization: 'i4c',
+      discipline: 'Forensics',
+      theoryHours: 300,
+      practicalHours: 148,
+      theoryCredits: 10,
+      practicalCredits: 9.866666666666667,
+      totalHours: 448,
+      creditsEarned: 19.866666666666667,
+      noOfDays: 40,
+      completionDate: 2025-08-21T14:04:34.613Z,
+      courseId: new ObjectId("68a7274423fd21d5ffb2c47d"),
+      pdfPath: 'http://localhost:3004/files/pdf-1755784959813-951233188.pdf',
+      pdfFileName: 'pdf-1755784959813-951233188.pdf'
+    }
+  ],
+  umbrellaKey: 'Forensics',
+  status: 'poc_approved'
+}
+📋 Admin can see 1 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency
+🔄 Admin processing claim 68a727728a2caae22e648382 for Forensics - certificate
+💰 Credit deduction completed:
+  Umbrella field: Forensics
+  Previous credits: 22.866666666666667
+  Required credits: 20
+  New credits: 2.866666666666667
+  Total credits: 9689.666666666666 → 9669.666666666666
+🔍 Admin approval: Querying course history for discipline: "Forensics" (converted from umbrellaKey: "Forensics")
+📊 Admin approval: Found 1 course history records for discipline: "Forensics"
+✅ Marked 1 contributing courses as certificateContributed: true
+📋 Marked course IDs: [ new ObjectId("68a7274423fd21d5ffb2c47d") ]
+✅ Recalculated cumulative counts for student 68a4edc7b2dcfedf6f1dcfac in discipline Forensics
+🎉 Claim finalized: 20 credits deducted, certificate issued, 1 courses marked as contributed
+🗑️ Claim 68a727728a2caae22e648382 deleted from database after successful approval
+🚀 Admin route /api/bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: { poc_approved: true, admin_approved: { '$ne': true } }
+📊 Found 0 claims in database
+📋 Admin can see 0 BPRND certification claims
+💡 Each claim includes detailed course breakdown for transparency

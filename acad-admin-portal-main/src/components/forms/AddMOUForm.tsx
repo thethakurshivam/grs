@@ -105,7 +105,7 @@ const AddMOUForm = () => {
       }
 
       // API call to backend POST MOU endpoint
-      const response = await fetch('http://localhost:3000/api/mous', {
+              const response = await fetch('http://localhost:3002/api/mous', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -30,7 +30,7 @@ export const useCourseSearchByMOU = () => {
         throw new Error('Authentication token not found');
       }
 
-      let url = `http://localhost:3000/api/courses/mou/${mouId}`;
+      let url = `http://localhost:3002/api/courses/mou/${mouId}`;
       if (status) {
         url += `?status=${status}`;
       }

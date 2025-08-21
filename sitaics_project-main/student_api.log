@@ -1,26 +1,347 @@
-node:events:502
-      throw er; // Unhandled 'error' event
-      ^
-
-Error: listen EADDRINUSE: address already in use :::3001
-    at Server.setupListenHandle [as _listen2] (node:net:1908:16)
-    at listenInCluster (node:net:1965:12)
-    at Server.listen (node:net:2067:7)
-    at Function.listen (/Users/shivam/Downloads/Tiru/sitaics_project-main/node_modules/express/lib/application.js:635:24)
-    at Object.<anonymous> (/Users/shivam/Downloads/Tiru/sitaics_project-main/api1.js:406:5)
-    at Module._compile (node:internal/modules/cjs/loader:1529:14)
-    at Module._extensions..js (node:internal/modules/cjs/loader:1613:10)
-    at Module.load (node:internal/modules/cjs/loader:1275:32)
-    at Module._load (node:internal/modules/cjs/loader:1096:12)
-    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
-Emitted 'error' event on Server instance at:
-    at emitErrorNT (node:net:1944:8)
-    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
-  code: 'EADDRINUSE',
-  errno: -48,
-  syscall: 'listen',
-  address: '::',
-  port: 3001
+BPRND Student API server running on port 3004
+Health check: http://localhost:3004/health
+✅ Connected to MongoDB successfully
+Database: mongodb://localhost:27017/sitaics
+🔐 BPRND Login attempt: {
+  origin: 'http://localhost:8080',
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+  body: { email: 'teststudent@example.com', password: '[HIDDEN]' }
 }
-
-Node.js v20.19.3
+📊 Credits breakdown for student 68a4edc7b2dcfedf6f1dcfac: {
+  Criminology: 9617.833333333334,
+  Cyber_Security: 0.6666666666666643,
+  Defence: 21.666666666666664,
+  Forensics: 3,
+  Military_Law: 4.999999999999993,
+  Police_Administration: 1.6666666666666643,
+  Total_Credits: 9649.933333333332
+}
+🔍 Available umbrella fields: [
+  'Criminology',
+  'Cyber Security',
+  'Defence',
+  'Forensics',
+  'Military Law',
+  'Police Administration'
+]
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Cyber Security
+📊 Found 1 course history records for Cyber Security
+💰 Current stored credits for Cyber Security: 0.6666666666666643
+📊 Summary for Cyber Security: 1.3333333333333286 remaining credits (0.6666666666666643 theory + 0.6666666666666643 practical)
+MongoDB disconnected
+MongoDB reconnected
+MongoDB disconnected
+MongoDB reconnected
+MongoDB disconnected
+MongoDB reconnected
+🔐 BPRND Login attempt: {
+  origin: 'http://localhost:8080',
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+  body: { email: 'teststudent@example.com', password: '[HIDDEN]' }
+}
+📊 Credits breakdown for student 68a4edc7b2dcfedf6f1dcfac: {
+  Criminology: 9617.833333333334,
+  Cyber_Security: 0.6666666666666643,
+  Defence: 21.666666666666664,
+  Forensics: 3,
+  Military_Law: 4.999999999999993,
+  Police_Administration: 1.6666666666666643,
+  Total_Credits: 9649.933333333332
+}
+🔍 Available umbrella fields: [
+  'Criminology',
+  'Cyber Security',
+  'Defence',
+  'Forensics',
+  'Military Law',
+  'Police Administration'
+]
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Criminology
+📊 Found 1 course history records for Criminology
+💰 Current stored credits for Criminology: 9617.833333333334
+📊 Summary for Criminology: 9617.833333333341 remaining credits (9606.312478857157 theory + 11.520854476184137 practical)
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Defence
+📊 Found 4 course history records for Defence
+💰 Current stored credits for Defence: 21.666666666666664
+📊 Summary for Defence: 23.666666666666664 remaining credits (11.833333333333332 theory + 11.833333333333332 practical)
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Forensics
+📊 Found 0 course history records for Forensics
+💰 Current stored credits for Forensics: 3
+📊 Summary for Forensics: 0 remaining credits (0 theory + 0 practical)
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Forensics
+📊 Found 0 course history records for Forensics
+💰 Current stored credits for Forensics: 3
+📊 Summary for Forensics: 0 remaining credits (0 theory + 0 practical)
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Police Administration
+📊 Found 1 course history records for Police Administration
+💰 Current stored credits for Police Administration: 1.6666666666666643
+📊 Summary for Police Administration: 3.3333333333333286 remaining credits (1.6666666666666643 theory + 1.6666666666666643 practical)
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Military Law
+📊 Found 4 course history records for Military Law
+💰 Current stored credits for Military Law: 4.999999999999993
+📊 Summary for Military Law: 6.666666666666657 remaining credits (3.205128205128201 theory + 3.4615384615384563 practical)
+🔐 BPRND Login attempt: {
+  origin: 'http://localhost:8080',
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+  body: { email: 'teststudent@example.com', password: '[HIDDEN]' }
+}
+🔐 BPRND Login attempt: {
+  origin: 'http://localhost:8080',
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+  body: { email: 'teststudent@example.com', password: '[HIDDEN]' }
+}
+🔐 BPRND Login attempt: {
+  origin: 'http://localhost:8080',
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+  body: { email: 'teststudent@example.com', password: '[HIDDEN]' }
+}
+📊 Credits breakdown for student 68a4edc7b2dcfedf6f1dcfac: {
+  Criminology: 9617.833333333334,
+  Cyber_Security: 0.6666666666666643,
+  Defence: 21.666666666666664,
+  Forensics: 3,
+  Military_Law: 4.999999999999993,
+  Police_Administration: 1.6666666666666643,
+  Total_Credits: 9649.933333333332
+}
+🔍 Available umbrella fields: [
+  'Criminology',
+  'Cyber Security',
+  'Defence',
+  'Forensics',
+  'Military Law',
+  'Police Administration'
+]
+📊 Credits breakdown for student 68a4edc7b2dcfedf6f1dcfac: {
+  Criminology: 9617.833333333334,
+  Cyber_Security: 0.6666666666666643,
+  Defence: 21.666666666666664,
+  Forensics: 3,
+  Military_Law: 4.999999999999993,
+  Police_Administration: 1.6666666666666643,
+  Total_Credits: 9649.933333333332
+}
+🔍 Available umbrella fields: [
+  'Criminology',
+  'Cyber Security',
+  'Defence',
+  'Forensics',
+  'Military Law',
+  'Police Administration'
+]
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Cyber Security
+📊 Found 1 course history records for Cyber Security
+💰 Current stored credits for Cyber Security: 0.6666666666666643
+📊 Summary for Cyber Security: 1.3333333333333286 remaining credits (0.6666666666666643 theory + 0.6666666666666643 practical)
+📊 Credits breakdown for student 68a4edc7b2dcfedf6f1dcfac: {
+  Criminology: 9617.833333333334,
+  Cyber_Security: 0.6666666666666643,
+  Defence: 21.666666666666664,
+  Forensics: 3,
+  Military_Law: 4.999999999999993,
+  Police_Administration: 1.6666666666666643,
+  Total_Credits: 9649.933333333332
+}
+🔍 Available umbrella fields: [
+  'Criminology',
+  'Cyber Security',
+  'Defence',
+  'Forensics',
+  'Military Law',
+  'Police Administration'
+]
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Criminology
+📊 Found 1 course history records for Criminology
+💰 Current stored credits for Criminology: 9617.833333333334
+📊 Summary for Criminology: 9617.833333333341 remaining credits (9606.312478857157 theory + 11.520854476184137 practical)
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Defence
+📊 Found 4 course history records for Defence
+💰 Current stored credits for Defence: 21.666666666666664
+📊 Summary for Defence: 23.666666666666664 remaining credits (11.833333333333332 theory + 11.833333333333332 practical)
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Defence
+📊 Found 4 course history records for Defence
+💰 Current stored credits for Defence: 21.666666666666664
+📊 Summary for Defence: 23.666666666666664 remaining credits (11.833333333333332 theory + 11.833333333333332 practical)
+🔐 BPRND Login attempt: {
+  origin: 'http://localhost:8080',
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+  body: { email: 'teststudent@example.com', password: '[HIDDEN]' }
+}
+🔐 BPRND Login attempt: {
+  origin: 'http://localhost:8080',
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+  body: { email: 'teststudent@example.com', password: '[HIDDEN]' }
+}
+Fetching BPRND student profile for ID: 68a4edc7b2dcfedf6f1dcfac
+BPRND student profile found: {
+  id: new ObjectId("68a4edc7b2dcfedf6f1dcfac"),
+  name: 'Test Student',
+  email: 'teststudent@example.com',
+  designation: 'Student',
+  state: 'Test State',
+  umbrella: 'Forensics'
+}
+Fetching BPRND student profile for ID: 68a4edc7b2dcfedf6f1dcfac
+BPRND student profile found: {
+  id: new ObjectId("68a4edc7b2dcfedf6f1dcfac"),
+  name: 'Test Student',
+  email: 'teststudent@example.com',
+  designation: 'Student',
+  state: 'Test State',
+  umbrella: 'Forensics'
+}
+📊 Credits breakdown for student 68a4edc7b2dcfedf6f1dcfac: {
+  Criminology: 9617.833333333334,
+  Cyber_Security: 0.6666666666666643,
+  Defence: 21.666666666666664,
+  Forensics: 3,
+  Military_Law: 4.999999999999993,
+  Police_Administration: 1.6666666666666643,
+  Total_Credits: 9649.933333333332
+}
+🔍 Available umbrella fields: [
+  'Criminology',
+  'Cyber Security',
+  'Defence',
+  'Forensics',
+  'Military Law',
+  'Police Administration'
+]
+📊 Credits breakdown for student 68a4edc7b2dcfedf6f1dcfac: {
+  Criminology: 9617.833333333334,
+  Cyber_Security: 0.6666666666666643,
+  Defence: 21.666666666666664,
+  Forensics: 3,
+  Military_Law: 4.999999999999993,
+  Police_Administration: 1.6666666666666643,
+  Total_Credits: 9649.933333333332
+}
+🔍 Available umbrella fields: [
+  'Criminology',
+  'Cyber Security',
+  'Defence',
+  'Forensics',
+  'Military Law',
+  'Police Administration'
+]
+📊 Credits breakdown for student 68a4edc7b2dcfedf6f1dcfac: {
+  Criminology: 9617.833333333334,
+  Cyber_Security: 0.6666666666666643,
+  Defence: 21.666666666666664,
+  Forensics: 3,
+  Military_Law: 4.999999999999993,
+  Police_Administration: 1.6666666666666643,
+  Total_Credits: 9649.933333333332
+}
+🔍 Available umbrella fields: [
+  'Criminology',
+  'Cyber Security',
+  'Defence',
+  'Forensics',
+  'Military Law',
+  'Police Administration'
+]
+📊 Credits breakdown for student 68a4edc7b2dcfedf6f1dcfac: {
+  Criminology: 9617.833333333334,
+  Cyber_Security: 0.6666666666666643,
+  Defence: 21.666666666666664,
+  Forensics: 3,
+  Military_Law: 4.999999999999993,
+  Police_Administration: 1.6666666666666643,
+  Total_Credits: 9649.933333333332
+}
+🔍 Available umbrella fields: [
+  'Criminology',
+  'Cyber Security',
+  'Defence',
+  'Forensics',
+  'Military Law',
+  'Police Administration'
+]
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Forensics
+📊 Found 0 course history records for Forensics
+💰 Current stored credits for Forensics: 3
+📊 Summary for Forensics: 0 remaining credits (0 theory + 0 practical)
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Defence
+📊 Found 4 course history records for Defence
+💰 Current stored credits for Defence: 21.666666666666664
+📊 Summary for Defence: 23.666666666666664 remaining credits (11.833333333333332 theory + 11.833333333333332 practical)
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Criminology
+📊 Found 1 course history records for Criminology
+💰 Current stored credits for Criminology: 9617.833333333334
+📊 Summary for Criminology: 9617.833333333341 remaining credits (9606.312478857157 theory + 11.520854476184137 practical)
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Criminology
+📊 Found 1 course history records for Criminology
+💰 Current stored credits for Criminology: 9617.833333333334
+📊 Summary for Criminology: 9617.833333333341 remaining credits (9606.312478857157 theory + 11.520854476184137 practical)
+📊 Credits breakdown for student 68a4edc7b2dcfedf6f1dcfac: {
+  Criminology: 9617.833333333334,
+  Cyber_Security: 0.6666666666666643,
+  Defence: 21.666666666666664,
+  Forensics: 3,
+  Military_Law: 4.999999999999993,
+  Police_Administration: 1.6666666666666643,
+  Total_Credits: 9649.933333333332
+}
+🔍 Available umbrella fields: [
+  'Criminology',
+  'Cyber Security',
+  'Defence',
+  'Forensics',
+  'Military Law',
+  'Police Administration'
+]
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Forensics
+📊 Found 0 course history records for Forensics
+💰 Current stored credits for Forensics: 3
+📊 Summary for Forensics: 0 remaining credits (0 theory + 0 practical)
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Defence
+📊 Found 4 course history records for Defence
+💰 Current stored credits for Defence: 21.666666666666664
+📊 Summary for Defence: 23.666666666666664 remaining credits (11.833333333333332 theory + 11.833333333333332 practical)
+🔍 Fetching course history for student 68a4edc7b2dcfedf6f1dcfac in umbrella: Criminology
+📊 Found 1 course history records for Criminology
+💰 Current stored credits for Criminology: 9617.833333333334
+📊 Summary for Criminology: 9617.833333333341 remaining credits (9606.312478857157 theory + 11.520854476184137 practical)
+Fetching BPRND student profile for ID: 68a4edc7b2dcfedf6f1dcfac
+BPRND student profile found: {
+  id: new ObjectId("68a4edc7b2dcfedf6f1dcfac"),
+  name: 'Test Student',
+  email: 'teststudent@example.com',
+  designation: 'Student',
+  state: 'Test State',
+  umbrella: 'Forensics'
+}
+Fetching BPRND student profile for ID: 68a4edc7b2dcfedf6f1dcfac
+BPRND student profile found: {
+  id: new ObjectId("68a4edc7b2dcfedf6f1dcfac"),
+  name: 'Test Student',
+  email: 'teststudent@example.com',
+  designation: 'Student',
+  state: 'Test State',
+  umbrella: 'Forensics'
+}
+Fetching BPRND student profile for ID: 68a4edc7b2dcfedf6f1dcfac
+BPRND student profile found: {
+  id: new ObjectId("68a4edc7b2dcfedf6f1dcfac"),
+  name: 'Test Student',
+  email: 'teststudent@example.com',
+  designation: 'Student',
+  state: 'Test State',
+  umbrella: 'Forensics'
+}
+🔐 BPRND Login attempt: {
+  origin: 'http://localhost:8080',
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+  body: { email: 'test@example.com', password: '[HIDDEN]' }
+}
+🔐 BPRND Login attempt: {
+  origin: 'http://localhost:8080',
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+  body: { email: 'test@example.com', password: '[HIDDEN]' }
+}
+🔐 BPRND Login attempt: {
+  origin: 'http://localhost:8080',
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+  body: { email: 'teststudent@example.com', password: '[HIDDEN]' }
+}

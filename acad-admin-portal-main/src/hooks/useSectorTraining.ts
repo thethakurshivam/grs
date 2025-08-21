@@ -84,7 +84,7 @@ export const useSectorTraining = (): UseSectorTrainingReturn => {
 
       console.log('Making request to /api/fields with token:', token.substring(0, 15) + '...');
       
-      const response = await fetch('http://localhost:3000/api/fields', {
+      const response = await fetch('http://localhost:3002/api/fields', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +139,7 @@ export const useSectorTraining = (): UseSectorTrainingReturn => {
 
       console.log('useSectorTraining: Making request to /api/fields/' + fieldId);
       
-      const response = await fetch(`http://localhost:3000/api/fields/${fieldId}`, {
+              const response = await fetch(`http://localhost:3002/api/fields/${fieldId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

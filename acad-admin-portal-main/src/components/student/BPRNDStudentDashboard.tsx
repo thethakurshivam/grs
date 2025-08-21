@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { StudentDashboardLayout } from './StudentDashboardLayout';
 import useBPRNDStudentCredits from '@/hooks/useBPRNDStudentCredits';
 import { useBPRNDStudentCertificates } from '@/hooks/useBPRNDStudentCertificates';
+import useBPRNDStudentPendingCredits from '@/hooks/useBPRNDStudentPendingCredits';
 
 export const BPRNDStudentDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -28,12 +29,16 @@ export const BPRNDStudentDashboard: React.FC = () => {
   const studentId = derivedId || localStorage.getItem('bprndStudentId') || localStorage.getItem('studentId');
   const { totalCredits, isLoading, error, refetch } = useBPRNDStudentCredits(studentId);
   const { certificates: studentCertificates, loading: certificatesLoading, fetchCertificates } = useBPRNDStudentCertificates();
+  const { data: pendingCredits, isLoading: pendingCreditsLoading, error: pendingCreditsError, refetch: refetchPendingCredits } = useBPRNDStudentPendingCredits(studentId);
 
   useEffect(() => {
-    const onFocus = () => refetch();
+    const onFocus = () => {
+      refetch();
+      refetchPendingCredits();
+    };
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
-  }, [refetch]);
+  }, [refetch, refetchPendingCredits]);
 
   // Fetch certificates when component mounts
   useEffect(() => {
@@ -172,9 +177,19 @@ export const BPRNDStudentDashboard: React.FC = () => {
               <div className="text-lg text-black">
                 <p className="opacity-80">Track your credit request status</p>
                 <div className="mt-3 space-y-1">
-                  <p className="text-base">• View approval progress</p>
-                  <p className="text-base">• Check request timeline</p>
-                  <p className="text-base">• Monitor status updates</p>
+                  {pendingCreditsLoading ? (
+                    <p className="text-base">• Loading...</p>
+                  ) : pendingCreditsError ? (
+                    <p className="text-base text-red-600">• Error loading data</p>
+                  ) : pendingCredits && pendingCredits.length > 0 ? (
+                    <>
+                      <p className="text-base">• Total Requests: {pendingCredits.length}</p>
+                      <p className="text-base">• Latest: {pendingCredits[0]?.discipline || 'N/A'}</p>
+                      <p className="text-base">• Status: {pendingCredits[0]?.status || 'pending'}</p>
+                    </>
+                  ) : (
+                    <p className="text-base">• No pending requests</p>
+                  )}
                 </div>
               </div>
             </CardContent>

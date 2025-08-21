@@ -61,6 +61,7 @@ import BPRNDStudentClaimsPage from './components/student/BPRNDStudentClaimsPage'
 import BPRNDCertificationRequestPage from './components/dashboard/BPRNDCertificationRequestPage';
 import BPRNDPendingCreditsPage from './components/dashboard/BPRNDPendingCreditsPage';
 import BPRNDPendingCreditRequestsPage from './components/student/BPRNDPendingCreditRequestsPage';
+import { CenteredToastProvider } from '@/contexts/centered-toast-context';
 
 const queryClient = new QueryClient();
 
@@ -220,51 +221,99 @@ const App = () => (
           {/* Default redirect to dashboard for BPRND root */}
           <Route
             path="/student/bprnd"
-            element={<BPRNDStudentDashboard />}
+            element={
+              <CenteredToastProvider>
+                <BPRNDStudentDashboard />
+              </CenteredToastProvider>
+            }
           />
           <Route
             path="/student/bprnd/profile-api"
-            element={<BPRNDStudentProfileAPI />}
+            element={
+              <CenteredToastProvider>
+                <BPRNDStudentProfileAPI />
+              </CenteredToastProvider>
+            }
           />
           <Route
             path="/student/bprnd/profile"
-            element={<BPRNDStudentProfile />}
+            element={
+              <CenteredToastProvider>
+                <BPRNDStudentProfile />
+              </CenteredToastProvider>
+            }
           />
           <Route
             path="/student/bprnd/dashboard"
-            element={<BPRNDStudentDashboard />}
+            element={
+              <CenteredToastProvider>
+                <BPRNDStudentDashboard />
+              </CenteredToastProvider>
+            }
           />
           <Route
             path="/student/bprnd/certifications"
-            element={<BPRNDCertifications />}
+            element={
+              <CenteredToastProvider>
+                <BPRNDCertifications />
+              </CenteredToastProvider>
+            }
           />
           <Route
             path="/student/bprnd/claim-credits"
-            element={<BPRNDClaimCredits />}
+            element={
+              <CenteredToastProvider>
+                <BPRNDClaimCredits />
+              </CenteredToastProvider>
+            }
           />
           <Route
             path="/student/bprnd/claims"
-            element={<BPRNDStudentClaimsPage />}
+            element={
+              <CenteredToastProvider>
+                <BPRNDStudentClaimsPage />
+              </CenteredToastProvider>
+            }
           />
           <Route
             path="/student/bprnd/pending-credits"
-            element={<BPRNDPendingCreditRequestsPage />}
+            element={
+              <CenteredToastProvider>
+                <BPRNDPendingCreditRequestsPage />
+              </CenteredToastProvider>
+            }
           />
           <Route
             path="/student/bprnd/training-calendar"
-            element={<BPRNDTrainingCalendar />}
+            element={
+              <CenteredToastProvider>
+                <BPRNDTrainingCalendar />
+              </CenteredToastProvider>
+            }
           />
           <Route
             path="/student/bprnd/credit-bank"
-            element={<StudentCreditBank />}
+            element={
+              <CenteredToastProvider>
+                <StudentCreditBank />
+              </CenteredToastProvider>
+            }
           />
           <Route
             path="/student/bprnd/certificates"
-            element={<BPRNDStudentCertificates />}
+            element={
+              <CenteredToastProvider>
+                <BPRNDStudentCertificates />
+              </CenteredToastProvider>
+            }
           />
           <Route
             path="/student/bprnd/previous-courses"
-            element={<PreviousCoursesForm />}
+            element={
+              <CenteredToastProvider>
+                <PreviousCoursesForm />
+              </CenteredToastProvider>
+            }
           />
 
           {/* Legacy Routes - Redirect to landing page */}

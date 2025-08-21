@@ -62,7 +62,7 @@ export const useParticipants = () => {
       return {
         mode: 'admin' as const,
         token: adminToken,
-        url: `http://localhost:3000/api/participants`,
+        url: `http://localhost:3002/api/participants`,
       };
     }
 

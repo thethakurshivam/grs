@@ -64,7 +64,7 @@ const SignupPage = () => {
 
     try {
       // API call to backend registration endpoint (admin routes in api.js)
-      const response = await fetch('http://localhost:3000/api/admin/register', {
+              const response = await fetch('http://localhost:3002/api/admin/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

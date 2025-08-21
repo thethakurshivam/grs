@@ -21,7 +21,12 @@ const POCRequestsPage: React.FC<Props> = ({ type = 'standard' }) => {
     name: string;
     organization: string;
     discipline: string;
+    theoryHours?: number;
+    practicalHours?: number;
+    theoryCredits?: number;
+    practicalCredits?: number;
     totalHours: number;
+    calculatedCredits?: number;
     noOfDays: number;
     pdf: string | null;
     acceptUrl?: string;
@@ -140,6 +145,21 @@ const POCRequestsPage: React.FC<Props> = ({ type = 'standard' }) => {
                         <p className={type === 'bprnd' ? 'text-sm text-black/80' : 'text-sm text-gray-500'}>Organization: {item.organization}</p>
                         <p className={type === 'bprnd' ? 'text-sm text-black/80' : 'text-sm text-gray-500'}>Discipline: {item.discipline}</p>
                         <p className={type === 'bprnd' ? 'text-sm text-black/80' : 'text-sm text-gray-500'}>Total Hours: {item.totalHours} • Days: {item.noOfDays}</p>
+                        
+                        {/* Detailed Credit Breakdown */}
+                        <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <h4 className="font-medium text-blue-900 mb-2 text-sm">Credit Breakdown</h4>
+                          <div className="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                              <p className="text-blue-700">Theory: {item.theoryHours || 0}h = {(item.theoryCredits || 0).toFixed(2)} credits</p>
+                              <p className="text-blue-700">Practical: {item.practicalHours || 0}h = {(item.practicalCredits || 0).toFixed(2)} credits</p>
+                            </div>
+                            <div>
+                              <p className="text-blue-700 font-medium">Total: {item.totalHours || 0}h</p>
+                              <p className="text-blue-700 font-medium">Credits: {(item.calculatedCredits || 0).toFixed(2)}</p>
+                            </div>
+                          </div>
+                        </div>
                         {item.pdf && (
                           <a
                             className="inline-flex items-center text-sm text-[#0b2e63] hover:underline mt-1"

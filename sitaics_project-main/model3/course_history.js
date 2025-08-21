@@ -19,6 +19,16 @@ const courseHistorySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    theoryHours: {
+      type: Number,
+      required: true,
+      min: [0, 'Theory hours cannot be negative'],
+    },
+    practicalHours: {
+      type: Number,
+      required: true,
+      min: [0, 'Practical hours cannot be negative'],
+    },
     totalHours: {
       type: Number,
       required: true,
@@ -28,6 +38,16 @@ const courseHistorySchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: [0, 'Number of days cannot be negative'],
+    },
+    theoryCredits: {
+      type: Number,
+      required: true,
+      min: [0, 'Theory credits cannot be negative'],
+    },
+    practicalCredits: {
+      type: Number,
+      required: true,
+      min: [0, 'Practical credits cannot be negative'],
     },
     creditsEarned: {
       type: Number,
@@ -53,6 +73,15 @@ const courseHistorySchema = new mongoose.Schema(
       qualification: String,
       contributedAt: Date,
       creditsContributed: Number
+    },
+    // Add PDF information fields
+    pdfPath: {
+      type: String,
+      required: false
+    },
+    pdfFileName: {
+      type: String,
+      required: false
     }
   },
   {
@@ -60,6 +89,6 @@ const courseHistorySchema = new mongoose.Schema(
   }
 );
 
-const CourseHistory = mongoose.model('CourseHistory', courseHistorySchema);
+const CourseHistory = mongoose.model('CourseHistory', courseHistorySchema, 'coursehistories');
 
 module.exports = CourseHistory;

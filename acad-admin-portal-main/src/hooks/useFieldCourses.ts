@@ -57,7 +57,7 @@ export const useFieldCourses = (fieldId: string | null) => {
 
       console.log('Making API request to:', `http://localhost:3000/api/fields/${id}`);
       
-      const response = await fetch(`http://localhost:3000/api/fields/${id}`, {
+      const response = await fetch(`http://localhost:3002/api/fields/${id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

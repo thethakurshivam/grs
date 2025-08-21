@@ -31,7 +31,7 @@ export const useSchoolsFromAPI1 = (): UseSchoolsFromAdminAPIReturn => {
         return;
       }
 
-      const response = await fetch('http://localhost:3000/api/schools-all', {
+      const response = await fetch('http://localhost:3002/api/schools-all', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

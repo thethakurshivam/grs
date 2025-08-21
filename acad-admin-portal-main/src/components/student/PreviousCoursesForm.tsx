@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { ArrowLeft, Plus, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Upload, Info } from 'lucide-react';
 import useBPRNDUmbrellas from '@/hooks/useBPRNDUmbrellas';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../hooks/use-toast';
+import { useCenteredToastContext } from '@/contexts/centered-toast-context';
 
 interface PreviousCourse {
   organization_name: string;
@@ -17,14 +18,32 @@ interface PreviousCourse {
 const PreviousCoursesForm: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { showSuccess } = useCenteredToastContext();
   const [previousCourses, setPreviousCourses] = useState<PreviousCourse[]>([
     { organization_name: '', course_name: '', certificate_pdf: null }
   ]);
   const [applicantName, setApplicantName] = useState('');
   const [discipline, setDiscipline] = useState('');
+  const [theoryHours, setTheoryHours] = useState<string>('');
+  const [practicalHours, setPracticalHours] = useState<string>('');
   const [totalHours, setTotalHours] = useState<string>('');
+  const [calculatedCredits, setCalculatedCredits] = useState<string>('');
   const [noOfDays, setNoOfDays] = useState<string>('');
   const { umbrellas, isLoading: umbrellasLoading, error: umbrellasError } = useBPRNDUmbrellas();
+  
+  // Auto-calculate total hours and credits when theory or practical hours change
+  useEffect(() => {
+    const theory = Number(theoryHours) || 0;
+    const practical = Number(practicalHours) || 0;
+    
+    // Calculate total hours
+    const total = theory + practical;
+    setTotalHours(total.toString());
+    
+    // Calculate credits: theory (30 hours = 1 credit) + practical (15 hours = 1 credit)
+    const credits = (theory / 30) + (practical / 15);
+    setCalculatedCredits(credits.toFixed(2));
+  }, [theoryHours, practicalHours]);
   
   // Debug logging for troubleshooting
   console.log('🔍 PreviousCoursesForm Debug:', {
@@ -65,7 +84,7 @@ const PreviousCoursesForm: React.FC = () => {
     const file = event.target.files?.[0] || null;
     updateCourse(index, 'certificate_pdf', file);
     if (file) {
-      toast({ title: 'File selected', description: file.name });
+      showSuccess('File Selected', file.name, 5000); // 5 seconds centered popup
     }
   };
 
@@ -89,6 +108,14 @@ const PreviousCoursesForm: React.FC = () => {
         toast({ title: 'Validation Error', description: 'Please attach certificate PDF', variant: 'destructive' });
         return;
       }
+      if (!theoryHours.trim() || Number(theoryHours) <= 0) {
+        toast({ title: 'Validation Error', description: 'Please enter valid theory hours', variant: 'destructive' });
+        return;
+      }
+      if (!practicalHours.trim() || Number(practicalHours) <= 0) {
+        toast({ title: 'Validation Error', description: 'Please enter valid practical hours', variant: 'destructive' });
+        return;
+      }
 
       // Compose form-data for api4 /pending-credits
       const formData = new FormData();
@@ -96,7 +123,8 @@ const PreviousCoursesForm: React.FC = () => {
       formData.append('name', applicantName.trim());
       formData.append('organization', first.organization_name.trim());
       formData.append('discipline', discipline.trim());
-      formData.append('totalHours', String(Number(totalHours)));
+      formData.append('theoryHours', String(Number(theoryHours)));
+      formData.append('practicalHours', String(Number(practicalHours)));
       formData.append('noOfDays', String(Number(noOfDays)));
       formData.append('pdf', first.certificate_pdf);
 
@@ -111,10 +139,17 @@ const PreviousCoursesForm: React.FC = () => {
         throw new Error(data?.message || `Request failed with status ${response.status}`);
       }
 
-      toast({ title: 'Submitted', description: data?.message || 'Pending credit record created successfully' });
-      // Do not redirect to the normal student portal – stay on this page
-      // If you prefer to go to BPRND dashboard instead, uncomment the next line:
-      // navigate('/student/bprnd/dashboard');
+      // Show centered success toast for "POC and Admin pending" message
+      showSuccess(
+        'Course Submitted Successfully!', 
+        'Your course has been submitted and is pending POC and Admin approval. You will be notified once approved.',
+        10000 // 10 seconds
+      );
+      
+      // Automatically redirect to BPRND student dashboard after 10 seconds
+      setTimeout(() => {
+        navigate('/student/bprnd/dashboard');
+      }, 10000); // 10 seconds delay to match the popup duration
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Network error. Please try again.';
       toast({ title: 'Error', description: message, variant: 'destructive' });
@@ -237,22 +272,65 @@ const PreviousCoursesForm: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Totals */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Hours and Credits */}
+                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="theory-hours" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
+                        Theory Hours *
+                      </Label>
+                      <Input
+                        id="theory-hours"
+                        type="number"
+                        min={0}
+                        value={theoryHours}
+                        onChange={(e) => setTheoryHours(e.target.value)}
+                        placeholder="e.g., 20"
+                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="practical-hours" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
+                        Practical Hours *
+                      </Label>
+                      <Input
+                        id="practical-hours"
+                        type="number"
+                        min={0}
+                        value={practicalHours}
+                        onChange={(e) => setPracticalHours(e.target.value)}
+                        placeholder="e.g., 30"
+                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
+                      />
+                    </div>
                     <div className="space-y-3">
                       <Label htmlFor="total-hours" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
-                        Total Hours *
+                        Total Hours
                       </Label>
                       <Input
                         id="total-hours"
                         type="number"
                         min={0}
                         value={totalHours}
-                        onChange={(e) => setTotalHours(e.target.value)}
-                        placeholder="e.g., 40"
-                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
+                        readOnly
+                        className="border-gray-300 bg-gray-50 h-12 text-base text-gray-900 cursor-not-allowed"
                       />
                     </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="calculated-credits" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
+                        Calculated Credits
+                      </Label>
+                      <Input
+                        id="calculated-credits"
+                        type="text"
+                        value={calculatedCredits}
+                        readOnly
+                        className="border-gray-300 bg-gray-50 h-12 text-base text-gray-900 cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Number of Days */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <Label htmlFor="no-of-days" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
                         Number of Days *
@@ -266,6 +344,26 @@ const PreviousCoursesForm: React.FC = () => {
                         placeholder="e.g., 5"
                         className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
                       />
+                    </div>
+                  </div>
+
+                  {/* Credit Calculation Info */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-1 bg-blue-100 rounded">
+                        <Info className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="text-sm text-blue-800">
+                        <p className="font-medium mb-1">Credit Calculation Formula:</p>
+                        <ul className="space-y-1 text-xs">
+                          <li>• <strong>Theory Hours:</strong> 30 hours = 1 credit</li>
+                          <li>• <strong>Practical Hours:</strong> 15 hours = 1 credit</li>
+                          <li>• <strong>Total Credits:</strong> (Theory ÷ 30) + (Practical ÷ 15)</li>
+                        </ul>
+                        <p className="text-xs mt-2 text-blue-700">
+                          Example: 60 theory + 30 practical = (60÷30) + (30÷15) = 2 + 2 = 4 credits
+                        </p>
+                      </div>
                     </div>
                   </div>
 

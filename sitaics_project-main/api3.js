@@ -303,7 +303,12 @@ app.get('/api/bprnd/pending-credits', async (req, res) => {
         name: rec.name,
         organization: rec.organization,
         discipline: rec.discipline,
+        theoryHours: rec.theoryHours,
+        practicalHours: rec.practicalHours,
+        theoryCredits: rec.theoryCredits,
+        practicalCredits: rec.practicalCredits,
         totalHours: rec.totalHours,
+        calculatedCredits: rec.calculatedCredits,
         noOfDays: rec.noOfDays,
         pdf: pdfUrl,
         admin_approved: rec.admin_approved,
@@ -510,7 +515,12 @@ app.get('/api/bprnd/pending-credits/student/:studentId', async (req, res) => {
         name: rec.name,
         organization: rec.organization,
         discipline: rec.discipline,
+        theoryHours: rec.theoryHours,
+        practicalHours: rec.practicalHours,
+        theoryCredits: rec.theoryCredits,
+        practicalCredits: rec.practicalCredits,
         totalHours: rec.totalHours,
+        calculatedCredits: rec.calculatedCredits,
         noOfDays: rec.noOfDays,
         pdf: pdfUrl,
         admin_approved: rec.admin_approved,
@@ -610,7 +620,7 @@ app.post('/api/bprnd/claims/:claimId/approve', async (req, res) => {
         poc_approved: true,
         poc_approved_at: new Date()
       },
-      { new: true }
+      { new: true, runValidators: false }
     );
 
     if (!claim) {
@@ -660,7 +670,7 @@ app.post('/api/bprnd/claims/:claimId/decline', async (req, res) => {
         declined_reason: reason,
         declined_at: new Date()
       },
-      { new: true }
+      { new: true, runValidators: false }
     );
 
     if (!claim) {
@@ -682,6 +692,58 @@ app.post('/api/bprnd/claims/:claimId/decline', async (req, res) => {
       success: false,
       message: 'Error declining claim',
       error: error.message
+    });
+  }
+});
+
+// Get count of pending credit requests for POC dashboard
+app.get('/api/bprnd/poc/pending-credits/count', async (req, res) => {
+  try {
+    // Count pending credits that are waiting for POC approval (neither POC nor admin approved yet)
+    const pendingCreditsCount = await PendingCredits.countDocuments({
+      bprnd_poc_approved: false,
+      admin_approved: false
+    });
+
+    res.json({
+      success: true,
+      message: 'Pending credits count retrieved successfully',
+      data: {
+        count: pendingCreditsCount
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching pending credits count:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch pending credits count',
+      details: error.message
+    });
+  }
+});
+
+// Get count of pending certification requests for POC dashboard
+app.get('/api/bprnd/poc/claims/count', async (req, res) => {
+  try {
+    // Count certification claims that are waiting for POC approval (neither POC nor admin approved yet)
+    const pendingClaimsCount = await bprnd_certification_claim.countDocuments({
+      poc_approved: false,
+      admin_approved: false
+    });
+
+    res.json({
+      success: true,
+      message: 'Pending certification claims count retrieved successfully',
+      data: {
+        count: pendingClaimsCount
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching pending certification claims count:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch pending certification claims count',
+      details: error.message
     });
   }
 });

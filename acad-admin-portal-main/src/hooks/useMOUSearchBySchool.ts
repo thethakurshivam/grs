@@ -44,7 +44,7 @@ export const useMOUSearchBySchool = (): UseMOUSearchBySchoolReturn => {
         return;
       }
 
-      const response = await fetch(`http://localhost:3000/api/mous/school/${encodeURIComponent(schoolId)}`, {
+      const response = await fetch(`http://localhost:3002/api/mous/school/${encodeURIComponent(schoolId)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

@@ -82,9 +82,9 @@ const PendingAdmin = require('../models/pendingAdmin');
 const Candidate = require('../models1/student');
 const Student = require('../models1/student'); // Import the correct Student model
 const PendingCredits = require('../model3/pendingcredits');
-const CreditCalculation = require('../model3/bprndstudents');
-const bprnd_certification_claim = require('../model3/bprnd_certification_claim');
 const bprndStudents = require('../model3/bprndstudents');
+const bprnd_certification_claim = require('../model3/bprnd_certification_claim');
+// Note: BPRND students are stored in credit_calculations collection, using bprndstudents model
 const CourseHistory = require('../model3/course_history');
 const umbrella = require('../model3/umbrella');
 const BprndCertificate = require('../model3/bprnd_certificate');
@@ -102,19 +102,14 @@ const recalculateCumulativeCounts = async (studentId, discipline) => {
   try {
     const allCoursesInDiscipline = await CourseHistory.find({
       studentId: new mongoose.Types.ObjectId(studentId),
-      discipline: discipline
+      discipline: discipline,
+      certificateContributed: { $ne: true } // Only count courses not contributed to certificates
     }).sort({ createdAt: 1 }); // Oldest first
 
     let cumulativeCount = 0;
     for (const course of allCoursesInDiscipline) {
-      if (course.certificateContributed) {
-        // For contributed courses, count only the remaining credits
-        const remainingCredits = course.creditsEarned - (course.contributedToCertificate?.creditsContributed || 0);
-        cumulativeCount += remainingCredits;
-      } else {
-        // For non-contributed courses, count all credits
-        cumulativeCount += course.creditsEarned;
-      }
+      // Only count courses that haven't contributed to certificates
+      cumulativeCount += course.creditsEarned;
       course.count = cumulativeCount;
       await course.save();
     }
@@ -822,7 +817,12 @@ app.get('/api/pending-credits', authenticateToken, asyncHandler(async (req, res)
         name: pendingCreditData.name,
         organization: pendingCreditData.organization,
         discipline: pendingCreditData.discipline,
+        theoryHours: pendingCreditData.theoryHours,
+        practicalHours: pendingCreditData.practicalHours,
+        theoryCredits: pendingCreditData.theoryCredits,
+        practicalCredits: pendingCreditData.practicalCredits,
         totalHours: pendingCreditData.totalHours,
+        calculatedCredits: pendingCreditData.calculatedCredits,
         noOfDays: pendingCreditData.noOfDays,
         pdf: pendingCreditData.pdf,
         admin_approved: pendingCreditData.admin_approved,
@@ -894,22 +894,32 @@ app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(asy
       
       // Now apply credits and save to course_history
       try {
-        // Calculate credits: 15 hours = 1 credit
-        const totalHours = Number(pendingCredit.totalHours || 0);
-        const newCredits = totalHours > 0 ? Math.ceil(totalHours / 15) : 0;
+        // Calculate credits using new formula: theory (30 hours = 1 credit) + practical (15 hours = 1 credit)
+        const theoryHours = Number(pendingCredit.theoryHours || 0);
+        const practicalHours = Number(pendingCredit.practicalHours || 0);
+        const newCredits = (theoryHours / 30) + (practicalHours / 15);
+        
+        // Calculate individual credits for detailed logging
+        const theoryCredits = theoryHours / 30;
+        const practicalCredits = practicalHours / 15;
+        
+        console.log(`📊 Credit calculation: Theory ${theoryHours}h (${theoryCredits.toFixed(2)} credits) + Practical ${practicalHours}h (${practicalCredits.toFixed(2)} credits) = ${newCredits} total credits`);
+        console.log(`📊 Detailed breakdown: Theory ${theoryCredits.toFixed(2)} credits, Practical ${practicalCredits.toFixed(2)} credits`);
         
         if (newCredits > 0) {
-          // Find student and update Total_Credits
-          const student = await bprndStudents.findById(pendingCredit.studentId);
+          // Find student in credit_calculations collection and update credits
+          const db = mongoose.connection.db;
+          const creditCalculationsCollection = db.collection('credit_calculations');
+          
+          const student = await creditCalculationsCollection.findOne({ _id: pendingCredit.studentId });
           if (student) {
+            console.log(`🔍 Found student: ${student.Name} (${student.email})`);
+            
             // Dynamically fetch umbrella fields from database
             const umbrellaFields = await umbrella.find({}).lean();
             if (!umbrellaFields || umbrellaFields.length === 0) {
-              console.log('⚠️ No umbrella fields found in database, only updating Total_Credits');
-              await bprndStudents.updateOne(
-                { _id: pendingCredit.studentId },
-                { $inc: { Total_Credits: newCredits } }
-              );
+              console.log('⚠️ No umbrella fields found in database');
+              return;
             } else {
               // Convert umbrella names to field keys (e.g., "Cyber Security" -> "Cyber_Security")
               const UMBRELLA_KEYS = umbrellaFields.map(u => u.name.replace(/\s+/g, '_'));
@@ -950,9 +960,9 @@ app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(asy
                 );
               }
               
-              // Update student credits
+              // Update student credits in credit_calculations collection
               if (fieldKey) {
-                await bprndStudents.updateOne(
+                await creditCalculationsCollection.updateOne(
                   { _id: pendingCredit.studentId },
                   {
                     $inc: {
@@ -961,15 +971,18 @@ app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(asy
                     },
                   }
                 );
-                console.log(`✅ Credits applied: ${newCredits} credits added to student ${pendingCredit.studentId} in field: ${fieldKey}`);
+                console.log(`✅ Credits applied: ${newCredits} credits added to student ${student.Name} in field: ${fieldKey}`);
               } else {
-                await bprndStudents.updateOne(
+                await creditCalculationsCollection.updateOne(
                   { _id: pendingCredit.studentId },
                   { $inc: { Total_Credits: newCredits } }
                 );
                 console.log(`⚠️ No matching umbrella field found for discipline "${pendingCredit.discipline}", only Total_Credits updated`);
               }
             }
+          } else {
+            console.log(`❌ Student not found in credit_calculations collection: ${pendingCredit.studentId}`);
+            return;
           }
         }
         
@@ -987,19 +1000,31 @@ app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(asy
           
           console.log(`🔍 Count calculation: Last count (${lastCount}) + New credits (${newCredits}) = New count (${newCount})`);
           
+          // Use the already calculated individual credits for detailed tracking
+          
           const courseHistoryEntry = new CourseHistory({
             studentId: pendingCredit.studentId,
             name: pendingCredit.name,
             organization: pendingCredit.organization,
             discipline: pendingCredit.discipline,
+            theoryHours: pendingCredit.theoryHours,
+            practicalHours: pendingCredit.practicalHours,
+            theoryCredits: theoryCredits,
+            practicalCredits: practicalCredits,
             totalHours: pendingCredit.totalHours,
             noOfDays: pendingCredit.noOfDays,
             creditsEarned: newCredits,
-            count: newCount
+            count: newCount,
+            // Add PDF information from pending credit
+            pdfPath: pendingCredit.pdf || null,
+            pdfFileName: pendingCredit.pdf ? pendingCredit.pdf.split('/').pop() : null
           });
           
           await courseHistoryEntry.save();
-          console.log(`✅ Course history saved for student ${pendingCredit.studentId}: ${pendingCredit.name} - ${newCredits} credits | Total count: ${newCount}`);
+          console.log(`✅ Course history saved for student ${pendingCredit.studentId}: ${pendingCredit.name}`);
+          console.log(`   📊 Theory: ${theoryHours}h = ${theoryCredits.toFixed(2)} credits`);
+          console.log(`   📊 Practical: ${practicalHours}h = ${practicalCredits.toFixed(2)} credits`);
+          console.log(`   📊 Total: ${newCredits.toFixed(2)} credits | Cumulative count: ${newCount}`);
         } catch (historyError) {
           console.error('Error saving to course history:', historyError);
           // Don't fail the approval if course history saving fails
@@ -2147,17 +2172,8 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
     return res.status(400).json({ success: false, error: 'POC must approve first before admin can approve' });
   }
 
-  // Set admin approval
-  claim.admin_approved = true;
-  claim.admin_approved_at = new Date();
-  claim.admin_approved_by = req.user?.email || 'admin';
-  
-  // Only set status to approved if POC has approved AND we successfully process the claim
-  // For now, keep it as admin_approved until we process everything
-  claim.status = 'admin_approved';
-  await claim.save();
-
-  console.log(`✅ Admin approved claim ${claimId} for ${claim.umbrellaKey} - ${claim.qualification}`);
+  // Don't set status to admin_approved yet - wait until entire process is successful
+  console.log(`🔄 Admin processing claim ${claimId} for ${claim.umbrellaKey} - ${claim.qualification}`);
 
   // Now both POC and Admin have approved - process the claim
   try {
@@ -2173,9 +2189,7 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
     const currentTotalCredits = Number(student.Total_Credits || 0);
 
     if (currentCredits < requiredCredits) {
-      claim.status = 'declined';
-      claim.declined_reason = 'Insufficient credits';
-      await claim.save();
+      // Don't change the claim status - just return error
       return res.status(400).json({ 
         success: false, 
         error: `Insufficient credits. Required: ${requiredCredits}, Available: ${currentCredits}` 
@@ -2183,9 +2197,19 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
     }
 
     // Deduct credits
-    student[umbrellaField] = Math.max(0, currentCredits - requiredCredits);
-    student.Total_Credits = Math.max(0, currentTotalCredits - requiredCredits);
+    const newUmbrellaCredits = Math.max(0, currentCredits - requiredCredits);
+    const newTotalCredits = Math.max(0, currentTotalCredits - requiredCredits);
+    
+    student[umbrellaField] = newUmbrellaCredits;
+    student.Total_Credits = newTotalCredits;
     await student.save();
+    
+    console.log(`💰 Credit deduction completed:`);
+    console.log(`  Umbrella field: ${umbrellaField}`);
+    console.log(`  Previous credits: ${currentCredits}`);
+    console.log(`  Required credits: ${requiredCredits}`);
+    console.log(`  New credits: ${newUmbrellaCredits}`);
+    console.log(`  Total credits: ${currentTotalCredits} → ${newTotalCredits}`);
 
     // Create certificate
     const certificate = new BprndCertificate({
@@ -2198,57 +2222,88 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
     });
     await certificate.save();
 
-    // Mark courses as contributed to this certificate (FIFO method)
+    // Get courses that will contribute to this certificate (FIFO method)
+    // Convert umbrellaKey back to proper format for course history query
+    // e.g., "Military_Law" -> "Military Law"
+    const disciplineForQuery = claim.umbrellaKey.replace(/_/g, ' ');
+    
+    console.log(`🔍 Admin approval: Querying course history for discipline: "${disciplineForQuery}" (converted from umbrellaKey: "${claim.umbrellaKey}")`);
+    
     const coursesToMark = await CourseHistory.find({
       studentId: claim.studentId,
-      discipline: claim.umbrellaKey,
-      certificateContributed: false
+      discipline: disciplineForQuery,
+      certificateContributed: { $ne: true } // Only consider courses not already contributed
     }).sort({ createdAt: 1 }); // Oldest first
+    
+    console.log(`📊 Admin approval: Found ${coursesToMark.length} course history records for discipline: "${disciplineForQuery}"`);
 
     let remainingCredits = requiredCredits;
     const markedCourses = [];
     let totalCreditsContributed = 0;
+    const coursesToMarkIds = []; // Track courses that will be marked as contributed
 
     for (const course of coursesToMark) {
       if (remainingCredits <= 0) break;
       
       const creditsToContribute = Math.min(course.creditsEarned, remainingCredits);
       
-      course.certificateContributed = true;
-      course.contributedToCertificate = {
-        certificateId: certificate._id,
-        certificateNo: certificate.certificateNo,
-        qualification: certificate.qualification,
-        contributedAt: new Date(),
-        creditsContributed: creditsToContribute
-      };
-      
-      await course.save();
+      // Track course info before marking
       markedCourses.push({
         courseId: course._id,
         courseName: course.name,
         creditsContributed: creditsToContribute
       });
       
+      // Add to marking list
+      coursesToMarkIds.push(course._id);
+      
       remainingCredits -= creditsToContribute;
       totalCreditsContributed += creditsToContribute;
     }
 
-    // Recalculate cumulative counts for all courses in this discipline
-    await recalculateCumulativeCounts(claim.studentId, claim.umbrellaKey);
+    // Mark the contributing courses as certificateContributed: true in coursehistories collection
+    if (coursesToMarkIds.length > 0) {
+      const updateResult = await CourseHistory.updateMany(
+        { _id: { $in: coursesToMarkIds } },
+        { certificateContributed: true }
+      );
+      
+      console.log(`✅ Marked ${updateResult.modifiedCount} contributing courses as certificateContributed: true`);
+      console.log(`📋 Marked course IDs:`, coursesToMarkIds);
+    }
 
-    // Mark claim as finalized
-    claim.status = 'approved';
-    claim.finalized_at = new Date();
-    await claim.save();
+    // Recalculate cumulative counts for all courses in this discipline
+    // Use the converted discipline name for the recalculation
+    await recalculateCumulativeCounts(claim.studentId, disciplineForQuery);
+
+    // Mark claim as finalized and set admin approval fields using findByIdAndUpdate
+    const finalizedClaim = await bprnd_certification_claim.findByIdAndUpdate(
+      claimId,
+      {
+        admin_approved: true,
+        admin_approved_at: new Date(),
+        admin_approved_by: req.user?.email || 'admin',
+        status: 'approved',
+        finalized_at: new Date()
+      },
+      { new: true, runValidators: false }
+    );
+
+    if (!finalizedClaim) {
+      return res.status(500).json({ success: false, error: 'Failed to finalize claim' });
+    }
+
+    // ✅ DELETE the claim after successful approval and certificate issuance
+    await bprnd_certification_claim.findByIdAndDelete(claimId);
 
     console.log(`🎉 Claim finalized: ${requiredCredits} credits deducted, certificate issued, ${markedCourses.length} courses marked as contributed`);
+    console.log(`🗑️ Claim ${claimId} deleted from database after successful approval`);
 
     return res.json({ 
       success: true, 
-      message: 'Claim approved and finalized. Credits deducted and certificate issued.',
+      message: 'Claim approved and finalized. Credits deducted, certificate issued, courses marked as contributed, and claim deleted.',
       data: {
-        claim,
+        claimId: claimId, // Return the ID since claim is now deleted
         certificate,
         creditsDeducted: requiredCredits,
         remainingCredits: {
@@ -2256,7 +2311,8 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
           total: student.Total_Credits
         },
         markedCourses: markedCourses,
-        coursesContributed: markedCourses.length
+        coursesContributed: markedCourses.length,
+        coursesMarked: coursesToMarkIds.length
       }
     });
 
@@ -2268,15 +2324,48 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
 
 // Decline a claim as Admin
 app.post('/api/bprnd/claims/:claimId/decline', authenticateToken, asyncHandler(async (req, res) => {
-  const { claimId } = req.params;
-  const claim = await bprnd_certification_claim.findById(claimId);
-  if (!claim) return res.status(404).json({ success: false, error: 'Claim not found' });
+  try {
+    const { claimId } = req.params;
+    const { reason } = req.body;
+    
+    const claim = await bprnd_certification_claim.findById(claimId);
+    if (!claim) return res.status(404).json({ success: false, error: 'Claim not found' });
 
-  claim.adminApproval = { by: req.user?.email || 'admin', at: new Date(), decision: 'declined' };
-  claim.status = 'declined';
-  await claim.save();
+    // Update using the new field structure
+    claim.admin_approved = false;
+    claim.admin_approved_at = new Date();
+    claim.admin_approved_by = req.user?.email || 'admin';
+    claim.status = 'declined';
+    claim.declined_reason = reason || 'Declined by admin';
+    claim.declined_at = new Date();
+    
+    await claim.save();
 
-  res.json({ success: true, message: 'Admin declined' });
+    console.log(`✅ Admin declined claim ${claimId} for ${claim.umbrellaKey} - ${claim.qualification}`);
+
+    // ✅ DELETE the declined claim from database
+    await bprnd_certification_claim.findByIdAndDelete(claimId);
+    
+    console.log(`🗑️ Declined claim ${claimId} deleted from database`);
+
+    res.json({ 
+      success: true, 
+      message: 'Claim declined by admin and deleted from database',
+      data: {
+        claimId: claimId,
+        status: 'declined',
+        declined_reason: claim.declined_reason,
+        declined_at: claim.declined_at
+      }
+    });
+  } catch (error) {
+    console.error('Error declining claim:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error declining claim',
+      details: error.message
+    });
+  }
 }));
 
 // Get pending credits for a specific student
@@ -2376,6 +2465,58 @@ app.post('/api/pending-credits/:studentId/decline', authenticateToken, asyncHand
     res.status(500).json({
       success: false,
       error: 'Failed to decline pending credits',
+      details: error.message
+    });
+  }
+}));
+
+// Get count of pending credit requests for admin dashboard
+app.get('/api/admin/pending-credits/count', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    // Count pending credits that are POC approved but waiting for admin approval
+    const pendingCreditsCount = await PendingCredits.countDocuments({
+      bprnd_poc_approved: true,
+      admin_approved: false
+    });
+
+    res.json({
+      success: true,
+      message: 'Pending credits count retrieved successfully',
+      data: {
+        count: pendingCreditsCount
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching pending credits count:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch pending credits count',
+      details: error.message
+    });
+  }
+}));
+
+// Get count of pending certification requests for admin dashboard
+app.get('/api/admin/bprnd-claims/count', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    // Count certification claims that are POC approved but waiting for admin approval
+    const pendingClaimsCount = await bprnd_certification_claim.countDocuments({
+      poc_approved: true,
+      admin_approved: false
+    });
+
+    res.json({
+      success: true,
+      message: 'Pending certification claims count retrieved successfully',
+      data: {
+        count: pendingClaimsCount
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching pending certification claims count:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch pending certification claims count',
       details: error.message
     });
   }

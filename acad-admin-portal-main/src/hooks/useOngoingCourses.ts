@@ -49,7 +49,7 @@ export const useOngoingCourses = () => {
 
       console.log('Making API request to:', 'http://localhost:3000/api/courses/ongoing');
       
-      const response = await fetch('http://localhost:3000/api/courses/ongoing', {
+      const response = await fetch('http://localhost:3002/api/courses/ongoing', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

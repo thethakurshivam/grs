@@ -33,7 +33,7 @@ export const useSchools = (): UseSchoolsReturn => {
         return;
       }
 
-      const response = await fetch('http://localhost:3000/api/schools', {
+      const response = await fetch('http://localhost:3002/api/schools', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

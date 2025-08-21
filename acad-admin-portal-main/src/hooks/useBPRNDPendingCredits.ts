@@ -6,7 +6,12 @@ export interface PendingCreditItem {
   name: string;
   organization: string;
   discipline: string;
+  theoryHours?: number;
+  practicalHours?: number;
+  theoryCredits?: number;
+  practicalCredits?: number;
   totalHours: number;
+  calculatedCredits?: number;
   noOfDays: number;
   pdf: string | null;
   acceptUrl: string;

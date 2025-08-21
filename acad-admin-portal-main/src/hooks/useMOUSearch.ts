@@ -41,7 +41,7 @@ export const useMOUSearch = (): UseMOUSearchReturn => {
         return;
       }
 
-      const response = await fetch(`http://localhost:3000/api/mous/search/${encodeURIComponent(organizationName)}`, {
+      const response = await fetch(`http://localhost:3002/api/mous/search/${encodeURIComponent(organizationName)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

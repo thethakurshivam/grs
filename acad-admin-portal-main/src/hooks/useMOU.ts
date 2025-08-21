@@ -52,8 +52,8 @@ export const useMOU = () => {
         mode: 'admin' as const,
         token: adminToken,
         pocId: null,
-        listUrl: `http://localhost:3000/api/mous`,
-        byIdUrl: (mouId: string) => `http://localhost:3000/api/mous/${mouId}`,
+        listUrl: `http://localhost:3002/api/mous`,
+        byIdUrl: (mouId: string) => `http://localhost:3002/api/mous/${mouId}`,
       };
     }
 

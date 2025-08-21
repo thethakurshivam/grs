@@ -49,7 +49,7 @@ export const useUpcomingCourses = () => {
 
       console.log('Making API request to:', 'http://localhost:3000/api/courses/upcoming');
       
-      const response = await fetch('http://localhost:3000/api/courses/upcoming', {
+      const response = await fetch('http://localhost:3002/api/courses/upcoming', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

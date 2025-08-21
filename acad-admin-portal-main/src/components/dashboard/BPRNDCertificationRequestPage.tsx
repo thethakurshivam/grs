@@ -35,12 +35,22 @@ interface BPRNDClaim {
   
   notes?: string;
   courses?: Array<{
-    courseName: string;
+    _id: string;
+    name: string;
     organization: string;
-    hoursEarned: number;
+    discipline: string;
+    theoryHours: number;
+    practicalHours: number;
+    theoryCredits: number;
+    practicalCredits: number;
+    totalHours: number;
     creditsEarned: number;
+    noOfDays: number;
     completionDate: string;
     courseId: string;
+    // Add PDF information
+    pdfPath?: string;
+    pdfFileName?: string;
   }>;
   createdAt: string;
   updatedAt: string;
@@ -60,7 +70,7 @@ const BPRNDCertificationRequestPage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       if (!token) throw new Error('Missing admin token');
       
-      const res = await fetch('http://localhost:3000/api/bprnd/claims', {
+      const res = await fetch('http://localhost:3002/api/bprnd/claims', {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -90,7 +100,7 @@ const BPRNDCertificationRequestPage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       if (!token) throw new Error('Missing admin token');
       
-      const res = await fetch(`http://localhost:3000/api/bprnd/claims/${id}/approve`, {
+      const res = await fetch(`http://localhost:3002/api/bprnd/claims/${id}/approve`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -135,7 +145,7 @@ const BPRNDCertificationRequestPage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       if (!token) throw new Error('Missing admin token');
       
-      const res = await fetch(`http://localhost:3000/api/bprnd/claims/${id}/decline`, {
+      const res = await fetch(`http://localhost:3002/api/bprnd/claims/${id}/decline`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -254,14 +264,14 @@ const BPRNDCertificationRequestPage: React.FC = () => {
         <Button
           variant="ghost"
           onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 text-black font-semibold"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">BPR&D Certification Request</h1>
-          <p className="text-gray-600">Review and approve BPRND certification claims</p>
+          <h1 className="text-3xl font-bold text-black">BPR&D Certification Request</h1>
+          <p className="text-black">Review and approve BPRND certification claims</p>
         </div>
       </div>
 
@@ -272,8 +282,8 @@ const BPRNDCertificationRequestPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-blue-600" />
               <div>
-                <p className="text-sm text-gray-600">Total Claims</p>
-                <p className="text-2xl font-bold">{claims.length}</p>
+                <p className="text-sm text-black">Total Claims</p>
+                <p className="text-2xl font-bold text-black">{claims.length}</p>
               </div>
             </div>
           </CardContent>
@@ -283,8 +293,8 @@ const BPRNDCertificationRequestPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-yellow-600" />
               <div>
-                <p className="text-sm text-gray-600">Pending</p>
-                <p className="text-2xl font-bold">{claims.filter(c => c.status === 'pending').length}</p>
+                <p className="text-sm text-black">Pending</p>
+                <p className="text-2xl font-bold text-black">{claims.filter(c => c.status === 'pending').length}</p>
               </div>
             </div>
           </CardContent>
@@ -294,8 +304,8 @@ const BPRNDCertificationRequestPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-green-600" />
               <div>
-                <p className="text-sm text-gray-600">Approved</p>
-                <p className="text-2xl font-bold">{claims.filter(c => c.status === 'approved').length}</p>
+                <p className="text-sm text-black">Approved</p>
+                <p className="text-2xl font-bold text-black">{claims.filter(c => c.status === 'approved').length}</p>
               </div>
             </div>
           </CardContent>
@@ -305,8 +315,8 @@ const BPRNDCertificationRequestPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-red-600" />
               <div>
-                <p className="text-sm text-gray-600">Declined</p>
-                <p className="text-2xl font-bold">{claims.filter(c => c.status === 'declined').length}</p>
+                <p className="text-sm text-black">Declined</p>
+                <p className="text-2xl font-bold text-black">{claims.filter(c => c.status === 'declined').length}</p>
               </div>
             </div>
           </CardContent>
@@ -318,8 +328,8 @@ const BPRNDCertificationRequestPage: React.FC = () => {
         <Card>
           <CardContent className="p-8 text-center">
             <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No BPRND Claims Found</h3>
-            <p className="text-gray-600">There are currently no BPRND certification claims to review.</p>
+            <h3 className="text-lg font-medium text-black mb-2">No BPRND Claims Found</h3>
+            <p className="text-black">There are currently no BPRND certification claims to review.</p>
           </CardContent>
         </Card>
       ) : (
@@ -332,10 +342,10 @@ const BPRNDCertificationRequestPage: React.FC = () => {
                     <div className="flex items-center gap-3 mb-3">
                       <Award className="h-5 w-5 text-blue-600" />
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-black">
                           {claim.umbrellaKey.replace(/_/g, ' ')}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-black">
                           Student ID: {claim.studentId}
                         </p>
                       </div>
@@ -358,7 +368,7 @@ const BPRNDCertificationRequestPage: React.FC = () => {
 
                     {claim.notes && (
                       <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-700">
+                        <p className="text-sm text-black">
                           <span className="font-medium">Notes:</span> {claim.notes}
                         </p>
                       </div>
@@ -375,23 +385,64 @@ const BPRNDCertificationRequestPage: React.FC = () => {
                         </div>
                         <div className="bg-blue-50 rounded-lg p-4">
                           <div className="space-y-3">
-                            {claim.courses.map((course, index) => (
-                              <div key={index} className="flex items-center justify-between p-3 bg-white rounded border border-blue-200">
-                                <div className="flex-1">
-                                  <h4 className="font-medium text-gray-900">{course.courseName}</h4>
-                                  <p className="text-sm text-gray-600">{course.organization}</p>
-                                  <p className="text-xs text-gray-500">
-                                    Completed: {new Date(course.completionDate).toLocaleDateString()}
-                                  </p>
+                                                        {claim.courses.map((course, index) => (
+                              <div key={index} className="p-3 bg-white rounded border border-blue-200">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex-1">
+                                                            <h4 className="font-medium text-black">{course.name}</h4>
+                        <p className="text-sm text-black">{course.organization}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-sm font-medium text-blue-600">
+                                      {course.creditsEarned} credits
+                                    </p>
+                                    <p className="text-xs text-black">
+                                      {course.totalHours} hours
+                                    </p>
+                                  </div>
                                 </div>
-                                <div className="text-right">
-                                  <p className="text-sm font-medium text-blue-600">
-                                    {course.creditsEarned} credits
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {course.hoursEarned} hours
-                                  </p>
+                                
+                                {/* Detailed Credit Breakdown */}
+                                <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                                  <h5 className="font-medium text-blue-900 mb-2 text-xs">Credit Breakdown</h5>
+                                  <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                      <p className="text-blue-700">Theory: {course.theoryHours || 0}h = {(course.theoryCredits || 0).toFixed(2)} cr</p>
+                                      <p className="text-blue-700">Practical: {course.practicalHours || 0}h = {(course.practicalCredits || 0).toFixed(2)} cr</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-blue-700">Days: {course.noOfDays || 0}</p>
+                                      <p className="text-blue-700">Completed: {new Date(course.completionDate).toLocaleDateString()}</p>
+                                    </div>
+                                  </div>
                                 </div>
+                                
+                                {/* PDF Document Display */}
+                                {course.pdfPath && (
+                                  <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
+                                    <h5 className="font-medium text-green-900 mb-2 text-xs">Supporting Document</h5>
+                                    <div className="flex items-center gap-2">
+                                      <FileText className="h-4 w-4 text-green-600" />
+                                      <div className="flex-1">
+                                        <p className="text-xs text-green-700 font-medium">
+                                          {course.pdfFileName || 'Course Certificate'}
+                                        </p>
+                                        <p className="text-xs text-green-600">
+                                          PDF document uploaded with course submission
+                                        </p>
+                                      </div>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-6 px-2 text-xs border-green-300 text-green-700 hover:bg-green-100"
+                                        onClick={() => window.open(course.pdfPath, '_blank')}
+                                      >
+                                        <Eye className="h-3 w-3 mr-1" />
+                                        View PDF
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -406,10 +457,10 @@ const BPRNDCertificationRequestPage: React.FC = () => {
                             </svg>
                           </div>
                           <div className="ml-3">
-                            <p className="text-sm text-yellow-700">
+                            <p className="text-sm text-black">
                               <strong>No course details available.</strong> This claim was created before course tracking was implemented.
                             </p>
-                            <p className="text-sm text-yellow-600 mt-1">
+                            <p className="text-sm text-black mt-1">
                               Course details: {JSON.stringify(claim.courses)}
                             </p>
                           </div>
@@ -472,7 +523,7 @@ const BPRNDCertificationRequestPage: React.FC = () => {
 
       {/* Refresh Button */}
       <div className="mt-6 text-center">
-        <Button onClick={fetchClaims} variant="outline" className="flex items-center gap-2 mx-auto">
+        <Button onClick={fetchClaims} variant="outline" className="flex items-center gap-2 mx-auto text-black font-semibold">
           <RefreshCcw className="h-4 w-4" />
           Refresh Claims
         </Button>

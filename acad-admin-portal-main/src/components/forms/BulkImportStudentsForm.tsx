@@ -56,7 +56,7 @@ const BulkImportStudentsForm = () => {
       formData.append('excelFile', selectedFile);
 
       // API call to backend bulk import students endpoint
-      const response = await fetch('http://localhost:3000/api/participants/import', {
+              const response = await fetch('http://localhost:3002/api/participants/import', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

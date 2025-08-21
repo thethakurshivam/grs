@@ -53,7 +53,7 @@ export const useCompletedCourses = () => {
 
       console.log('Making API request to:', 'http://localhost:3000/api/courses/completed');
       
-      const response = await fetch('http://localhost:3000/api/courses/completed', {
+      const response = await fetch('http://localhost:3002/api/courses/completed', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

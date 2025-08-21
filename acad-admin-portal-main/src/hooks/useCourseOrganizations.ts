@@ -16,7 +16,7 @@ export const useCourseOrganizations = () => {
           throw new Error('Authentication token not found');
         }
 
-        const response = await fetch('http://localhost:3000/api/courses/organizations', {
+        const response = await fetch('http://localhost:3002/api/courses/organizations', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

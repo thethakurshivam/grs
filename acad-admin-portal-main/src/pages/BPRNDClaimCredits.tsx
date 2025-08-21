@@ -3,6 +3,8 @@ import { StudentDashboardLayout } from '@/components/student/StudentDashboardLay
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import useBPRNDCertifications from '@/hooks/useBPRNDCertifications';
 import { useToast } from '@/hooks/use-toast';
+import { useCenteredToastContext } from '@/contexts/centered-toast-context';
+import { useNavigate } from 'react-router-dom';
 
 const BPRNDClaimCredits: React.FC = () => {
   const storedBprnd = typeof window !== 'undefined' ? localStorage.getItem('bprndStudentData') : null;
@@ -12,6 +14,8 @@ const BPRNDClaimCredits: React.FC = () => {
 
   const { data, isLoading, error, refetch } = useBPRNDCertifications(studentId);
   const { toast } = useToast();
+  const { showSuccess } = useCenteredToastContext();
+  const navigate = useNavigate();
 
   const handleRequest = async (
     item: { fieldKey: string; field: string; qualification: string }
@@ -33,7 +37,17 @@ const BPRNDClaimCredits: React.FC = () => {
         throw new Error(json?.message || `Failed with status ${res.status}`);
       }
 
-      toast({ title: 'Request submitted', description: `${item.field} — ${item.qualification}` });
+      // Show centered success toast for certification request
+      showSuccess(
+        'Certification Request Submitted!', 
+        `Your request for ${item.field} — ${item.qualification} has been submitted successfully.`,
+        3000 // 3 seconds
+      );
+      
+      // Automatically redirect to BPRND student dashboard after 3 seconds
+      setTimeout(() => {
+        navigate('/student/bprnd/dashboard');
+      }, 3000); // 3 seconds delay to match the popup duration
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Network error';
       toast({ title: 'Error', description: message, variant: 'destructive' });
