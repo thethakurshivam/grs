@@ -61,6 +61,7 @@ import BPRNDStudentClaimsPage from './components/student/BPRNDStudentClaimsPage'
 import BPRNDCertificationRequestPage from './components/dashboard/BPRNDCertificationRequestPage';
 import BPRNDPendingCreditsPage from './components/dashboard/BPRNDPendingCreditsPage';
 import BPRNDPendingCreditRequestsPage from './components/student/BPRNDPendingCreditRequestsPage';
+import CertificateMappingsListPage from './components/dashboard/CertificateMappingsListPage';
 import { CenteredToastProvider } from '@/contexts/centered-toast-context';
 
 const queryClient = new QueryClient();
@@ -127,6 +128,7 @@ const App = () => (
             <Route path="bprnd/claims" element={<AdminBPRNDClaimsPage />} />
             <Route path="bprnd-certification-request" element={<BPRNDCertificationRequestPage />} />
             <Route path="bprnd-pending-credits" element={<BPRNDPendingCreditsPage />} />
+            <Route path="certificate-mappings" element={<CertificateMappingsListPage />} />
           </Route>
 
           {/* POC Authentication Routes */}

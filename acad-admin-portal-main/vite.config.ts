@@ -9,8 +9,23 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     proxy: {
+      '/api/poc': {
+        target: 'http://localhost:3003',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/api/bprnd/student': {
+        target: 'http://localhost:3004',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/api/bprnd': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+        secure: false,
+      },
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:3002',
         changeOrigin: true,
         secure: false,
       }

@@ -38,8 +38,8 @@ const StudentLoginPage: React.FC<StudentLoginPageProps> = ({
     try {
       // API call to backend login endpoint
       const apiUrl = isBPRND
-        ? 'http://localhost:3004/login' // BPRND API (api4.js)
-        : 'http://localhost:3001/students/login'; // Regular student API (api1.js)
+        ? '/api/bprnd/student/login' // BPRND API (api4.js) - will proxy to port 3004
+        : '/api/students/login'; // Regular student API (api1.js) - will proxy to port 3001
 
       console.log('🔗 Login API URL:', apiUrl, 'isBPRND:', isBPRND);
 

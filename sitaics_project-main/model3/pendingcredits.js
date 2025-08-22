@@ -11,12 +11,17 @@ const pendingCreditsSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    courseName: {
+      type: String,
+      required: true,
+    },
     organization: {
       type: String,
       required: true,
     },
     discipline: {
       type: String,
+      
       required: true,
     },
     theoryHours: {

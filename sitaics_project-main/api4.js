@@ -528,16 +528,16 @@ router.get('/student/:id/course-history/:umbrella', async (req, res) => {
 // Pending credits upload (PDF)
 router.post('/pending-credits', upload.single('pdf'), async (req, res) => {
   try {
-    const { name, organization, discipline, studentId } = req.body;
+    const { name, courseName, organization, discipline, studentId } = req.body;
     const theoryHours = Number(req.body?.theoryHours);
     const practicalHours = Number(req.body?.practicalHours);
     const noOfDays = Number(req.body?.noOfDays);
 
     // Validate required fields
-    if (!studentId || !name || !organization || !discipline || Number.isNaN(theoryHours) || Number.isNaN(practicalHours) || Number.isNaN(noOfDays) || !req.file) {
+    if (!studentId || !name || !courseName || !organization || !discipline || Number.isNaN(theoryHours) || Number.isNaN(practicalHours) || Number.isNaN(noOfDays) || !req.file) {
       return res.status(400).json({
         success: false,
-        message: 'studentId, name, organization, discipline, theoryHours, practicalHours, noOfDays, and PDF file are required'
+        message: 'studentId, name, courseName, organization, discipline, theoryHours, practicalHours, noOfDays, and PDF file are required'
       });
     }
 
@@ -552,6 +552,7 @@ router.post('/pending-credits', upload.single('pdf'), async (req, res) => {
     const pendingCredit = new PendingCredits({
       studentId,
       name: String(name),
+      courseName: String(courseName),
       organization: String(organization),
       discipline: String(discipline),
       theoryHours,
@@ -616,6 +617,7 @@ app.get('/api/bprnd/pending-credits/student/:studentId', async (req, res) => {
         id: rec._id,
         studentId: rec.studentId,
         name: rec.name,
+        courseName: rec.courseName,
         organization: rec.organization,
         discipline: rec.discipline,
         theoryHours: rec.theoryHours,
@@ -647,12 +649,85 @@ app.get('/api/bprnd/pending-credits/student/:studentId', async (req, res) => {
 });
 
 // Mount router
+// Login endpoint for BPRND students
+app.post('/api/bprnd/student/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password are required',
+      });
+    }
+
+    // Find student by email
+    const student = await CreditCalculation.findOne({ email: email.toLowerCase().trim() });
+
+    if (!student) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password',
+      });
+    }
+
+    // Compare password using the method defined in the schema
+    const isPasswordValid = await student.comparePassword(password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password',
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        studentId: student._id,
+        email: student.email,
+        type: 'bprnd-student',
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      {
+        expiresIn: '24h',
+      }
+    );
+
+    // Return success response with token and student data (without password)
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token: token,
+      student: {
+        _id: student._id,
+        email: student.email,
+        Name: student.Name,
+        Designation: student.Designation,
+        State: student.State,
+        Department: student.Department,
+        EmployeeId: student.EmployeeId,
+        Umbrella: student.Umbrella,
+        Phone: student.Phone,
+        JoiningDate: student.JoiningDate,
+      },
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+});
+
 app.use('/', router);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'BPRND Student API is running' });
-});
+ });
 
 // Database test endpoint
 app.get('/test-db', async (req, res) => {

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 const creditCalculationSchema = new mongoose.Schema(
   {
@@ -38,5 +39,31 @@ const creditCalculationSchema = new mongoose.Schema(
   },
   { collection: 'credit_calculations' }
 );
+
+// Add password comparison method
+creditCalculationSchema.methods.comparePassword = async function(candidatePassword) {
+  try {
+    if (!this.password) {
+      return false;
+    }
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    console.error('Password comparison error:', error);
+    return false;
+  }
+};
+
+// Add password hashing middleware
+creditCalculationSchema.pre('save', async function(next) {
+  if (this.isModified('password')) {
+    try {
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+    } catch (error) {
+      console.error('Password hashing error:', error);
+    }
+  }
+  next();
+});
 
 module.exports = mongoose.model('CreditCalculation', creditCalculationSchema);

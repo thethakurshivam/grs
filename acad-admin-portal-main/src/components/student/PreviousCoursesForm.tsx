@@ -104,6 +104,10 @@ const PreviousCoursesForm: React.FC = () => {
         toast({ title: 'Validation Error', description: 'Please enter organization name', variant: 'destructive' });
         return;
       }
+      if (!first.course_name.trim()) {
+        toast({ title: 'Validation Error', description: 'Please enter course name', variant: 'destructive' });
+        return;
+      }
       if (!first.certificate_pdf) {
         toast({ title: 'Validation Error', description: 'Please attach certificate PDF', variant: 'destructive' });
         return;
@@ -121,6 +125,7 @@ const PreviousCoursesForm: React.FC = () => {
       const formData = new FormData();
       formData.append('studentId', studentId);
       formData.append('name', applicantName.trim());
+      formData.append('courseName', first.course_name.trim());
       formData.append('organization', first.organization_name.trim());
       formData.append('discipline', discipline.trim());
       formData.append('theoryHours', String(Number(theoryHours)));

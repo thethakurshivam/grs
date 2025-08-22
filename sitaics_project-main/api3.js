@@ -210,6 +210,75 @@ app.post(
   }
 );
 
+// Login route for frontend compatibility
+app.post('/api/poc/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password are required',
+      });
+    }
+
+    // Find user by email
+    const user = await pocbprnd.findOne({ email: email.toLowerCase().trim() });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password',
+      });
+    }
+
+    // Compare password using the method defined in the schema
+    const isPasswordValid = await user.comparePassword(password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password',
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        pocId: user._id,
+        email: user.email,
+        organization: user.organization,
+        type: 'bprnd-poc',
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      {
+        expiresIn: '24h',
+      }
+    );
+
+    // Return success response with token and user data (without password)
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token: token,
+      poc: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        organization: user.organization,
+        mous: []
+      },
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+});
+
 // Login route
 app.post('/api/bprnd/poc/login', async (req, res) => {
   try {

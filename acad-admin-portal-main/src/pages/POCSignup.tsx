@@ -66,7 +66,7 @@ const POCSignup: React.FC<POCSignupProps> = ({ isBPRND = false }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:3002/api/${isBPRND ? 'bprnd/poc' : 'poc'}/register`,
+        `/api/${isBPRND ? 'poc' : 'poc'}/register`,
         {
           method: 'POST',
           headers: {

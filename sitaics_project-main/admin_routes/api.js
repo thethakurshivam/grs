@@ -1004,7 +1004,7 @@ app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(asy
           
           const courseHistoryEntry = new CourseHistory({
             studentId: pendingCredit.studentId,
-            name: pendingCredit.name,
+            name: pendingCredit.courseName || pendingCredit.discipline + ' Course',
             organization: pendingCredit.organization,
             discipline: pendingCredit.discipline,
             theoryHours: pendingCredit.theoryHours,
@@ -1021,7 +1021,7 @@ app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(asy
           });
           
           await courseHistoryEntry.save();
-          console.log(`✅ Course history saved for student ${pendingCredit.studentId}: ${pendingCredit.name}`);
+          console.log(`✅ Course history saved for student ${pendingCredit.studentId}: ${pendingCredit.courseName || pendingCredit.discipline + ' Course'}`);
           console.log(`   📊 Theory: ${theoryHours}h = ${theoryCredits.toFixed(2)} credits`);
           console.log(`   📊 Practical: ${practicalHours}h = ${practicalCredits.toFixed(2)} credits`);
           console.log(`   📊 Total: ${newCredits.toFixed(2)} credits | Cumulative count: ${newCount}`);
@@ -2293,6 +2293,50 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
       return res.status(500).json({ success: false, error: 'Failed to finalize claim' });
     }
 
+    // Create certificate course mapping before deleting the claim
+    try {
+      const CertificateCourseMapping = require('../model3/certificate_course_mapping');
+      
+      // Get detailed course information for the mapping
+      const courseDetails = await CourseHistory.find({
+        _id: { $in: coursesToMarkIds }
+      }).lean();
+
+      // Create the mapping document
+      const certificateMapping = new CertificateCourseMapping({
+        certificateId: certificate._id,
+        studentId: claim.studentId,
+        umbrellaKey: claim.umbrellaKey,
+        qualification: claim.qualification,
+        totalCreditsRequired: requiredCredits,
+        courses: courseDetails.map(course => {
+          // Calculate how many credits this course contributes
+          const courseContribution = markedCourses.find(mc => mc.courseId.toString() === course._id.toString());
+          const creditsUsed = courseContribution ? courseContribution.creditsContributed : 0;
+          
+          return {
+            courseId: course._id,
+            courseName: course.name,
+            organization: course.organization,
+            theoryHours: course.theoryHours,
+            practicalHours: course.practicalHours,
+            totalCredits: course.creditsEarned,
+            creditsUsed: creditsUsed,
+            completionDate: course.createdAt,
+            pdfPath: course.pdfPath,
+            pdfFileName: course.pdfFileName
+          };
+        })
+      });
+
+      await certificateMapping.save();
+      console.log(`📋 Certificate course mapping created successfully for certificate ${certificate._id}`);
+      console.log(`   Mapped ${courseDetails.length} courses with total credits used: ${totalCreditsContributed}`);
+    } catch (mappingError) {
+      console.error('⚠️ Warning: Failed to create certificate course mapping:', mappingError);
+      // Continue with claim deletion even if mapping fails
+    }
+
     // ✅ DELETE the claim after successful approval and certificate issuance
     await bprnd_certification_claim.findByIdAndDelete(claimId);
 
@@ -2343,6 +2387,7 @@ app.post('/api/bprnd/claims/:claimId/decline', authenticateToken, asyncHandler(a
 
     console.log(`✅ Admin declined claim ${claimId} for ${claim.umbrellaKey} - ${claim.qualification}`);
 
+    // Note: No certificate course mapping created for declined claims
     // ✅ DELETE the declined claim from database
     await bprnd_certification_claim.findByIdAndDelete(claimId);
     
@@ -2363,6 +2408,256 @@ app.post('/api/bprnd/claims/:claimId/decline', authenticateToken, asyncHandler(a
     res.status(500).json({ 
       success: false, 
       error: 'Error declining claim',
+      details: error.message
+    });
+  }
+}));
+
+// Get all certificate course mappings
+app.get('/api/certificate-course-mappings', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    console.log('🚀 Admin route /api/certificate-course-mappings called');
+    
+    // Get query parameters for filtering
+    const { 
+      studentId, 
+      umbrellaKey, 
+      qualification, 
+      certificateId,
+      page = 1,
+      limit = 50,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
+
+    // Build filter object
+    const filter = {};
+    if (studentId) filter.studentId = studentId;
+    if (umbrellaKey) filter.umbrellaKey = umbrellaKey;
+    if (qualification) filter.qualification = qualification;
+    if (certificateId) filter.certificateId = certificateId;
+
+    // Build sort object
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Import the CertificateCourseMapping model
+    const CertificateCourseMapping = require('../model3/certificate_course_mapping');
+
+    // Get total count for pagination
+    const totalCount = await CertificateCourseMapping.countDocuments(filter);
+    
+    // Fetch mappings with pagination and sorting
+    const mappings = await CertificateCourseMapping.find(filter)
+      .populate('certificateId', 'certificateNo')
+      .populate('studentId', 'Name email State Umbrella') // Populate actual student fields
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    // Enhance the response with calculated fields
+    const enhancedMappings = mappings.map(mapping => {
+      const totalCreditsUsed = mapping.courses.reduce((sum, course) => sum + course.creditsUsed, 0);
+      const remainingCredits = Math.max(0, mapping.totalCreditsRequired - totalCreditsUsed);
+      const creditEfficiency = mapping.totalCreditsRequired > 0 
+        ? Math.round((totalCreditsUsed / mapping.totalCreditsRequired) * 100) 
+        : 0;
+
+      return {
+        ...mapping,
+        totalCreditsUsed,
+        remainingCredits,
+        creditEfficiency,
+        courseCount: mapping.courses.length,
+        // Format dates for better readability
+        createdAt: mapping.createdAt ? new Date(mapping.createdAt).toLocaleDateString() : null,
+        updatedAt: mapping.updatedAt ? new Date(mapping.updatedAt).toLocaleDateString() : null
+      };
+    });
+
+    console.log(`📊 Admin can see ${enhancedMappings.length} certificate course mappings`);
+    console.log(`💡 Total mappings in database: ${totalCount}`);
+
+    res.json({ 
+      success: true, 
+      count: enhancedMappings.length,
+      totalCount,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(totalCount / parseInt(limit)),
+      data: enhancedMappings 
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching certificate course mappings:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error fetching certificate course mappings',
+      details: error.message 
+    });
+  }
+}));
+
+// Get certificate course mapping by ID
+app.get('/api/certificate-course-mappings/:mappingId', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    const { mappingId } = req.params;
+    console.log(`🚀 Admin route /api/certificate-course-mappings/${mappingId} called`);
+
+    // Import the CertificateCourseMapping model
+    const CertificateCourseMapping = require('../model3/certificate_course_mapping');
+
+    const mapping = await CertificateCourseMapping.findById(mappingId)
+      .populate('certificateId', 'certificateNo')
+      .populate('studentId', 'name email')
+      .lean();
+
+    if (!mapping) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Certificate course mapping not found' 
+      });
+    }
+
+    // Calculate additional fields
+    const totalCreditsUsed = mapping.courses.reduce((sum, course) => sum + course.creditsUsed, 0);
+    const remainingCredits = Math.max(0, mapping.totalCreditsRequired - totalCreditsUsed);
+    const creditEfficiency = mapping.totalCreditsRequired > 0 
+      ? Math.round((totalCreditsUsed / mapping.totalCreditsRequired) * 100) 
+      : 0;
+
+    const enhancedMapping = {
+      ...mapping,
+      totalCreditsUsed,
+      remainingCredits,
+      creditEfficiency,
+      courseCount: mapping.courses.length
+    };
+
+    console.log(`📋 Admin retrieved mapping: ${mappingId}`);
+    console.log(`   Certificate: ${mapping.certificateId?.certificateNo || 'N/A'}`);
+    console.log(`   Student: ${mapping.studentId?.name || 'N/A'}`);
+    console.log(`   Courses: ${mapping.courses.length}`);
+
+    res.json({ 
+      success: true, 
+      data: enhancedMapping 
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching certificate course mapping:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error fetching certificate course mapping',
+      details: error.message 
+    });
+  }
+}));
+
+// Get certificate course mappings for a specific student
+app.get('/api/certificate-course-mappings/student/:studentId', authenticateToken, asyncHandler(async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { page = 1, limit = 50 } = req.query;
+    
+    console.log(`🚀 Admin route /api/certificate-course-mappings/student/${studentId} called`);
+
+    // Import the CertificateCourseMapping model
+    const CertificateCourseMapping = require('../model3/certificate_course_mapping');
+
+    // Validate student ID format
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid student ID format'
+      });
+    }
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get total count for pagination
+    const totalCount = await CertificateCourseMapping.countDocuments({ studentId });
+    
+    // Fetch mappings for the specific student
+    const mappings = await CertificateCourseMapping.find({ studentId })
+      .populate('certificateId', 'certificateNo')
+      .populate('studentId', 'name email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    if (mappings.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'No certificate course mappings found for this student'
+      });
+    }
+
+    // Enhance the response with calculated fields
+    const enhancedMappings = mappings.map(mapping => {
+      const totalCreditsUsed = mapping.courses.reduce((sum, course) => sum + course.creditsUsed, 0);
+      const remainingCredits = Math.max(0, mapping.totalCreditsRequired - totalCreditsUsed);
+      const creditEfficiency = mapping.totalCreditsRequired > 0 
+        ? Math.round((totalCreditsUsed / mapping.totalCreditsRequired) * 100) 
+        : 0;
+
+      return {
+        ...mapping,
+        totalCreditsUsed,
+        remainingCredits,
+        creditEfficiency,
+        courseCount: mapping.courses.length
+      };
+    });
+
+    // Calculate summary statistics for the student
+    const summary = {
+      totalMappings: totalCount,
+      totalCertificates: totalCount,
+      totalCreditsEarned: enhancedMappings.reduce((sum, m) => sum + m.totalCreditsRequired, 0),
+      totalCreditsUsed: enhancedMappings.reduce((sum, m) => sum + m.totalCreditsUsed, 0),
+      umbrellaBreakdown: {}
+    };
+
+    enhancedMappings.forEach(mapping => {
+      if (!summary.umbrellaBreakdown[mapping.umbrellaKey]) {
+        summary.umbrellaBreakdown[mapping.umbrellaKey] = {
+          certificates: 0,
+          totalCredits: 0,
+          usedCredits: 0
+        };
+      }
+      
+      summary.umbrellaBreakdown[mapping.umbrellaKey].certificates++;
+      summary.umbrellaBreakdown[mapping.umbrellaKey].totalCredits += mapping.totalCreditsRequired;
+      summary.umbrellaBreakdown[mapping.umbrellaKey].usedCredits += mapping.totalCreditsUsed;
+    });
+
+    console.log(`📊 Admin retrieved ${enhancedMappings.length} mappings for student ${studentId}`);
+    console.log(`   Total mappings for student: ${totalCount}`);
+
+    res.json({
+      success: true,
+      count: enhancedMappings.length,
+      totalCount,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(totalCount / parseInt(limit)),
+      summary,
+      data: enhancedMappings
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching student certificate course mappings:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error fetching student certificate course mappings',
       details: error.message
     });
   }

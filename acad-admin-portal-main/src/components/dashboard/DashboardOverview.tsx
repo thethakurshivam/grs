@@ -18,6 +18,7 @@ import MOUCard from "./MOUCard";
 import CompletedCoursesCountCard from "./CompletedCoursesCountCard";
 import OngoingCoursesCountCard from "./OngoingCoursesCountCard";
 import UpcomingCoursesCard from "./UpcomingCoursesCard";
+import CertificateMappingCard from "./CertificateMappingCard";
 
 const DashboardOverview = () => {
   const navigate = useNavigate();
@@ -70,6 +71,9 @@ const DashboardOverview = () => {
         
         {/* Upcoming Courses Count Card - Dynamic from API */}
         <UpcomingCoursesCard />
+        
+        {/* Certificate Mapping Card */}
+        <CertificateMappingCard />
         
         {dashboardCards.map((card, index) => (
           <Card 
