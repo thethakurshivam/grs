@@ -93,8 +93,8 @@ export const StudentDashboardOverview: React.FC = () => {
       value: 'View',
       description: 'Manage your student profile',
       icon: UserCircle,
-      color: 'text-teal-600',
-      bgColor: 'bg-teal-100',
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-100',
       onClick: handleProfileCardClick,
       clickable: true
     },
@@ -103,8 +103,8 @@ export const StudentDashboardOverview: React.FC = () => {
       value: loading ? 'Loading...' : `${courseCount} courses`,
       description: 'Available courses for enrollment',
       icon: BookOpen,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-100',
       onClick: handleCoursesCardClick,
       clickable: true
     },
@@ -113,8 +113,8 @@ export const StudentDashboardOverview: React.FC = () => {
       value: loading ? 'Loading...' : `${enrolledCourseCount} courses`,
       description: 'Courses you are currently enrolled in',
       icon: BookOpen,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-100',
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-100',
       onClick: handleEnrolledCoursesCardClick,
       clickable: true
     },
@@ -123,8 +123,8 @@ export const StudentDashboardOverview: React.FC = () => {
       value: loading ? 'Loading...' : `${completedCourseCount} courses`,
       description: 'Successfully completed courses',
       icon: GraduationCap,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-100',
       onClick: handleCompletedCoursesCardClick,
       clickable: true
     },
@@ -133,32 +133,32 @@ export const StudentDashboardOverview: React.FC = () => {
       value: '45',
       description: 'Total credits earned',
       icon: CreditCard,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-100'
     },
     {
       title: 'Available Credit',
       value: loading ? '...' : availableCredits.toString(),
       description: 'Credits available for use',
       icon: Coins,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100'
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-100'
     },
     {
       title: 'Used Credit',
       value: loading ? '...' : usedCredits.toString(),
       description: 'Credits already utilized',
       icon: Award,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100'
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-100'
     },
     {
       title: 'Completed Courses Other Than RRU',
       value: '5',
       description: 'External course completions',
       icon: User,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-100'
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-100'
     }
   ];
 
@@ -191,13 +191,13 @@ export const StudentDashboardOverview: React.FC = () => {
           return (
             <Card 
               key={index} 
-              className={`hover:shadow-lg transition-shadow ${card.clickable ? 'cursor-pointer' : ''}`}
+              className={`bg-gray-100 border border-gray-300 hover:border-gray-400 hover:shadow-md transition-all duration-200 ${card.clickable ? 'cursor-pointer' : ''}`}
               onClick={card.onClick}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                              <CardTitle className="text-sm font-medium text-gray-700">
-                {card.title}
-              </CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-700">
+                  {card.title}
+                </CardTitle>
                 <div className={`p-2 rounded-lg ${card.bgColor}`}>
                   <Icon className={`w-4 h-4 ${card.color}`} />
                 </div>

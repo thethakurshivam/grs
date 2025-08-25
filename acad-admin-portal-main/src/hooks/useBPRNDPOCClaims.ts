@@ -45,7 +45,7 @@ export const useBPRNDPOCClaims = (): UseBPRNDPOCClaimsReturn => {
         throw new Error('Missing POC token');
       }
 
-      const response = await fetch('http://localhost:3003/api/bprnd/claims', {
+      const response = await fetch('/api/bprnd/claims', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -73,6 +73,18 @@ export const useBPRNDPOCClaims = (): UseBPRNDPOCClaimsReturn => {
 
   useEffect(() => {
     fetchClaims();
+    
+    // Set up polling every 5 seconds
+    const intervalId = setInterval(() => {
+      console.log('🔄 useBPRNDPOCClaims: Polling - refetching data...');
+      fetchClaims();
+    }, 5000); // 5 seconds
+    
+    // Cleanup interval on unmount
+    return () => {
+      console.log('🧹 useBPRNDPOCClaims: Cleaning up polling interval');
+      clearInterval(intervalId);
+    };
   }, [fetchClaims]);
 
   return {

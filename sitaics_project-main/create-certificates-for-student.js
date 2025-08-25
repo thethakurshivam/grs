@@ -26,13 +26,31 @@ async function createCertificatesForStudent() {
         continue;
       }
 
+      // Find the last certificate for this umbrella to get the next sequence number
+      const lastCertificate = await BprndCertificate.findOne(
+        { umbrellaKey: claim.umbrellaKey }, 
+        {}, 
+        { sort: { 'certificateNo': -1 } }
+      );
+      
+      let nextSequenceNumber = 1;
+      if (lastCertificate && lastCertificate.certificateNo) {
+        const idParts = lastCertificate.certificateNo.split('_');
+        if (idParts.length >= 3) {
+          const lastNumber = parseInt(idParts[2]);
+          if (!isNaN(lastNumber)) {
+            nextSequenceNumber = lastNumber + 1;
+          }
+        }
+      }
+
       // Create certificate
       const certificate = new BprndCertificate({
         studentId: new mongoose.Types.ObjectId(studentId),
         umbrellaKey: claim.umbrellaKey,
         qualification: claim.qualification,
         claimId: claim._id,
-        certificateNo: `CERT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        certificateNo: `rru_${claim.umbrellaKey}_${nextSequenceNumber}`,
         issuedAt: new Date()
       });
 

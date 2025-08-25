@@ -9,7 +9,7 @@ interface UseBPRNDStudentCreditsResult {
 
 /**
  * Fetches total credits for a BPRND student from API4
- * Endpoint: GET http://localhost:3004/student/:id/credits
+ * Endpoint: GET /api/student/:id/credits
  */
 export function useBPRNDStudentCredits(studentId: string | null | undefined): UseBPRNDStudentCreditsResult {
   const [totalCredits, setTotalCredits] = useState<number | null>(null);
@@ -29,7 +29,7 @@ export function useBPRNDStudentCredits(studentId: string | null | undefined): Us
 
     const controller = new AbortController();
     try {
-      const response = await fetch(`http://localhost:3004/student/${studentId}/credits`, {
+      const response = await fetch(`/api/student/${studentId}/credits`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,

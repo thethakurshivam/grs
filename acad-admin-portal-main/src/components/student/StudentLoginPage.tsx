@@ -140,12 +140,12 @@ const StudentLoginPage: React.FC<StudentLoginPageProps> = ({
               <BookOpen className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-primary">
-            {isBPRND ? 'BPR&D Student Portal' : 'Student Portal'}
-          </h1>
-          <p className="text-gray-800 mt-2 font-medium">
-            Sign in to your {isBPRND ? 'BPR&D student' : 'student'} account
-          </p>
+                  <h1 className="text-3xl font-bold text-primary">
+          {isBPRND ? 'BPR&D Candidate Portal' : 'Student Portal'}
+        </h1>
+        <p className="text-gray-800 mt-2 font-medium">
+          Sign in to your {isBPRND ? 'BPR&D candidate' : 'student'} account
+        </p>
         </div>
 
         <Card className="shadow-lg border-0">

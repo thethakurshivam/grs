@@ -20,6 +20,7 @@ export interface PendingCreditItem {
 
 interface UseBPRNDPendingCreditsResult {
   data: PendingCreditItem[];
+  count: number;
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
@@ -31,7 +32,7 @@ export function useBPRNDPendingCredits(): UseBPRNDPendingCreditsResult {
   const [error, setError] = useState<string | null>(null);
 
   const endpoint = useMemo(
-    () => 'http://localhost:3003/api/bprnd/pending-credits',
+    () => '/api/bprnd/pending-credits',
     []
   );
 
@@ -39,6 +40,7 @@ export function useBPRNDPendingCredits(): UseBPRNDPendingCreditsResult {
     setIsLoading(true);
     setError(null);
     const controller = new AbortController();
+    
     try {
       const res = await fetch(endpoint, {
         method: 'GET',
@@ -70,9 +72,24 @@ export function useBPRNDPendingCredits(): UseBPRNDPendingCreditsResult {
 
   useEffect(() => {
     fetchData();
+    
+    // Set up polling every 5 seconds for real-time updates
+    const intervalId = setInterval(() => {
+      console.log('🔄 useBPRNDPendingCredits: Polling - refetching data...');
+      fetchData();
+    }, 5000); // 5 seconds
+    
+    // Cleanup interval on unmount
+    return () => {
+      console.log('🧹 useBPRNDPendingCredits: Cleaning up polling interval');
+      clearInterval(intervalId);
+    };
   }, [fetchData]);
 
-  return { data, isLoading, error, refetch: fetchData };
+  // Calculate count from data length
+  const count = data.length;
+
+  return { data, count, isLoading, error, refetch: fetchData };
 }
 
 export default useBPRNDPendingCredits;

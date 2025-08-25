@@ -119,7 +119,7 @@ async function testCompleteFlow() {
       umbrellaKey: newClaim.umbrellaKey,
       qualification: newClaim.qualification,
       claimId: newClaim._id,
-      certificateNo: `CERT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      certificateNo: `rru_${newClaim.umbrellaKey}_1`,
       issuedAt: new Date()
     });
     await certificate.save();

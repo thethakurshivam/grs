@@ -14,7 +14,7 @@ interface UseBPRNDUmbrellasResult {
 
 export function useBPRNDUmbrellas(): UseBPRNDUmbrellasResult {
   const [umbrellas, setUmbrellas] = useState<Umbrella[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Start with loading true
   const [error, setError] = useState<string | null>(null);
 
   const fetchUmbrellas = useCallback(async () => {
@@ -23,7 +23,7 @@ export function useBPRNDUmbrellas(): UseBPRNDUmbrellasResult {
 
     const controller = new AbortController();
     try {
-      const response = await fetch('http://localhost:3004/umbrellas', {
+      const response = await fetch('http://localhost:3003/api/umbrellas', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
@@ -44,11 +44,20 @@ export function useBPRNDUmbrellas(): UseBPRNDUmbrellasResult {
         throw new Error(json?.message || 'Failed to fetch umbrellas');
       }
 
-      setUmbrellas(json.data || []);
+      // Ensure we always set valid data
+      const validUmbrellas = Array.isArray(json.data) ? json.data : [];
+      setUmbrellas(validUmbrellas);
+      
+      // Log for debugging
+      console.log('Umbrellas fetched successfully:', validUmbrellas);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Network error fetching umbrellas';
-      setError(message);
-      setUmbrellas([]);
+      if (err instanceof Error && err.name === 'AbortError') {
+        return; // Ignore abort errors
+      }
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch umbrellas';
+      setError(errorMessage);
+      setUmbrellas([]); // Ensure umbrellas is always an array
+      console.error('Error fetching umbrellas:', err);
     } finally {
       setIsLoading(false);
     }

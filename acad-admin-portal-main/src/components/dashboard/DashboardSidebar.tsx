@@ -26,7 +26,8 @@ import {
   Send
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import useAdminRequestCounts from "@/hooks/useAdminRequestCounts";
+import useAdminPendingCredits from "@/hooks/useAdminPendingCredits";
+import useAdminBPRNDClaims from "@/hooks/useAdminBPRNDClaims";
 
 const sidebarItems = [
   {
@@ -64,11 +65,13 @@ export function DashboardSidebar() {
   const userName = localStorage.getItem("userName") || "Admin";
   const collapsed = state === "collapsed";
   
-  // Fetch request counts for badges
-  const { data: requestCounts, isLoading: countsLoading } = useAdminRequestCounts();
+  // Fetch data for badges using new efficient hooks
+  const { count: pendingCreditsCount, isLoading: pendingCreditsLoading } = useAdminPendingCredits();
+  const { count: pendingCertificationCount, isLoading: pendingCertificationLoading } = useAdminBPRNDClaims();
   
-  // Debug logging
-  console.log('🔍 DashboardSidebar: Hook data:', { requestCounts, countsLoading });
+
+  
+
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
@@ -84,22 +87,22 @@ export function DashboardSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
-      <SidebarHeader className="border-b bg-primary text-primary-foreground">
-        <div className="flex items-center gap-3 p-4">
-          <div className="bg-primary-foreground/10 p-2 rounded-lg">
-            <GraduationCap className="h-6 w-6" />
+    <Sidebar className={collapsed ? "w-16" : "w-72"} collapsible="icon">
+      <SidebarHeader className="border-b border-gray-200 bg-white/95 backdrop-blur-sm">
+        <div className="flex items-center gap-4 p-6">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-3 rounded-xl shadow-lg">
+            <GraduationCap className="h-7 w-7 text-white" />
           </div>
           {!collapsed && (
             <div>
-              <h2 className="font-semibold text-black">University Admin</h2>
-              <p className="text-sm text-black">Management Panel</p>
+              <h2 className="font-bold text-gray-900 text-lg">University Admin</h2>
+              <p className="text-sm text-gray-600 font-medium">Management Portal</p>
             </div>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-card">
+      <SidebarContent className="bg-white/95 backdrop-blur-sm">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -113,8 +116,8 @@ export function DashboardSidebar() {
                     variant="ghost"
                     className={`w-full justify-start ${
                       location.pathname === "/dashboard"
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-accent"
+                        ? "bg-blue-50 text-blue-900 border-r-4 border-blue-500"
+                        : "hover:bg-blue-50 text-gray-700 hover:text-blue-900"
                     }`}
                     onClick={() => navigate("/dashboard")}
                   >
@@ -135,8 +138,8 @@ export function DashboardSidebar() {
                       variant="ghost"
                       className={`w-full justify-start ${
                         isActive(item.url)
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-accent"
+                          ? "bg-blue-50 text-blue-900 border-r-4 border-blue-500"
+                          : "hover:bg-blue-50 text-gray-700 hover:text-blue-900"
                       }`}
                       onClick={() => navigate(item.url)}
                     >
@@ -152,30 +155,29 @@ export function DashboardSidebar() {
                 <SidebarMenuButton asChild>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start hover:bg-accent relative"
+                    className="w-full justify-start hover:bg-blue-50 text-gray-700 hover:text-blue-900 relative"
                     onClick={() =>
                       navigate('/dashboard/bprnd-certification-request')
                     }
                   >
                     <Send className="h-4 w-4" />
                     {!collapsed && (
-                      <span className="ml-2 flex items-center gap-2">
-                        BPR&D Certification Request
-                        {!countsLoading && requestCounts?.pendingCertificationCount > 0 && (
-                          <Badge variant="notification" className="ml-auto">
-                            {requestCounts.pendingCertificationCount}
+                      <span className="ml-2 flex items-center gap-2 min-w-0">
+                        <span className="truncate">BPR&D Certification Request</span>
+                        {!pendingCertificationLoading && pendingCertificationCount > 0 && (
+                          <Badge variant="notification" className="flex-shrink-0">
+                            {pendingCertificationCount}
                           </Badge>
                         )}
-
                       </span>
                     )}
-                    {/* Show badge even when collapsed */}
-                    {!countsLoading && requestCounts?.pendingCertificationCount > 0 && (
+                    {/* Show badge only when there are pending requests */}
+                    {!pendingCertificationLoading && pendingCertificationCount > 0 && (
                       <Badge 
                         variant="notification" 
                         className={`absolute -top-1 -right-1 min-w-[20px] h-5 text-xs ${collapsed ? 'block' : 'hidden'}`}
                       >
-                        {requestCounts.pendingCertificationCount}
+                        {pendingCertificationCount}
                       </Badge>
                     )}
                   </Button>
@@ -187,30 +189,29 @@ export function DashboardSidebar() {
                 <SidebarMenuButton asChild>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start hover:bg-accent relative"
+                    className="w-full justify-start hover:bg-blue-50 text-gray-700 hover:text-blue-900 relative"
                     onClick={() =>
                       navigate('/dashboard/bprnd-pending-credits')
                     }
                   >
                     <FileText className="h-4 w-4" />
                     {!collapsed && (
-                      <span className="ml-2 flex items-center gap-2">
-                        BPR&D Pending Credits
-                        {!countsLoading && requestCounts?.pendingCreditsCount > 0 && (
-                          <Badge variant="notification" className="ml-auto">
-                            {requestCounts.pendingCreditsCount}
+                      <span className="ml-2 flex items-center gap-2 min-w-0">
+                        <span className="truncate">BPR&D Pending Credits</span>
+                        {!pendingCreditsLoading && pendingCreditsCount > 0 && (
+                          <Badge variant="notification" className="flex-shrink-0">
+                            {pendingCreditsCount}
                           </Badge>
                         )}
-
                       </span>
                     )}
                     {/* Show badge even when collapsed */}
-                    {!countsLoading && requestCounts?.pendingCreditsCount > 0 && (
+                    {!pendingCreditsLoading && pendingCreditsCount > 0 && (
                       <Badge 
                         variant="notification" 
                         className={`absolute -top-1 -right-1 min-w-[20px] h-5 text-xs ${collapsed ? 'block' : 'hidden'}`}
                       >
-                        {requestCounts.pendingCreditsCount}
+                        {pendingCreditsCount}
                       </Badge>
                     )}
                   </Button>
@@ -221,17 +222,17 @@ export function DashboardSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t bg-card">
-        <div className="p-4">
+      <SidebarFooter className="border-t border-gray-200 bg-white/95 backdrop-blur-sm">
+        <div className="p-6">
           {!collapsed && (
-            <div className="mb-3">
-              <p className="text-sm font-medium text-black">Welcome back,</p>
-              <p className="text-sm text-black">{userName}</p>
+            <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+              <p className="text-sm font-semibold text-gray-800">Welcome back,</p>
+              <p className="text-sm text-blue-700 font-medium">{userName}</p>
             </div>
           )}
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full border-gray-300 text-gray-700 hover:bg-red-50 hover:border-red-400 hover:text-red-700 transition-colors rounded-xl"
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />

@@ -2106,10 +2106,12 @@ app.get('/api/bprnd/claims', authenticateToken, asyncHandler(async (req, res) =>
   const { status } = req.query;
   console.log('📝 Query parameters:', { status });
   
-  // If specific status requested, use it; otherwise show only claims that POC has approved but admin hasn't
+  // If specific status requested, use it; otherwise show all claims that need admin attention
   const filter = status ? { status } : { 
-    poc_approved: true,        // POC has approved
-    admin_approved: { $ne: true }  // Admin has not approved yet
+    $or: [
+      { poc_approved: true, admin_approved: { $ne: true } },  // POC approved, admin pending
+      { poc_approved: false, admin_approved: false }          // Neither POC nor admin approved
+    ]
   };
   console.log('🔍 Filter applied:', filter);
   
@@ -2211,13 +2213,31 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
     console.log(`  New credits: ${newUmbrellaCredits}`);
     console.log(`  Total credits: ${currentTotalCredits} → ${newTotalCredits}`);
 
+    // Find the last certificate for this umbrella to get the next sequence number
+    const lastCertificate = await BprndCertificate.findOne(
+      { umbrellaKey: claim.umbrellaKey }, 
+      {}, 
+      { sort: { 'certificateNo': -1 } }
+    );
+    
+    let nextSequenceNumber = 1;
+    if (lastCertificate && lastCertificate.certificateNo) {
+      const idParts = lastCertificate.certificateNo.split('_');
+      if (idParts.length >= 3) {
+        const lastNumber = parseInt(idParts[2]);
+        if (!isNaN(lastNumber)) {
+          nextSequenceNumber = lastNumber + 1;
+        }
+      }
+    }
+
     // Create certificate
     const certificate = new BprndCertificate({
       studentId: claim.studentId,
       umbrellaKey: claim.umbrellaKey,
       qualification: claim.qualification,
       claimId: claim._id,
-      certificateNo: `CERT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      certificateNo: `rru_${claim.umbrellaKey}_${nextSequenceNumber}`,
       issuedAt: new Date()
     });
     await certificate.save();
@@ -2263,12 +2283,27 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
 
     // Mark the contributing courses as certificateContributed: true in coursehistories collection
     if (coursesToMarkIds.length > 0) {
-      const updateResult = await CourseHistory.updateMany(
-        { _id: { $in: coursesToMarkIds } },
-        { certificateContributed: true }
-      );
+      // Update each course individually to set the contributedToCertificate details
+      for (const courseId of coursesToMarkIds) {
+        const courseContribution = markedCourses.find(mc => mc.courseId.toString() === courseId.toString());
+        if (courseContribution) {
+          await CourseHistory.findByIdAndUpdate(
+            courseId,
+            {
+              certificateContributed: true,
+              contributedToCertificate: {
+                certificateId: certificate._id,
+                certificateNo: certificate.certificateNo,
+                qualification: claim.qualification,
+                contributedAt: new Date(),
+                creditsContributed: courseContribution.creditsContributed
+              }
+            }
+          );
+        }
+      }
       
-      console.log(`✅ Marked ${updateResult.modifiedCount} contributing courses as certificateContributed: true`);
+      console.log(`✅ Marked ${coursesToMarkIds.length} contributing courses as certificateContributed: true with detailed contribution info`);
       console.log(`📋 Marked course IDs:`, coursesToMarkIds);
     }
 
@@ -2765,57 +2800,7 @@ app.post('/api/pending-credits/:studentId/decline', authenticateToken, asyncHand
   }
 }));
 
-// Get count of pending credit requests for admin dashboard
-app.get('/api/admin/pending-credits/count', authenticateToken, asyncHandler(async (req, res) => {
-  try {
-    // Count pending credits that are POC approved but waiting for admin approval
-    const pendingCreditsCount = await PendingCredits.countDocuments({
-      bprnd_poc_approved: true,
-      admin_approved: false
-    });
-
-    res.json({
-      success: true,
-      message: 'Pending credits count retrieved successfully',
-      data: {
-        count: pendingCreditsCount
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching pending credits count:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch pending credits count',
-      details: error.message
-    });
-  }
-}));
-
-// Get count of pending certification requests for admin dashboard
-app.get('/api/admin/bprnd-claims/count', authenticateToken, asyncHandler(async (req, res) => {
-  try {
-    // Count certification claims that are POC approved but waiting for admin approval
-    const pendingClaimsCount = await bprnd_certification_claim.countDocuments({
-      poc_approved: true,
-      admin_approved: false
-    });
-
-    res.json({
-      success: true,
-      message: 'Pending certification claims count retrieved successfully',
-      data: {
-        count: pendingClaimsCount
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching pending certification claims count:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch pending certification claims count',
-      details: error.message
-    });
-  }
-}));
+// Note: Count-only routes removed - counts are now calculated in frontend from full data
 
 // Start the server
 app.listen(PORT, () => {

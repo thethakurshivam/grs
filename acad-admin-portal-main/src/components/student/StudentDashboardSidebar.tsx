@@ -96,7 +96,7 @@ export const StudentDashboardSidebar: React.FC = () => {
     { name: 'Certifications', icon: Award, onClick: handleCertifications, path: '/student/bprnd/certifications' },
     { name: 'Claim Credits', icon: BadgeCheck, onClick: handleClaimCredits, path: '/student/bprnd/claim-credits' },
     { name: 'Credit Bank', icon: CreditCard, onClick: handleBprndCreditBank, path: '/student/bprnd/credit-bank' },
-    { name: 'My Requests', icon: ClipboardList, onClick: handleBprndMyRequests, path: '/student/bprnd/claims' },
+    { name: 'My Certification Requests', icon: ClipboardList, onClick: handleBprndMyRequests, path: '/student/bprnd/claims' },
     { name: 'Rise', icon: ExternalLink, onClick: handleRise, path: '/student/bprnd/rise' },
   ];
 
@@ -116,13 +116,15 @@ export const StudentDashboardSidebar: React.FC = () => {
   const menuItems = isBprnd ? bprndMenuItems : studentMenuItems;
 
   return (
-    <div className={`w-64 shadow-lg ${isBprnd ? 'bg-[#1e3a8a]' : 'bg-sidebar-background'}`}>
-      <div className="p-6">
-        <h1 className={`text-2xl font-bold ${isBprnd ? 'text-white' : 'text-gray-800'}`}>{isBprnd ? 'BPR&D Student' : 'Student'} Portal</h1>
+    <div className={`w-64 border-r ${isBprnd ? 'bg-gray-100 border-gray-300' : 'bg-sidebar-background'}`}>
+      <div className="p-6 border-b border-gray-200">
+        <h1 className={`text-xl font-semibold ${isBprnd ? 'text-gray-900' : 'text-gray-800'}`}>
+          {isBprnd ? 'BPR&D Candidate' : 'Student'} Portal
+        </h1>
       </div>
       
-      <nav className="mt-6">
-        <div className="px-4 space-y-2">
+      <nav className="mt-4">
+        <div className="px-3 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -130,13 +132,17 @@ export const StudentDashboardSidebar: React.FC = () => {
               <button
                 key={item.name}
                 onClick={item.onClick}
-                className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                className={`flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
                   isBprnd 
-                    ? (isActive ? 'bg-blue-600 text-white' : 'text-blue-100 hover:bg-blue-600 hover:text-white')
-                    : (isActive ? 'bg-sidebar-accent text-gray-900' : 'text-gray-700 hover:bg-sidebar-accent hover:text-gray-900')
+                    ? (isActive 
+                        ? 'bg-gray-200 text-gray-900 border border-gray-300' 
+                        : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900')
+                    : (isActive 
+                        ? 'bg-sidebar-accent text-gray-900' 
+                        : 'text-gray-700 hover:bg-sidebar-accent hover:text-gray-900')
                 }`}
               >
-                <Icon className="w-5 h-5 mr-3" />
+                <Icon className={`w-4 h-4 mr-3 ${isBprnd ? 'text-gray-600' : ''}`} />
                 {item.name}
               </button>
             );
@@ -144,16 +150,16 @@ export const StudentDashboardSidebar: React.FC = () => {
         </div>
       </nav>
 
-      <div className="absolute bottom-0 w-64 p-4">
+      <div className="absolute bottom-0 w-64 p-4 border-t border-gray-200">
         <button 
           onClick={handleLogout}
-          className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+          className={`flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
             isBprnd 
-              ? 'text-blue-100 hover:bg-blue-600 hover:text-white' 
+              ? 'text-gray-700 hover:bg-gray-200 hover:text-gray-900' 
               : 'text-gray-700 hover:bg-sidebar-accent hover:text-gray-900'
           }`}
         >
-          <LogOut className="w-5 h-5 mr-3" />
+          <LogOut className="w-4 h-4 mr-3" />
           Logout
         </button>
       </div>

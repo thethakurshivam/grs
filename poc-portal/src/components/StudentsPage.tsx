@@ -2,15 +2,17 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { 
   Users, 
-  ArrowLeft, 
   Search, 
   Plus, 
   Filter,
   Mail,
   Phone,
   Calendar,
-  GraduationCap
+  GraduationCap,
+  Eye,
+  Edit
 } from 'lucide-react';
+import Layout from './Layout';
 
 interface StudentsPageProps {
   user: any;
@@ -73,136 +75,137 @@ const StudentsPage = ({ user, onLogout }: StudentsPageProps) => {
   });
 
   const getStatusColor = (status: string) => {
-    return status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+    return status === 'active' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-red-100 text-red-800 border-red-200';
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="h-5 w-5" />
-                <span>Back to Dashboard</span>
-              </button>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="h-8 w-8 bg-primary-100 rounded-full flex items-center justify-center">
-                  <Users className="h-4 w-4 text-primary-600" />
-                </div>
-                <span className="text-sm font-medium text-gray-700">{user?.name}</span>
-              </div>
-            </div>
+    <Layout 
+      user={user} 
+      onLogout={onLogout} 
+      title="Students" 
+      subtitle="Manage and view all registered students"
+    >
+      {/* Page Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Student Management</h2>
+            <p className="text-slate-600 mt-1">Total {filteredStudents.length} students</p>
           </div>
+          <button className="btn-primary flex items-center space-x-2">
+            <Plus className="h-4 w-4" />
+            <span>Add Student</span>
+          </button>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Students</h1>
-              <p className="text-gray-600 mt-2">
-                {normalizedStudents ? `${effectiveStudents.length} student(s) from backend` : 'Manage and view all registered students'}
-              </p>
-            </div>
-            <button className="btn-primary flex items-center space-x-2">
-              <Plus className="h-4 w-4" />
-              <span>Add Student</span>
+      {/* Search and Filters */}
+      <div className="card mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search students by name or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-field pl-10"
+            />
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={selectedFilter}
+              onChange={(e) => setSelectedFilter(e.target.value)}
+              className="input-field min-w-[120px]"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <button className="btn-outline flex items-center space-x-2">
+              <Filter className="h-4 w-4" />
+              <span>More</span>
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Search and Filter */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search students by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-400" />
-              <select
-                value={selectedFilter}
-                onChange={(e) => setSelectedFilter(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="all">All Students</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Students List */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Students ({filteredStudents.length})
-            </h2>
-          </div>
-          
-          <div className="divide-y divide-gray-200">
-            {filteredStudents.map((student) => (
-              <div key={student.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={student.avatar}
-                    alt={student.name}
-                    className="h-12 w-12 rounded-full object-cover"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
+      {/* Students Table */}
+      <div className="card">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-slate-200">
+                <th className="text-left py-3 px-4 font-semibold text-slate-700">Student</th>
+                <th className="text-left py-3 px-4 font-semibold text-slate-700">Contact</th>
+                <th className="text-left py-3 px-4 font-semibold text-slate-700">Enrollment</th>
+                <th className="text-left py-3 px-4 font-semibold text-slate-700">Status</th>
+                <th className="text-left py-3 px-4 font-semibold text-slate-700">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredStudents.map((student) => (
+                <tr key={student.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <td className="py-4 px-4">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={student.avatar}
+                        alt={student.name}
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
                       <div>
-                        <h3 className="text-lg font-medium text-gray-900">{student.name}</h3>
-                        <div className="flex items-center space-x-4 mt-1">
-                          <div className="flex items-center space-x-1 text-sm text-gray-500">
-                            <Mail className="h-4 w-4" />
-                            <span>{student.email}</span>
-                          </div>
-                          <div className="flex items-center space-x-1 text-sm text-gray-500">
-                            <Phone className="h-4 w-4" />
-                            <span>{student.phone}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-1 text-sm text-gray-500">
-                          <GraduationCap className="h-4 w-4" />
-                          <span>{student.course}</span>
-                        </div>
-                        <div className="flex items-center space-x-1 text-sm text-gray-500">
-                          <Calendar className="h-4 w-4" />
-                          <span>{new Date(student.enrollmentDate).toLocaleDateString()}</span>
-                        </div>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(student.status)}`}>
-                          {student.status}
-                        </span>
+                        <p className="font-medium text-slate-900">{student.name}</p>
+                        <p className="text-sm text-slate-500">{student.course}</p>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2 text-sm text-slate-600">
+                        <Mail className="h-3 w-3" />
+                        <span>{student.email}</span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-sm text-slate-600">
+                        <Phone className="h-3 w-3" />
+                        <span>{student.phone}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="flex items-center space-x-2 text-sm text-slate-600">
+                      <Calendar className="h-3 w-3" />
+                      <span>{student.enrollmentDate}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(student.status)}`}>
+                      {student.status}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="flex items-center space-x-2">
+                      <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                        <Edit className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </main>
-    </div>
+
+        {filteredStudents.length === 0 && (
+          <div className="text-center py-12">
+            <Users className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500">No students found</p>
+          </div>
+        )}
+      </div>
+    </Layout>
   );
 };
 

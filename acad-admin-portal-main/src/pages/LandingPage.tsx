@@ -147,19 +147,19 @@ const LandingPage: React.FC = () => {
                 </div>
               </div>
               <CardTitle className="text-xl font-bold text-[#0b2e63]">
-                BPR&D Student Portal
+                BPR&D Candidate Portal
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-black mb-6 text-sm">
-                Access BPR&D student dashboard to view courses, projects, and
+                Access BPR&D candidate dashboard to view courses, projects, and
                 research activities.
               </p>
               <Button
                 className="w-full bg-[#0b2e63] hover:bg-[#09264f] text-white"
                 onClick={handleBPRNDClick}
               >
-                Access BPR&D Portal
+                Access BPR&D Candidate Portal
               </Button>
             </CardContent>
           </Card>

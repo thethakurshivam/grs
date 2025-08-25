@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { CreditCard, Clock, Calendar, Award, Building } from 'lucide-react';
+import { CreditCard, Clock, Calendar, Award, Building, X } from 'lucide-react';
 import useBPRNDCreditBreakdown from '@/hooks/useBPRNDCreditBreakdown';
 import useBPRNDUmbrellas from '@/hooks/useBPRNDUmbrellas';
 
@@ -58,11 +58,12 @@ export const CreditBankPage: React.FC = () => {
   const { data: creditData, isLoading: creditsLoading, error: creditsError, refetch: refetchCredits } = useBPRNDCreditBreakdown(studentId);
   const { umbrellas, isLoading: umbrellasLoading, error: umbrellasError, refetch: refetchUmbrellas } = useBPRNDUmbrellas();
 
-  // State for hover functionality
-  const [hoveredUmbrella, setHoveredUmbrella] = useState<string | null>(null);
+  // State for modal functionality
+  const [selectedUmbrella, setSelectedUmbrella] = useState<string | null>(null);
   const [courseHistory, setCourseHistory] = useState<CourseHistoryResponse | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const onFocus = () => {
@@ -73,7 +74,7 @@ export const CreditBankPage: React.FC = () => {
     return () => window.removeEventListener('focus', onFocus);
   }, [refetchCredits, refetchUmbrellas]);
 
-  // Fetch course history when hovering over a card
+  // Fetch course history when clicking on a card
   const fetchCourseHistory = async (fieldKey: string) => {
     if (!studentId || !fieldKey) return;
 
@@ -96,6 +97,7 @@ export const CreditBankPage: React.FC = () => {
       const data = await response.json();
       if (data.success) {
         setCourseHistory(data.data);
+        setIsModalOpen(true);
       } else {
         throw new Error(data.message || 'Failed to fetch course history');
       }
@@ -108,16 +110,17 @@ export const CreditBankPage: React.FC = () => {
     }
   };
 
-  // Handle mouse enter on credit card
-  const handleCardHover = (umbrella: string, fieldKey: string) => {
-    setHoveredUmbrella(umbrella);
+  // Handle click on credit card
+  const handleCardClick = (umbrella: string, fieldKey: string) => {
+    setSelectedUmbrella(umbrella);
     // Use the field key (e.g., "Cyber_Security") for the API call, not the display title
     fetchCourseHistory(fieldKey);
   };
 
-  // Handle mouse leave on credit card
-  const handleCardLeave = () => {
-    setHoveredUmbrella(null);
+  // Close modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedUmbrella(null);
     setCourseHistory(null);
     setHistoryError(null);
   };
@@ -152,255 +155,318 @@ export const CreditBankPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Credit Bank</h2>
-        <p className="text-gray-600 mb-4">
-          View your available credits across different disciplines. Hover over cards to see course history.
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl shadow-lg mb-4">
+          <CreditCard className="h-8 w-8 text-white" />
+        </div>
+        <h2 className="text-4xl font-bold text-gray-900 mb-3">Credit Bank</h2>
+        <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-6">
+          View your available credits across different disciplines. Click on any umbrella card to see detailed course history and track your professional development progress.
         </p>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <p className="text-blue-800 text-sm">
-            <strong>Note:</strong> Credit bank shows your <strong>available credits</strong> (credits you can spend on certifications). 
-            Course history shows remaining credits for each course that can still contribute to future certifications.
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 max-w-4xl mx-auto">
+          <p className="text-gray-700 text-base leading-relaxed">
+            <strong>💡 Note:</strong> Credit bank shows your <strong>available credits</strong> (credits you can spend on certifications). 
+            Click on any umbrella card to view detailed course history and remaining credits for each course.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Credit Cards Section - Fixed width, no layout shifts */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-6 w-6 text-[#0b2e63]" />
-                Credit Breakdown
-                {hoveredUmbrella && (
-                  <span className="text-sm font-normal text-gray-600 ml-2">
-                    (Hovering over: {hoveredUmbrella})
-                  </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading && (
-                <p className="text-gray-600">Loading credit breakdown...</p>
-              )}
-              {error && !isLoading && (
-                <p className="text-red-600">{error}</p>
-              )}
-              {!isLoading && !error && filteredCreditEntries.length === 0 && (
-                <div className="text-center py-8">
-                  <p className="text-gray-600">No umbrella fields found in your profile.</p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Please contact support if you believe this is an error.
-                  </p>
-                </div>
-              )}
-              {!isLoading && !error && filteredCreditEntries.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {filteredCreditEntries.map(([label, value]) => {
-                    const title = label.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-                    const credits = Number(value) || 0;
-                    const isHovered = hoveredUmbrella === title;
-                    
-                    return (
-                      <Card 
-                        key={label} 
-                        className={`border transition-colors duration-200 cursor-pointer ${
-                          isHovered 
-                            ? 'border-[#0b2e63] shadow-md' 
-                            : credits > 0
-                              ? 'border-[#0b2e63]/20 hover:border-[#0b2e63]/40'
-                              : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                        onMouseEnter={() => handleCardHover(title, label)}
-                        onMouseLeave={handleCardLeave}
-                      >
-                        <CardHeader>
-                          <CardTitle className="text-sm font-medium text-[#0b2e63]">{title}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className={`text-xl font-semibold ${credits > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
+      {/* Credit Cards Section - Full width since we removed the course history section */}
+      <div className="w-full">
+        <Card className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+          <CardHeader className="bg-gray-50 border-b border-gray-200 px-8 py-6">
+            <CardTitle className="flex items-center gap-3 text-2xl font-bold text-gray-900">
+              <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center">
+                <CreditCard className="h-5 w-5 text-white" />
+              </div>
+              Credit Breakdown
+              <span className="text-sm font-normal text-gray-600 ml-3 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                🖱️ Click on any umbrella to view course history
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading && (
+              <p className="text-gray-600">Loading credit breakdown...</p>
+            )}
+            {error && !isLoading && (
+              <p className="text-red-600">{error}</p>
+            )}
+            {!isLoading && !error && filteredCreditEntries.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-600">No umbrella fields found in your profile.</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Please contact support if you believe this is an error.
+                </p>
+              </div>
+            )}
+            {!isLoading && !error && filteredCreditEntries.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredCreditEntries.map(([label, value], index) => {
+                  const title = label.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+                  const credits = Number(value) || 0;
+  
+                  
+                  return (
+                    <Card 
+                      key={label} 
+                      className={`bg-white border transition-all duration-300 cursor-pointer rounded-lg overflow-hidden group hover:shadow-md ${
+                        credits > 0
+                          ? 'border-gray-200 hover:border-gray-300'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => handleCardClick(title, label)}
+                    >
+                      {/* Subtle top accent */}
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gray-300"></div>
+                      
+                      <CardHeader className="pb-3 pt-4">
+                        <CardTitle className="text-sm font-semibold text-gray-900 group-hover:text-gray-700 transition-colors flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center">
+                            <Award className="w-3 h-3 text-gray-600" />
+                          </div>
+                          {title}
+                        </CardTitle>
+                      </CardHeader>
+                      
+                      <CardContent className="pt-0">
+                        <div className="text-center">
+                          <div className={`text-2xl font-bold mb-2 ${
+                            credits > 0 
+                              ? 'text-gray-900' 
+                              : 'text-gray-400'
+                          }`}>
                             {credits}
-                          </p>
-                          <p className={`text-xs mt-1 ${credits > 0 ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {credits > 0 ? 'credits earned' : 'no credits yet'}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                          </div>
+                          <div className={`px-3 py-1 rounded-md text-xs font-medium ${
+                            credits > 0 
+                              ? 'bg-gray-100 text-gray-700 border border-gray-200' 
+                              : 'bg-gray-50 text-gray-500 border border-gray-200'
+                          }`}>
+                            {credits > 0 ? 'Available' : 'None'}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Course History Section - Always present, content changes on hover */}
-        <div className="lg:col-span-1">
-          <Card className="h-fit transition-opacity duration-300 ease-in-out">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-6 w-6 text-[#0b2e63]" />
-                Course History
-              </CardTitle>
-              <p className="text-sm text-gray-600 font-normal">
-                {hoveredUmbrella || 'Hover over a credit card to view course history'}
-              </p>
-            </CardHeader>
-            <CardContent>
+      {/* Course History Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="bg-gray-900 text-white p-6 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center">
+                    <Award className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">{selectedUmbrella} Course History</h2>
+                    <p className="text-gray-300">Detailed view of your courses and credits</p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeModal}
+                  className="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-xl flex items-center justify-center transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
               {isLoadingHistory && (
-                <div className="text-center py-4">
-                  <p className="text-gray-600">Loading course history...</p>
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600 text-lg">Loading course history...</p>
                 </div>
               )}
 
               {historyError && (
-                <div className="text-center py-4">
-                  <p className="text-red-600 text-sm">{historyError}</p>
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <X className="h-8 w-8 text-red-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Course History</h3>
+                  <p className="text-red-600 mb-4">{historyError}</p>
+                  <button
+                    onClick={() => fetchCourseHistory(selectedUmbrella?.replace(/\s+/g, '_') || '')}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Try Again
+                  </button>
                 </div>
               )}
 
               {courseHistory && !isLoadingHistory && !historyError && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {/* Summary Stats */}
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <h4 className="font-semibold text-sm text-gray-900 mb-2">Summary</h4>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="flex items-center gap-1">
-                        <Award className="h-3 w-3 text-[#0b2e63]" />
-                        <span className="text-gray-600">{courseHistory.summary.totalCourses} courses</span>
+                  <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 shadow-sm">
+                    <h4 className="font-bold text-gray-900 text-xl mb-4 flex items-center gap-3">
+                      <div className="w-6 h-6 bg-gray-600 rounded-full"></div>
+                      Summary Overview
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                        <Award className="h-5 w-5 text-gray-600" />
+                        <div>
+                          <p className="text-gray-900 font-semibold">{courseHistory.summary.totalCourses}</p>
+                          <p className="text-gray-600 text-xs">Courses</p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <CreditCard className="h-3 w-3 text-[#0b2e63]" />
-                        <span className="text-gray-600">{courseHistory.summary.totalCredits} credits</span>
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                        <CreditCard className="h-5 w-5 text-gray-600" />
+                        <div>
+                          <p className="text-gray-900 font-semibold">{courseHistory.summary.totalCredits}</p>
+                          <p className="text-gray-600 text-xs">Credits</p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3 text-[#0b2e63]" />
-                        <span className="text-gray-600">{courseHistory.summary.totalHours} hours</span>
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                        <Clock className="h-5 w-5 text-gray-600" />
+                        <div>
+                          <p className="text-gray-900 font-semibold">{courseHistory.summary.totalHours}</p>
+                          <p className="text-gray-600 text-xs">Hours</p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3 text-[#0b2e63]" />
-                        <span className="text-gray-600">{courseHistory.summary.totalDays} days</span>
+                      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                        <Calendar className="h-5 w-5 text-gray-600" />
+                        <div>
+                          <p className="text-gray-900 font-semibold">{courseHistory.summary.totalDays}</p>
+                          <p className="text-gray-600 text-xs">Days</p>
+                        </div>
                       </div>
                     </div>
                     
                     {/* Detailed Credit Summary */}
-                    <div className="mt-2 pt-2 border-t border-gray-200">
-                      <h5 className="font-medium text-xs text-gray-700 mb-1">Credit Breakdown</h5>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="flex items-center gap-1">
-                          <span className="text-blue-600">Theory:</span>
-                          <span className="text-gray-600">{Math.round(courseHistory.summary.totalTheoryCredits || 0)} cr</span>
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <h5 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <div className="w-5 h-5 bg-gray-600 rounded-full"></div>
+                        Credit Breakdown
+                      </h5>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="p-3 bg-white rounded-lg border border-gray-200">
+                          <span className="text-gray-700 font-semibold">Theory Credits:</span>
+                          <span className="text-gray-900 font-bold ml-2 text-lg">{Math.round(courseHistory.summary.totalTheoryCredits || 0)}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-blue-600">Practical:</span>
-                          <span className="text-gray-600">{Math.round(courseHistory.summary.totalPracticalCredits || 0)} cr</span>
+                        <div className="p-3 bg-white rounded-lg border border-gray-200">
+                          <span className="text-gray-700 font-semibold">Practical Credits:</span>
+                          <span className="text-gray-900 font-bold ml-2 text-lg">{Math.round(courseHistory.summary.totalPracticalCredits || 0)}</span>
                         </div>
                       </div>
                     </div>
                     
                     {/* Backend Note */}
                     {courseHistory.summary.note && (
-                      <div className="mt-2 pt-2 border-t border-gray-200">
-                        <p className="text-xs text-blue-600 italic">{courseHistory.summary.note}</p>
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <p className="text-gray-700 font-medium">{courseHistory.summary.note}</p>
+                        </div>
                       </div>
                     )}
                   </div>
 
                   {/* Course List */}
                   {courseHistory.courses.length > 0 ? (
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-gray-900">Available Courses</h4>
+                    <div className="space-y-4">
+                      <h4 className="font-bold text-gray-900 text-xl flex items-center gap-3">
+                        <div className="w-6 h-6 bg-gray-600 rounded-full"></div>
+                        Available Courses
+                      </h4>
                       {courseHistory.courses.map((course) => (
-                        <div key={course._id} className="border border-gray-200 rounded-lg p-3 bg-white">
-                          <h5 className="font-medium text-sm text-gray-900 mb-1">{course.name}</h5>
-                          <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
-                            <Building className="h-3 w-3" />
-                            <span>{course.organization}</span>
+                        <div key={course._id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300">
+                          <h5 className="font-bold text-gray-900 text-lg mb-3">{course.name}</h5>
+                          <div className="flex items-center gap-2 text-sm text-gray-600 mb-3 p-2 bg-gray-50 rounded-lg">
+                            <Building className="h-4 w-4 text-gray-600" />
+                            <span className="font-medium">{course.organization}</span>
                           </div>
                           
                           {/* Credit Status Indicator */}
-                          <div className={`mb-2 p-2 rounded border text-xs ${
+                          <div className={`mb-3 p-3 rounded-lg border text-sm font-medium ${
                             course.isFullyAvailable 
-                              ? 'bg-green-50 border-green-200 text-green-700' 
+                              ? 'bg-gray-50 border-gray-300 text-gray-800' 
                               : course.remainingTotalCredits > 0 
-                                ? 'bg-yellow-50 border-yellow-200 text-yellow-700'
-                                : 'bg-red-50 border-red-200 text-red-700'
+                                ? 'bg-gray-50 border-gray-300 text-gray-800'
+                                : 'bg-gray-50 border-gray-300 text-gray-800'
                           }`}>
-                            <div className="flex items-center gap-1 mb-1">
+                            <div className="flex items-center gap-2 mb-2">
                               {course.isFullyAvailable ? (
-                                <span className="font-medium">✅ Fully Available</span>
+                                <span className="font-bold">✅ Fully Available</span>
                               ) : course.remainingTotalCredits > 0 ? (
-                                <span className="font-medium">⚠️ Partially Available</span>
+                                <span className="font-bold">⚠️ Partially Available</span>
                               ) : (
-                                <span className="font-medium">❌ Fully Used</span>
+                                <span className="font-bold">❌ Fully Used</span>
                               )}
                             </div>
                             
                             {/* Original vs Remaining Credits */}
-                            <div className="grid grid-cols-2 gap-2">
-                              <div>
-                                <p className="font-medium">Original Credits:</p>
-                                <p>Theory: {Math.round(course.originalTheoryCredits || 0)} cr</p>
-                                <p>Practical: {Math.round(course.originalPracticalCredits || 0)} cr</p>
-                                <p className="font-medium">Total: {Math.round(course.originalTotalCredits || 0)} cr</p>
+                            <div className="grid grid-cols-2 gap-3 mb-3">
+                              <div className="p-2 bg-white rounded-lg border border-gray-200">
+                                <p className="font-semibold text-gray-700 text-sm mb-1">Original Credits:</p>
+                                <p className="text-gray-900 text-sm">Theory: {Math.round(course.originalTheoryCredits || 0)}</p>
+                                <p className="text-gray-900 text-sm">Practical: {Math.round(course.originalPracticalCredits || 0)}</p>
+                                <p className="font-bold text-gray-900 text-base">Total: {Math.round(course.originalTotalCredits || 0)}</p>
                               </div>
-                              <div>
-                                <p className="font-medium">Remaining Credits:</p>
-                                <p>Theory: {Math.round(course.remainingTheoryCredits || 0)} cr</p>
-                                <p>Practical: {Math.round(course.remainingPracticalCredits || 0)} cr</p>
-                                <p className="font-medium">Total: {Math.round(course.remainingTotalCredits || 0)} cr</p>
+                              <div className="p-2 bg-white rounded-lg border border-gray-200">
+                                <p className="font-semibold text-gray-700 text-sm mb-1">Remaining Credits:</p>
+                                <p className="text-gray-900 text-sm">Theory: {Math.round(course.remainingTheoryCredits || 0)}</p>
+                                <p className="text-gray-900 text-sm">Practical: {Math.round(course.remainingPracticalCredits || 0)}</p>
+                                <p className="font-bold text-gray-900 text-base">Total: {Math.round((course.remainingTheoryCredits || 0) + (course.remainingPracticalCredits || 0))}</p>
                               </div>
                             </div>
                             
                             {/* Credits Used */}
                             {course.creditsUsed > 0 && (
-                              <div className="mt-1 pt-1 border-t border-current">
-                                <p className="font-medium">Credits Used: {Math.round(course.creditsUsed)} cr</p>
+                              <div className="mt-3 pt-3 border-t border-gray-300">
+                                <div className="p-2 bg-white rounded-lg border border-gray-200">
+                                  <p className="font-bold text-gray-800">Credits Used: {Math.round(course.creditsUsed)}</p>
+                                </div>
                               </div>
                             )}
                           </div>
                           
                           {/* Course Details */}
-                          <div className="grid grid-cols-3 gap-2 text-xs text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3 text-[#0b2e63]" />
-                              <span>{course.noOfDays}d</span>
+                          <div className="grid grid-cols-3 gap-3 text-sm text-gray-600 mt-3">
+                            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                              <Calendar className="h-4 w-4 text-gray-600" />
+                              <span className="font-medium text-gray-700">{course.noOfDays} days</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3 text-[#0b2e63]" />
-                              <span>{course.totalHours}h</span>
+                            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                              <Clock className="h-4 w-4 text-gray-600" />
+                              <span className="font-medium text-gray-700">{course.totalHours} hours</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Award className="h-3 w-3 text-[#0b2e63]" />
-                              <span>{Math.round(course.remainingTotalCredits || 0)} cr</span>
+                            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                              <Award className="h-4 w-4 text-gray-600" />
+                              <span className="font-medium text-gray-700">{Math.round((course.remainingTheoryCredits || 0) + (course.remainingPracticalCredits || 0))} credits</span>
                             </div>
                           </div>
                           
-                          <p className="text-xs text-gray-500 mt-2">
-                            Completed: {new Date(course.createdAt).toLocaleDateString()}
-                          </p>
+                          <div className="mt-3 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                            <p className="text-sm text-gray-700 font-medium text-center">
+                              🎓 Completed: {new Date(course.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-4 text-gray-500">
-                      <p className="text-sm">No courses found for this umbrella field</p>
+                    <div className="text-center py-8 text-gray-500">
+                      <p className="text-lg">No courses found for this umbrella field</p>
                     </div>
                   )}
                 </div>
               )}
-
-              {!hoveredUmbrella && !isLoadingHistory && !historyError && (
-                <div className="text-center py-8 text-gray-500">
-                  <Award className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                  <p className="text-sm">Hover over any credit card to view course history</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Debug information for development */}
       {process.env.NODE_ENV === 'development' && (
@@ -412,11 +478,11 @@ export const CreditBankPage: React.FC = () => {
             <p>Available umbrellas: {umbrellas.map(u => u.name).join(', ')}</p>
             <p>Credit fields: {creditData ? Object.keys(creditData).join(', ') : 'None'}</p>
             <p>Filtered entries: {filteredCreditEntries.length}</p>
-            <p>Hovered umbrella: {hoveredUmbrella || 'None'}</p>
+            <p>Selected umbrella: {selectedUmbrella || 'None'}</p>
             <p>Course history loaded: {courseHistory ? 'Yes' : 'No'}</p>
           </CardContent>
         </Card>
       )}
     </div>
-      );
-  };
+  );
+};

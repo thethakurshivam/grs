@@ -13,6 +13,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { StudentDashboardLayout } from './StudentDashboardLayout';
 
 interface PendingCreditRequest {
   id: string;
@@ -49,7 +50,7 @@ const BPRNDPendingCreditRequestsPage: React.FC = () => {
       if (!studentId) throw new Error('Missing studentId');
       setLoading(true);
       setError(null);
-      const res = await fetch(`http://localhost:3004/api/bprnd/pending-credits/student/${studentId}`);
+      const res = await fetch(`/api/bprnd/pending-credits/student/${studentId}`);
       const json = await res.json();
       if (!res.ok || json?.success === false) throw new Error(json?.message || `HTTP ${res.status}`);
       setRequests(json.data || []);
@@ -96,30 +97,36 @@ const BPRNDPendingCreditRequestsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 m-6">
-      <div className="p-6 bg-white border border-blue-200 rounded-lg shadow-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-[#1e3a8a]">My Pending Credit Requests</h1>
-            <p className="text-black">Track the status of your credit requests and their approval progress</p>
+    <StudentDashboardLayout>
+      <div className="space-y-6">
+        <div className="p-8 bg-gradient-to-br from-white to-blue-50/30 border border-blue-200/50 rounded-2xl shadow-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <Clock className="h-5 w-5 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">My Pending Credit Requests</h1>
+              </div>
+              <p className="text-gray-600 text-lg">Track the status of your credit requests and their approval progress</p>
+            </div>
+            <Button 
+              onClick={fetchPendingCreditRequests} 
+              variant="outline" 
+              className="flex items-center space-x-2 text-blue-700 font-semibold border-blue-300 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 px-6 py-3 rounded-xl"
+              disabled={loading}
+            >
+              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
+            </Button>
           </div>
-          <Button 
-            onClick={fetchPendingCreditRequests} 
-            variant="outline" 
-            className="flex items-center space-x-2 text-black font-semibold border-black hover:bg-gray-100"
-            disabled={loading}
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
-          </Button>
         </div>
-      </div>
 
-      <Card className="bg-white border border-blue-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-[#1e3a8a]">Credit Requests</CardTitle>
-          <CardDescription className="text-black">
-            Total: {requests.length} {loading && '(Loading...)'}
+      <Card className="bg-gradient-to-br from-white to-gray-50/50 border border-gray-200/50 shadow-xl rounded-2xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200/50 px-8 py-6">
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">Credit Requests</CardTitle>
+          <CardDescription className="text-gray-600 text-lg">
+            Total: <span className="font-semibold text-blue-600">{requests.length}</span> {loading && '(Loading...)'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -164,7 +171,7 @@ const BPRNDPendingCreditRequestsPage: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {requests.map((request) => (
-                <div key={request.id} className="border border-blue-200 rounded-lg bg-blue-50/30 hover:bg-blue-50/50 transition-colors p-4">
+                <div key={request.id} className="border border-gray-200/50 rounded-xl bg-gradient-to-br from-white to-gray-50/50 hover:from-gray-50/50 hover:to-gray-100/50 hover:shadow-lg hover:border-gray-300/50 transition-all duration-300 p-6">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       {getStatusIcon(request.status)}
@@ -253,7 +260,8 @@ const BPRNDPendingCreditRequestsPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </StudentDashboardLayout>
   );
 };
 

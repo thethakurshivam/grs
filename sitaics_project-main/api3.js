@@ -13,7 +13,7 @@ const nodemailer = require('nodemailer');
 const bprndStudents = require('./model3/bprndstudents');
 const umbrella = require('./model3/umbrella');
 const bprnd_certification_claim = require('./model3/bprnd_certification_claim');
-const emailConfig = require('./email-config');
+
 require('dotenv').config();
 
 // Polyfill fetch if needed
@@ -66,18 +66,20 @@ const upload = multer({
 
 // Configure nodemailer
 const transporter = nodemailer.createTransport({
-  service: emailConfig.EMAIL_SERVICE,
+  service: process.env.EMAIL_SERVICE || 'gmail',
   auth: {
-    user: emailConfig.EMAIL_USER,
-    pass: emailConfig.EMAIL_PASS,
+    user: process.env.EMAIL_USER || 'trinayan.1303@gmail.com',
+    pass: process.env.EMAIL_PASS || 'sfnw ucmk zunl zmra',
   },
 });
 
 // Test email configuration on startup
 console.log('📧 Email Configuration:');
-console.log('  Service:', emailConfig.EMAIL_SERVICE);
-console.log('  User:', emailConfig.EMAIL_USER);
-console.log('  Password:', emailConfig.EMAIL_PASS ? '***configured***' : 'NOT CONFIGURED');
+console.log('  Service:', process.env.EMAIL_SERVICE || 'gmail');
+console.log('  User:', process.env.EMAIL_USER || 'trinayan.1303@gmail.com');
+console.log('  Password:', process.env.EMAIL_PASS ? '***configured***' : 'NOT CONFIGURED');
+
+
 
 // Verify transporter configuration
 transporter.verify(function(error, success) {
@@ -88,23 +90,53 @@ transporter.verify(function(error, success) {
   }
 });
 
+// Test route to verify API is working
+app.get('/api/test', (req, res) => {
+  console.log('✅ Test route hit');
+  res.json({ message: 'BPRND POC API is working!' });
+});
+
 // Bulk import BPRND students from Excel file
 app.post(
   '/api/bprnd/students/upload',
   upload.single('excelFile'),
   async (req, res) => {
+    console.log('🚀 BPRND students upload route hit');
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file);
+
     try {
       if (!req.file) {
+        console.log('❌ No file uploaded');
         return res.status(400).json({
           success: false,
           message: 'No file uploaded',
         });
       }
 
+      // Get umbrella from form data
+      const { umbrella } = req.body;
+      if (!umbrella) {
+        return res.status(400).json({
+          success: false,
+          message: 'Umbrella selection is required',
+        });
+      }
+
+      console.log('Processing bulk import for umbrella:', umbrella);
+      console.log('File received:', req.file.originalname, 'Size:', req.file.size);
+
       const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const data = xlsx.utils.sheet_to_json(worksheet);
+
+      console.log('Excel data rows:', data.length);
+
+      if (data.length > 0) {
+        console.log('📊 First row structure:', Object.keys(data[0]));
+        console.log('📊 Sample data:', data[0]);
+      }
 
       if (!data || data.length === 0) {
         return res.status(400).json({
@@ -118,23 +150,55 @@ app.post(
 
       for (const row of data) {
         try {
+          // Normalize all fields
+          const normalizedRow = {
+            Name: row.Name || row.name,
+            Email: row.Email || row.email,
+            Designation: row.Designation || row.designation || '',
+            State: row.State || row.state || '',
+            Organization: row.Organization || row.organization || '',
+
+            Training_Topic: row.Training_Topic || row.training_topic || '',
+            Per_session_minutes: row.Per_session_minutes || row.per_session_minutes || 0,
+            Theory_sessions: row.Theory_sessions || row.theory_sessions || 0,
+            Practical_sessions: row.Practical_sessions || row.practical_sessions || 0,
+            Theory_Hours: row.Theory_Hours || row.theory_hours || 0,
+            Practical_Hours: row.Practical_Hours || row.practical_hours || 0,
+            Total_Hours: row.Total_Hours || row.total_hours || 0,
+            Theory_Credits: row.Theory_Credits || row.theory_credits || 0,
+            Practical_Credits: row.Practical_Credits || row.practical_credits || 0,
+            Total_Credits: row.Total_Credits || row.total_credits || 0,
+            date_of_birth: row.date_of_birth,
+          };
+
+          // Handle Excel numeric dates → JS Date
+          if (typeof normalizedRow.date_of_birth === 'number') {
+            normalizedRow.date_of_birth = new Date(
+              Math.round((normalizedRow.date_of_birth - 25569) * 86400 * 1000)
+            );
+          } else if (normalizedRow.date_of_birth) {
+            normalizedRow.date_of_birth = new Date(normalizedRow.date_of_birth);
+          } else {
+            normalizedRow.date_of_birth = new Date('1990-01-01');
+          }
+
           // Validate required fields
-          if (!row.Name || !row.Email) {
+          if (!normalizedRow.Name || !normalizedRow.Email) {
             errors.push({
-              row: row,
-              error: 'Missing required fields: Name and Email are required',
+              row,
+              error: `Missing required fields: Name and Email are required. Found: Name="${normalizedRow.Name}", Email="${normalizedRow.Email}"`,
             });
             continue;
           }
 
           // Check if user already exists
           const existingUser = await bprndStudents.findOne({
-            email: row.Email.toLowerCase().trim(),
+            email: normalizedRow.Email.toLowerCase().trim(),
           });
 
           if (existingUser) {
             errors.push({
-              row: row,
+              row,
               error: 'User with this email already exists',
             });
             continue;
@@ -142,35 +206,86 @@ app.post(
 
           // Create new user
           const newUser = new bprndStudents({
-            Name: row.Name,
-            Email: row.Email.toLowerCase().trim(),
-            Designation: row.Designation || '',
-            State: row.State || '',
-            Organization: row.Organization || '',
-            Umbrella: row.Umbrella || '',
-            Total_Credits: 0,
+            Name: normalizedRow.Name,
+            email: normalizedRow.Email.toLowerCase().trim(),
+            Designation: normalizedRow.Designation,
+            State: normalizedRow.State,
+            Organization: normalizedRow.Organization,
+            Umbrella: umbrella,
+
+            Training_Topic: normalizedRow.Training_Topic,
+            Per_session_minutes: normalizedRow.Per_session_minutes,
+            Theory_sessions: normalizedRow.Theory_sessions,
+            Practical_sessions: normalizedRow.Practical_sessions,
+            Theory_Hours: normalizedRow.Theory_Hours,
+            Practical_Hours: normalizedRow.Practical_Hours,
+            Total_Hours: normalizedRow.Total_Hours,
+            Theory_Credits: normalizedRow.Theory_Credits,
+            Practical_Credits: normalizedRow.Practical_Credits,
+            Total_Credits: normalizedRow.Total_Credits,
+            date_of_birth: normalizedRow.date_of_birth,
+
+            // Default umbrella credit fields
+            Cyber_Security: 0,
+            Criminology: 0,
+            Military_Law: 0,
+            Police_Administration: 0,
+            Defence: 0,
+            Forensics: 0,
           });
 
+          // Debug: Log what we're trying to save
+          console.log('🔍 DEBUG: Attempting to save user with data:', JSON.stringify(newUser.toObject(), null, 2));
+          console.log('🔍 DEBUG: Schema validation should pass for all required fields');
+
           await newUser.save();
+          
+          // Create corresponding entry in coursehistories collection
+          try {
+            const courseHistoryEntry = new CourseHistory({
+              studentId: newUser._id,
+              name: normalizedRow.Training_Topic,
+              organization: normalizedRow.Organization,
+              discipline: umbrella,
+              theoryHours: normalizedRow.Theory_Hours,
+              practicalHours: normalizedRow.Practical_Hours,
+              totalHours: normalizedRow.Total_Hours,
+              noOfDays: 1, // Default to 1 day for now
+              theoryCredits: normalizedRow.Theory_Credits,
+              practicalCredits: normalizedRow.Practical_Credits,
+              creditsEarned: normalizedRow.Total_Credits,
+              count: normalizedRow.Total_Credits, // Same value as Total Credits
+              certificateContributed: false
+            });
+
+            await courseHistoryEntry.save();
+            console.log(`✅ Course history entry created for: ${normalizedRow.Training_Topic}`);
+          } catch (courseHistoryError) {
+            console.error(`❌ Failed to create course history entry for ${normalizedRow.Training_Topic}:`, courseHistoryError);
+            // Don't fail the entire import if course history creation fails
+          }
+
           results.push({
-            name: row.Name,
-            email: row.Email,
+            name: normalizedRow.Name,
+            email: normalizedRow.Email,
             status: 'created',
           });
+
+          console.log(`✅ User created: ${normalizedRow.Name} (${normalizedRow.Email})`);
 
           // Send welcome email
           try {
             const mailOptions = {
-              from: emailConfig.EMAIL_USER,
-              to: row.Email,
+              from: process.env.EMAIL_USER || 'trinayan.1303@gmail.com',
+              to: normalizedRow.Email,
               subject: 'RRU Portal Login Credentials',
               html: `
                 <h2>Welcome to RRU Portal!</h2>
-                <p>Hello ${row.Name},</p>
+                <p>Hello ${normalizedRow.Name},</p>
                 <p>Your account has been created successfully in the RRU Portal.</p>
                 <p>You can now login to the RRU portal with the following credentials:</p>
                 <ul>
-                  <li><strong>Email:</strong> ${row.Email}</li>
+                  <li><strong>Email:</strong> ${normalizedRow.Email}</li>
                   <li><strong>Password:</strong> Your registered password</li>
                 </ul>
                 <p>Please login and change your password after first login.</p>
@@ -179,22 +294,28 @@ app.post(
             };
 
             await transporter.sendMail(mailOptions);
-            console.log(`✅ Welcome email sent to ${row.Email}`);
+            console.log(`✅ Welcome email sent to ${normalizedRow.Email}`);
           } catch (emailError) {
-            console.error(`❌ Failed to send welcome email to ${row.Email}:`, emailError);
+            console.error(`❌ Failed to send welcome email to ${normalizedRow.Email}:`, emailError);
           }
         } catch (error) {
+          console.error('❌ ERROR: Failed to save user:', error);
+          console.error('❌ ERROR: Validation details:', error.errors);
+          console.error('❌ ERROR: Full error object:', JSON.stringify(error, null, 2));
           errors.push({
-            row: row,
+            row,
             error: error.message,
           });
         }
       }
 
+      console.log(`Bulk import completed: ${results.length} created, ${errors.length} errors`);
+
       res.status(200).json({
         success: true,
         message: `Bulk import completed. ${results.length} users created, ${errors.length} errors.`,
         data: {
+          totalProcessed: data.length,
           created: results,
           errors: errors,
         },
@@ -516,31 +637,7 @@ app.post('/api/bprnd/pending-credits/:id/reject', async (req, res) => {
   }
 });
 
-// Get count of pending credits for BPRND POC dashboard
-app.get('/api/bprnd/pending-credits/count', async (req, res) => {
-  try {
-    const count = await PendingCredits.countDocuments({ 
-      admin_approved: false,
-      bprnd_poc_approved: false 
-    });
-
-    res.status(200).json({
-      success: true,
-      message: 'Pending credits count retrieved successfully',
-      data: {
-        pendingCount: count,
-        timestamp: new Date()
-      }
-    });
-  } catch (error) {
-    console.error('Error counting pending credits:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error counting pending credits',
-      error: error.message,
-    });
-  }
-});
+// Note: Count-only route removed - count is now calculated in frontend from full data
 
 // Get pending credits for a specific student
 app.get('/api/bprnd/pending-credits/student/:studentId', async (req, res) => {
@@ -791,28 +888,106 @@ app.get('/api/bprnd/poc/pending-credits/count', async (req, res) => {
   }
 });
 
-// Get count of pending certification requests for POC dashboard
-app.get('/api/bprnd/poc/claims/count', async (req, res) => {
-  try {
-    // Count certification claims that are waiting for POC approval (neither POC nor admin approved yet)
-    const pendingClaimsCount = await bprnd_certification_claim.countDocuments({
-      poc_approved: false,
-      admin_approved: false
-    });
+// Note: Count-only route removed - count is now calculated in frontend from full data
 
+// Get all umbrellas for BPRND bulk import
+app.get('/api/umbrellas', async (req, res) => {
+  try {
+    const umbrellas = await umbrella.find({}).sort({ name: 1 }).lean();
+    
     res.json({
       success: true,
-      message: 'Pending certification claims count retrieved successfully',
-      data: {
-        count: pendingClaimsCount
-      }
+      message: 'Umbrellas retrieved successfully',
+      data: umbrellas
     });
   } catch (error) {
-    console.error('Error fetching pending certification claims count:', error);
+    console.error('Error fetching umbrellas:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch pending certification claims count',
-      details: error.message
+      message: 'Failed to fetch umbrellas',
+      error: error.message
+    });
+  }
+});
+
+// Get all BPRND students data from credit_calculation collection
+app.get('/api/bprnd/students', async (req, res) => {
+  try {
+    console.log('👥 Fetching all BPRND students from credit_calculations collection...');
+    
+    // Directly query the credit_calculations collection
+    const db = mongoose.connection.db;
+    const creditCalculationsCollection = db.collection('credit_calculations');
+    const students = await creditCalculationsCollection.find({}).toArray();
+    
+    console.log(`✅ Found ${students.length} BPRND students in credit_calculations collection`);
+    
+    res.json({
+      success: true,
+      message: 'BPRND students data retrieved successfully',
+      data: students,
+      count: students.length
+    });
+  } catch (error) {
+    console.error('❌ Error fetching BPRND students data:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch BPRND students data',
+      error: error.message
+    });
+  }
+});
+
+// Get discipline course counts from coursehistories collection for pie chart
+app.get('/api/bprnd/disciplines/count', async (req, res) => {
+  try {
+    console.log('📊 Fetching discipline course counts from coursehistories collection...');
+    
+    // Directly query the coursehistories collection
+    const db = mongoose.connection.db;
+    const coursehistoriesCollection = db.collection('coursehistories');
+    
+    // Aggregate to count courses by discipline
+    const disciplineCounts = await coursehistoriesCollection.aggregate([
+      {
+        $group: {
+          _id: '$discipline',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { count: -1 } // Sort by count descending
+      }
+    ]).toArray();
+    
+    // Convert to the format needed for frontend
+    const disciplineData = {};
+    let totalCourses = 0;
+    
+    disciplineCounts.forEach(item => {
+      if (item._id) { // Only include disciplines with valid names
+        disciplineData[item._id] = item.count;
+        totalCourses += item.count;
+      }
+    });
+    
+    console.log(`✅ Found ${disciplineCounts.length} disciplines with ${totalCourses} total courses`);
+    console.log('📈 Discipline breakdown:', disciplineData);
+    
+    res.json({
+      success: true,
+      message: 'Discipline course counts retrieved successfully',
+      data: disciplineData,
+      totalCourses: totalCourses,
+      disciplineCount: disciplineCounts.length
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching discipline course counts:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch discipline course counts',
+      error: error.message
     });
   }
 });

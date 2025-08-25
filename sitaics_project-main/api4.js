@@ -416,11 +416,10 @@ router.get('/student/:id/course-history/:umbrella', async (req, res) => {
 
     // Find all course history records for this student and discipline
     // Note: discipline in coursehistories matches umbrella name from database
-    // Filter out courses that have contributed to certificates
+    // Show ALL courses to properly display credit usage (both used and unused)
     const courseHistory = await CourseHistory.find({
       studentId: new mongoose.Types.ObjectId(id),
-      discipline: { $regex: new RegExp(umbrella, 'i') }, // Case-insensitive match
-      certificateContributed: { $ne: true } // Only show courses not contributed to certificates
+      discipline: { $regex: new RegExp(umbrella, 'i') } // Case-insensitive match
     })
     .sort({ createdAt: -1 }) // Sort by newest first
     .lean();
@@ -442,41 +441,95 @@ router.get('/student/:id/course-history/:umbrella', async (req, res) => {
 
     console.log(`💰 Current stored credits for ${umbrella}: ${currentStoredCredits}`);
 
-    // Calculate remaining credits for each course based on current stored credits
-    let remainingCreditsToDistribute = currentStoredCredits;
+    // Calculate remaining credits for each course based on what's actually been used
     const coursesWithRemainingCredits = [];
 
     for (const course of courseHistory) {
       const courseTotalCredits = (course.theoryCredits || 0) + (course.practicalCredits || 0);
       
-      if (remainingCreditsToDistribute > 0) {
-        // Calculate how many credits from this course are still available
-        const creditsFromThisCourse = Math.min(courseTotalCredits, remainingCreditsToDistribute);
-        remainingCreditsToDistribute -= creditsFromThisCourse;
+      // Check if this course has contributed to any certificates
+      const hasContributed = course.certificateContributed === true;
+      
+      if (hasContributed) {
+        // Course has been used for certification - calculate remaining credits
+        let contributedCredits = 0;
+        
+        if (course.contributedToCertificate?.creditsContributed) {
+          // Use actual contributed credits if available
+          contributedCredits = course.contributedToCertificate.creditsContributed;
+        } else {
+          // If contributedToCertificate is missing but course is marked as contributed,
+          // we need to make a reasonable assumption about credit usage
+          
+          // Check if this is a "Remaining Credits" course (created when partial credits were used)
+          if (course.name && course.name.includes('(Remaining Credits)')) {
+            // This is already a remaining credits course, so all credits are available
+            contributedCredits = 0;
+          } else {
+            // This is an original course marked as contributed but missing details
+            // Look for corresponding "Remaining Credits" course to determine usage
+            let remainingCourseExists = null;
+            
+            // First try to find by originalCourseId
+            if (course._id) {
+              remainingCourseExists = courseHistory.find(c => 
+                c.originalCourseId && c.originalCourseId.toString() === course._id.toString()
+              );
+            }
+            
+            // If not found by ID, try to find by name pattern
+            if (!remainingCourseExists) {
+              remainingCourseExists = courseHistory.find(c => 
+                c.name && c.name.includes(`${course.name} (Remaining Credits)`) &&
+                c.certificateContributed === false // Only consider unused remaining courses
+              );
+            }
+            
+            if (remainingCourseExists) {
+              // If remaining course exists, calculate how much was used
+              const remainingCreditsFromOtherCourse = (remainingCourseExists.theoryCredits || 0) + (remainingCourseExists.practicalCredits || 0);
+              contributedCredits = Math.max(0, courseTotalCredits - remainingCreditsFromOtherCourse);
+              console.log(`🔍 Found remaining course for ${course.name}: original=${courseTotalCredits}, remaining=${remainingCreditsFromOtherCourse}, used=${contributedCredits}`);
+            } else {
+              // No remaining course found - assume course was fully used
+              contributedCredits = courseTotalCredits;
+              console.log(`⚠️ No remaining course found for ${course.name}: marking as fully used (${contributedCredits} credits)`);
+            }
+          }
+        }
+        
+        const remainingCredits = Math.max(0, courseTotalCredits - contributedCredits);
+        
+        // Distribute remaining credits proportionally between theory and practical
+        const theoryRatio = courseTotalCredits > 0 ? (course.theoryCredits || 0) / courseTotalCredits : 0;
+        const practicalRatio = courseTotalCredits > 0 ? (course.practicalCredits || 0) / courseTotalCredits : 0;
+        
+        const remainingTheoryCredits = Math.round(remainingCredits * theoryRatio);
+        const remainingPracticalCredits = Math.round(remainingCredits * practicalRatio);
         
         coursesWithRemainingCredits.push({
           ...course,
           originalTheoryCredits: course.theoryCredits || 0,
           originalPracticalCredits: course.practicalCredits || 0,
           originalTotalCredits: courseTotalCredits,
-          remainingTheoryCredits: Math.min(course.theoryCredits || 0, creditsFromThisCourse),
-          remainingPracticalCredits: Math.min(course.practicalCredits || 0, creditsFromThisCourse),
-          remainingTotalCredits: creditsFromThisCourse,
-          creditsUsed: courseTotalCredits - creditsFromThisCourse,
-          isFullyAvailable: creditsFromThisCourse === courseTotalCredits
+          remainingTheoryCredits: remainingTheoryCredits,
+          remainingPracticalCredits: remainingPracticalCredits,
+          remainingTotalCredits: remainingCredits,
+          creditsUsed: contributedCredits,
+          isFullyAvailable: remainingCredits === courseTotalCredits
         });
       } else {
-        // No more credits available, course is fully used
+        // Course hasn't been used for certification yet - all credits available
         coursesWithRemainingCredits.push({
           ...course,
           originalTheoryCredits: course.theoryCredits || 0,
           originalPracticalCredits: course.practicalCredits || 0,
           originalTotalCredits: courseTotalCredits,
-          remainingTheoryCredits: 0,
-          remainingPracticalCredits: 0,
-          remainingTotalCredits: 0,
-          creditsUsed: courseTotalCredits,
-          isFullyAvailable: false
+          remainingTheoryCredits: course.theoryCredits || 0,
+          remainingPracticalCredits: course.practicalCredits || 0,
+          remainingTotalCredits: courseTotalCredits,
+          creditsUsed: 0,
+          isFullyAvailable: true
         });
       }
     }
@@ -487,8 +540,9 @@ router.get('/student/:id/course-history/:umbrella', async (req, res) => {
     const totalRemainingCredits = totalRemainingTheoryCredits + totalRemainingPracticalCredits;
     const totalHours = coursesWithRemainingCredits.reduce((sum, course) => sum + (course.totalHours || 0), 0);
     const totalDays = coursesWithRemainingCredits.reduce((sum, course) => sum + (course.noOfDays || 0), 0);
+    const totalCreditsUsed = coursesWithRemainingCredits.reduce((sum, course) => sum + (course.creditsUsed || 0), 0);
 
-    console.log(`📊 Summary for ${umbrella}: ${totalRemainingCredits} remaining credits (${totalRemainingTheoryCredits} theory + ${totalRemainingPracticalCredits} practical)`);
+    console.log(`📊 Summary for ${umbrella}: ${totalRemainingCredits} remaining credits (${totalRemainingTheoryCredits} theory + ${totalRemainingPracticalCredits} practical), ${totalCreditsUsed} credits used`);
 
     return res.status(200).json({
       success: true,
@@ -504,8 +558,9 @@ router.get('/student/:id/course-history/:umbrella', async (req, res) => {
           totalPracticalCredits: totalRemainingPracticalCredits,
           totalHours,
           totalDays,
+          totalCreditsUsed, // Total credits used from all courses
           currentStoredCredits, // Include for reference
-          note: `Course history shows remaining credits (${totalRemainingCredits}) that can still contribute to future certifications. This matches your credit bank card.`
+          note: `Course history shows remaining credits (${totalRemainingCredits}) that can still contribute to future certifications. Total credits used: ${totalCreditsUsed}. This matches your credit bank card.`
         }
       }
     });
@@ -1435,7 +1490,7 @@ router.post('/internal/bprnd/claims/:claimId/finalize', async (req, res) => {
       qualification: claim.qualification,
       claimId: claim._id,
       issuedAt: new Date(),
-      certificateNo: `CERT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      certificateNo: `rru_${key}_${nextSequenceNumber}`,
     });
 
     // Mark claim approved

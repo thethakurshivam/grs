@@ -35,7 +35,7 @@ export const BPRNDCertificatesPage: React.FC = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-4xl font-extrabold text-[#0b2e63]">BPR&D Student Certificates</h1>
+          <h1 className="text-4xl font-extrabold text-[#0b2e63]">BPR&D Candidate Certificates</h1>
           <p className="text-lg text-black mt-2">Loading your certificates...</p>
         </div>
         <div className="flex justify-center items-center h-64">
@@ -49,7 +49,7 @@ export const BPRNDCertificatesPage: React.FC = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-4xl font-extrabold text-[#0b2e63]">BPR&D Student Certificates</h1>
+          <h1 className="text-4xl font-extrabold text-[#0b2e63]">BPR&D Candidate Certificates</h1>
           <p className="text-lg text-black mt-2">Error loading certificates</p>
         </div>
         <Card className="border border-red-200 bg-white rounded-xl">
@@ -132,60 +132,78 @@ export const BPRNDCertificatesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-4xl font-extrabold text-[#0b2e63]">BPR&D Student Certificates</h1>
-        <p className="text-lg text-black mt-2">Your earned certifications and qualifications</p>
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl shadow-lg mb-4">
+          <Award className="h-8 w-8 text-white" />
+        </div>
+        <h1 className="text-4xl font-bold text-gray-900 mb-3">BPR&D Candidate Certificates</h1>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">Your earned certifications and qualifications - a testament to your professional development</p>
       </div>
 
       {certificates.length === 0 ? (
-        <Card className="border border-[#0b2e63]/20 bg-white rounded-xl">
-          <CardContent className="pt-6">
-            <div className="text-center py-8">
-              <Award className="w-16 h-16 text-[#0b2e63]/40 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Certificates Yet</h3>
-              <p className="text-gray-600">You haven't earned any certificates yet. Complete training courses to earn your first certification.</p>
+        <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <CardContent className="pt-8 pb-8">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-2xl mb-6">
+                <Award className="h-10 w-10 text-gray-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">No Certificates Yet</h3>
+              <p className="text-gray-600 text-lg max-w-md mx-auto">You haven't earned any certificates yet. Complete training courses to earn your first certification and advance your career.</p>
             </div>
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {certificates.map((certificate) => (
-            <Card key={certificate._id} className="border border-[#0b2e63]/20 bg-white hover:shadow-lg transition-shadow rounded-xl">
-              <CardHeader className="pb-3">
+          {certificates.map((certificate, index) => (
+            <Card key={certificate._id} className="bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 rounded-xl overflow-hidden group">
+              {/* Subtle top accent */}
+              <div className="absolute top-0 left-0 w-full h-0.5 bg-gray-300"></div>
+              
+              <CardHeader className="pb-4 pt-6">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold text-[#0b2e63] flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-[#0b2e63]" />
+                  <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-gray-700 transition-colors flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                      <Shield className="w-4 h-4 text-gray-600" />
+                    </div>
                     {formatUmbrellaKey(certificate.umbrellaKey)}
                   </CardTitle>
-                  <div className="h-8 w-8 rounded-full bg-[#0b2e63]/10 flex items-center justify-center">
-                    <Award className="h-4 w-4 text-[#0b2e63]" />
+                  <div className="h-10 w-10 rounded-lg bg-gray-900 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <Award className="h-5 w-5 text-white" />
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              
+              <CardContent className="pt-0">
                 <div className="space-y-3">
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Qualification</p>
-                    <p className="font-medium text-gray-900 text-sm">{certificate.qualification || 'N/A'}</p>
+                  {/* Qualification */}
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-1">Qualification</p>
+                    <p className="font-semibold text-gray-900 text-sm">{certificate.qualification || 'N/A'}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Certificate No</p>
-                    <p className="font-medium text-gray-900 text-sm font-mono">{certificate.certificateNo}</p>
+                  
+                  {/* Certificate Number */}
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-1">Certificate No</p>
+                    <p className="font-mono font-semibold text-gray-900 text-sm">{certificate.certificateNo}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Issued Date</p>
-                    <p className="font-medium text-gray-900 text-sm">{formatDate(certificate.issuedAt)}</p>
+                  
+                  {/* Issued Date */}
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-1">Issued Date</p>
+                    <p className="font-semibold text-gray-900 text-sm">{formatDate(certificate.issuedAt)}</p>
                   </div>
-                  <div className="pt-2 border-t border-gray-100">
+                  
+                  {/* Footer with ID and Download */}
+                  <div className="pt-3 border-t border-gray-200">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-[#0b2e63]">
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
                         <Hash className="w-3 h-3" />
                         <span className="font-medium">ID: {certificate._id.slice(-8)}</span>
                       </div>
                       <button
                         onClick={() => handleDownloadCertificate(certificate._id)}
                         disabled={downloadingId === certificate._id}
-                        className="px-3 py-1 bg-[#0b2e63] text-white text-xs rounded-md hover:bg-[#0b2e63]/90 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {downloadingId === certificate._id ? (
                           <>
@@ -209,22 +227,22 @@ export const BPRNDCertificatesPage: React.FC = () => {
       )}
 
       {certificates.length > 0 && (
-        <div className="mt-6">
-          <Card className="border border-[#0b2e63]/20 bg-[#0b2e63]/5 rounded-xl">
-            <CardContent className="pt-6">
+        <div className="mt-8">
+          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <CardContent className="pt-8 pb-8">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-[#0b2e63]/20 flex items-center justify-center">
-                    <Award className="h-5 w-5 text-[#0b2e63]" />
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-gray-900 flex items-center justify-center">
+                    <Award className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-[#0b2e63]">Total Certificates Earned</h3>
-                    <p className="text-sm text-gray-600">You have successfully completed {certificates.length} certification program{certificates.length !== 1 ? 's' : ''}</p>
+                    <h3 className="text-xl font-bold text-gray-900">Total Certificates Earned</h3>
+                    <p className="text-gray-600">You have successfully completed {certificates.length} certification program{certificates.length !== 1 ? 's' : ''}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold text-[#0b2e63]">{certificates.length}</div>
-                  <div className="text-sm text-gray-600">Certificates</div>
+                  <div className="text-4xl font-bold text-gray-900">{certificates.length}</div>
+                  <div className="text-sm text-gray-600 font-medium">Certificates</div>
                 </div>
               </div>
             </CardContent>

@@ -8,6 +8,7 @@ import useBPRNDUmbrellas from '@/hooks/useBPRNDUmbrellas';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../hooks/use-toast';
 import { useCenteredToastContext } from '@/contexts/centered-toast-context';
+import { StudentDashboardLayout } from './StudentDashboardLayout';
 
 interface PreviousCourse {
   organization_name: string;
@@ -162,30 +163,30 @@ const PreviousCoursesForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <StudentDashboardLayout>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4 bg-white rounded-lg shadow-sm p-6">
+        <div className="flex items-center gap-4 bg-gray-100 rounded-lg border border-gray-300 p-6">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/student/dashboard')}
-            className="hover:bg-gray-100 rounded-full"
+            className="hover:bg-gray-200 rounded-full"
           >
-            <ArrowLeft className="h-5 w-5 text-indigo-800" />
+            <ArrowLeft className="h-5 w-5 text-gray-600" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-indigo-900">Add Course Other Than RRU</h1>
-            <p className="text-gray-800 mt-2">Submit a course certificate (PDF) for pending credits.</p>
+            <h1 className="text-3xl font-bold text-gray-900">Add Course Other Than RRU</h1>
+            <p className="text-gray-600 mt-2">Submit a course certificate (PDF) for pending credits.</p>
           </div>
         </div>
 
         {/* Form */}
-        <Card className="border-0 shadow-lg bg-white">
+        <Card className="border border-gray-300 bg-gray-100">
           <CardHeader className="border-b border-gray-200 px-8 py-6">
-            <CardTitle className="text-2xl font-semibold text-indigo-900 flex items-center gap-3">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <Upload className="h-6 w-6 text-indigo-600" />
+            <CardTitle className="text-2xl font-semibold text-gray-900 flex items-center gap-3">
+              <div className="p-2 bg-gray-200 rounded-lg">
+                <Upload className="h-6 w-6 text-gray-600" />
               </div>
               Pending Credits Submission
             </CardTitle>
@@ -193,7 +194,7 @@ const PreviousCoursesForm: React.FC = () => {
           <CardContent className="p-8 space-y-8">
             {/* Applicant name */}
             <div className="space-y-3">
-              <Label htmlFor="applicant-name" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
+              <Label htmlFor="applicant-name" className="text-gray-700 font-medium text-sm">
                 Your Name *
               </Label>
               <Input
@@ -201,20 +202,20 @@ const PreviousCoursesForm: React.FC = () => {
                 value={applicantName}
                 onChange={(e) => setApplicantName(e.target.value)}
                 placeholder="e.g., John Doe"
-                className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
+                className="border-gray-300 focus:border-gray-400 focus:ring-gray-400 h-12 text-base text-gray-900 placeholder:text-gray-500"
               />
             </div>
 
             {/* Discipline */}
             <div className="space-y-3">
-              <Label htmlFor="discipline" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
+              <Label htmlFor="discipline" className="text-gray-700 font-medium text-sm">
                 Discipline *
               </Label>
               <select
                 id="discipline"
                 value={discipline}
                 onChange={(e) => setDiscipline(e.target.value)}
-                className="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base rounded-md text-gray-900"
+                className="w-full border-gray-300 focus:border-gray-400 focus:ring-gray-400 h-12 text-base rounded-md text-gray-900"
               >
                 <option value="" disabled>{umbrellasLoading ? 'Loading...' : 'Select a discipline'}</option>
                 {(umbrellas || []).map((u) => (
@@ -222,28 +223,28 @@ const PreviousCoursesForm: React.FC = () => {
                 ))}
               </select>
               {umbrellasError && (
-                <p className="text-sm text-red-700">Failed to load disciplines: {umbrellasError}</p>
+                <p className="text-sm text-red-600">Failed to load disciplines: {umbrellasError}</p>
               )}
               {!umbrellasLoading && !umbrellasError && (!umbrellas || umbrellas.length === 0) && (
-                <p className="text-sm text-yellow-700">No disciplines available. Please refresh the page or contact support.</p>
+                <p className="text-sm text-yellow-600">No disciplines available. Please refresh the page or contact support.</p>
               )}
               {!umbrellasLoading && umbrellas && umbrellas.length > 0 && (
-                <p className="text-sm text-green-700">✓ {umbrellas.length} disciplines loaded successfully</p>
+                <p className="text-sm text-green-600">✓ {umbrellas.length} disciplines loaded successfully</p>
               )}
             </div>
 
             {previousCourses.map((course, index) => (
-              <Card key={index} className="border border-gray-200 bg-gray-50 shadow-sm">
-                <CardContent className="p-8 space-y-6">
+              <Card key={index} className="border border-gray-300 bg-gray-200">
+                <CardContent className="p-6 space-y-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-indigo-900">Course {index + 1}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Course {index + 1}</h3>
                     {previousCourses.length > 1 && (
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => removeCourse(index)}
-                        className="border-red-200 text-red-700 hover:bg-red-50"
+                        className="border-gray-400 text-gray-600 hover:bg-gray-300"
                       >
                         <Trash2 className="h-4 w-4 mr-2" /> Remove
                       </Button>
@@ -251,7 +252,7 @@ const PreviousCoursesForm: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <Label htmlFor={`org-${index}`} className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
+                      <Label htmlFor={`org-${index}`} className="text-gray-700 font-medium text-sm">
                         Organization *
                       </Label>
                       <Input
@@ -259,12 +260,12 @@ const PreviousCoursesForm: React.FC = () => {
                         value={course.organization_name}
                         onChange={(e) => updateCourse(index, 'organization_name', e.target.value)}
                         placeholder="e.g., Coursera, edX, ..."
-                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
+                        className="border-gray-300 focus:border-gray-400 focus:ring-gray-400 h-12 text-base text-gray-900 placeholder:text-gray-500"
                       />
                     </div>
 
                   <div className="space-y-3">
-                      <Label htmlFor={`course-${index}`} className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
+                      <Label htmlFor={`course-${index}`} className="text-gray-700 font-medium text-sm">
                         Course Name
                       </Label>
                       <Input
@@ -272,7 +273,7 @@ const PreviousCoursesForm: React.FC = () => {
                         value={course.course_name}
                         onChange={(e) => updateCourse(index, 'course_name', e.target.value)}
                         placeholder="e.g., Machine Learning, Web Development..."
-                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
+                        className="border-gray-300 focus:border-gray-400 focus:ring-gray-400 h-12 text-base text-gray-900 placeholder:text-gray-500"
                       />
                     </div>
                   </div>
@@ -280,7 +281,7 @@ const PreviousCoursesForm: React.FC = () => {
                   {/* Hours and Credits */}
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <div className="space-y-3">
-                      <Label htmlFor="theory-hours" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
+                      <Label htmlFor="theory-hours" className="text-gray-700 font-medium text-sm">
                         Theory Hours *
                       </Label>
                       <Input
@@ -290,11 +291,11 @@ const PreviousCoursesForm: React.FC = () => {
                         value={theoryHours}
                         onChange={(e) => setTheoryHours(e.target.value)}
                         placeholder="e.g., 20"
-                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
+                        className="border-gray-300 focus:border-gray-400 focus:ring-gray-400 h-12 text-base text-gray-900 placeholder:text-gray-500"
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label htmlFor="practical-hours" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
+                      <Label htmlFor="practical-hours" className="text-gray-700 font-medium text-sm">
                         Practical Hours *
                       </Label>
                       <Input
@@ -304,11 +305,11 @@ const PreviousCoursesForm: React.FC = () => {
                         value={practicalHours}
                         onChange={(e) => setPracticalHours(e.target.value)}
                         placeholder="e.g., 30"
-                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
+                        className="border-gray-300 focus:border-gray-400 focus:ring-gray-400 h-12 text-base text-gray-900 placeholder:text-gray-500"
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label htmlFor="total-hours" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
+                      <Label htmlFor="total-hours" className="text-gray-700 font-medium text-sm">
                         Total Hours
                       </Label>
                       <Input
@@ -317,11 +318,11 @@ const PreviousCoursesForm: React.FC = () => {
                         min={0}
                         value={totalHours}
                         readOnly
-                        className="border-gray-300 bg-gray-50 h-12 text-base text-gray-900 cursor-not-allowed"
+                        className="border-gray-300 bg-gray-100 h-12 text-base text-gray-900 cursor-not-allowed"
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label htmlFor="calculated-credits" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
+                      <Label htmlFor="calculated-credits" className="text-gray-700 font-medium text-sm">
                         Calculated Credits
                       </Label>
                       <Input
@@ -329,7 +330,7 @@ const PreviousCoursesForm: React.FC = () => {
                         type="text"
                         value={calculatedCredits}
                         readOnly
-                        className="border-gray-300 bg-gray-50 h-12 text-base text-gray-900 cursor-not-allowed"
+                        className="border-gray-300 bg-gray-100 h-12 text-base text-gray-900 cursor-not-allowed"
                       />
                     </div>
                   </div>
@@ -337,7 +338,7 @@ const PreviousCoursesForm: React.FC = () => {
                   {/* Number of Days */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <Label htmlFor="no-of-days" className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
+                      <Label htmlFor="no-of-days" className="text-gray-700 font-medium text-sm">
                         Number of Days *
                       </Label>
                       <Input
@@ -347,25 +348,25 @@ const PreviousCoursesForm: React.FC = () => {
                         value={noOfDays}
                         onChange={(e) => setNoOfDays(e.target.value)}
                         placeholder="e.g., 5"
-                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 h-12 text-base text-gray-900 placeholder:text-gray-500"
+                        className="border-gray-300 focus:border-gray-400 focus:ring-gray-400 h-12 text-base text-gray-900 placeholder:text-gray-500"
                       />
                     </div>
                   </div>
 
                   {/* Credit Calculation Info */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="bg-gray-300 border border-gray-400 rounded-lg p-4">
                     <div className="flex items-start gap-3">
-                      <div className="p-1 bg-blue-100 rounded">
-                        <Info className="h-4 w-4 text-blue-600" />
+                      <div className="p-1 bg-gray-400 rounded">
+                        <Info className="h-4 w-4 text-gray-700" />
                       </div>
-                      <div className="text-sm text-blue-800">
+                      <div className="text-sm text-gray-800">
                         <p className="font-medium mb-1">Credit Calculation Formula:</p>
                         <ul className="space-y-1 text-xs">
                           <li>• <strong>Theory Hours:</strong> 30 hours = 1 credit</li>
                           <li>• <strong>Practical Hours:</strong> 15 hours = 1 credit</li>
                           <li>• <strong>Total Credits:</strong> (Theory ÷ 30) + (Practical ÷ 15)</li>
                         </ul>
-                        <p className="text-xs mt-2 text-blue-700">
+                        <p className="text-xs mt-2 text-gray-700">
                           Example: 60 theory + 30 practical = (60÷30) + (30÷15) = 2 + 2 = 4 credits
                         </p>
                       </div>
@@ -373,7 +374,7 @@ const PreviousCoursesForm: React.FC = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <Label htmlFor={`cert-${index}`} className="text-indigo-800 font-semibold text-sm uppercase tracking-wide">
+                    <Label htmlFor={`cert-${index}`} className="text-gray-700 font-medium text-sm">
                       Certificate PDF *
                     </Label>
                     <div className="flex items-center gap-4">
@@ -383,11 +384,11 @@ const PreviousCoursesForm: React.FC = () => {
                           type="file"
                           accept=".pdf"
                           onChange={(e) => handleFileUpload(index, e)}
-                          className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                          className="border-gray-300 focus:border-gray-400 focus:ring-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                         />
                       </div>
                     </div>
-                    <p className="text-sm text-gray-700">Upload your course completion certificate (PDF format only)</p>
+                    <p className="text-sm text-gray-600">Upload your course completion certificate (PDF format only)</p>
                   </div>
                 </CardContent>
               </Card>
@@ -398,32 +399,32 @@ const PreviousCoursesForm: React.FC = () => {
                 type="button"
                 variant="outline"
                 onClick={addCourse}
-                className="w-full border-2 border-dashed border-gray-300 text-indigo-800 hover:bg-gray-50 hover:border-indigo-300 h-16 text-base font-medium"
+                className="w-full border-2 border-dashed border-gray-400 text-gray-700 hover:bg-gray-300 hover:border-gray-500 h-16 text-base font-medium"
               >
                 <Plus className="h-5 w-5 mr-3" />
                 Add Another Course
               </Button>
             </div>
 
-            <div className="flex gap-6 pt-8 border-t border-gray-200">
+            <div className="flex gap-6 pt-8 border-t border-gray-300">
               <Button
                 variant="outline"
                 onClick={() => navigate('/student/dashboard')}
-                className="flex-1 h-12 text-base font-medium border-gray-300 text-indigo-800 hover:bg-gray-50"
+                className="flex-1 h-12 text-base font-medium border-gray-400 text-gray-700 hover:bg-gray-300"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
-                className="flex-1 h-12 text-base font-medium bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                className="flex-1 h-12 text-base font-medium bg-gray-800 hover:bg-gray-900 text-white transition-colors"
               >
                 Submit
               </Button>
             </div>
-          </CardContent>
-        </Card>
+                  </CardContent>
+      </Card>
       </div>
-    </div>
+    </StudentDashboardLayout>
   );
 };
 

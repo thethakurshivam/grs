@@ -14,23 +14,23 @@ const OngoingCoursesCountCard = () => {
   if (loading) {
     return (
       <Card 
-        className="hover:shadow-lg transition-all duration-200 border-0 shadow-md cursor-pointer"
+        className="hover:shadow-md transition-all duration-200 border border-gray-200 shadow-sm cursor-pointer bg-white"
         onClick={handleCardClick}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-black">
+          <CardTitle className="text-sm font-medium text-gray-900">
             Ongoing Courses
           </CardTitle>
-          <div className="p-2 rounded-full bg-blue-50">
-            <BookOpen className="h-5 w-5 text-blue-600" />
+          <div className="p-2 rounded-full bg-gray-100">
+            <BookOpen className="h-5 w-5 text-gray-700" />
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <div className="text-3xl font-bold text-black">
+            <div className="text-3xl font-bold text-gray-900">
               Loading...
             </div>
-            <p className="text-sm text-black">
+            <p className="text-sm text-gray-600">
               Currently active courses
             </p>
           </div>
@@ -42,23 +42,23 @@ const OngoingCoursesCountCard = () => {
   if (error) {
     return (
       <Card 
-        className="hover:shadow-lg transition-all duration-200 border-0 shadow-md cursor-pointer"
+        className="hover:shadow-md transition-all duration-200 border border-gray-200 shadow-sm cursor-pointer bg-white"
         onClick={handleCardClick}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-black">
+          <CardTitle className="text-sm font-medium text-gray-900">
             Ongoing Courses
           </CardTitle>
-          <div className="p-2 rounded-full bg-blue-50">
-            <BookOpen className="h-5 w-5 text-blue-600" />
+          <div className="p-2 rounded-full bg-gray-100">
+            <BookOpen className="h-5 w-5 text-gray-700" />
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <div className="text-3xl font-bold text-black">
+            <div className="text-3xl font-bold text-gray-900">
               Error
             </div>
-            <p className="text-sm text-black">
+            <p className="text-sm text-gray-600">
               Failed to load ongoing courses data
             </p>
           </div>
@@ -69,25 +69,25 @@ const OngoingCoursesCountCard = () => {
 
   return (
     <Card 
-      className="hover:shadow-lg transition-all duration-200 border-0 shadow-md cursor-pointer"
+      className="hover:shadow-md transition-all duration-200 border border-gray-200 shadow-sm cursor-pointer bg-white"
       onClick={handleCardClick}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-black">
+        <CardTitle className="text-sm font-medium text-gray-900">
           Ongoing Courses
         </CardTitle>
-        <div className="p-2 rounded-full bg-blue-50">
-          <BookOpen className="h-5 w-5 text-blue-600" />
+        <div className="p-2 rounded-full bg-gray-100">
+          <BookOpen className="h-5 w-5 text-gray-700" />
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          <div className="text-3xl font-bold text-black">
+          <div className="text-3xl font-bold text-gray-900">
             {ongoingCoursesCount}
           </div>
-          <p className="text-sm text-black">
-            Currently active courses
-          </p>
+                      <p className="text-sm text-gray-600">
+              Currently active courses
+            </p>
         </div>
       </CardContent>
     </Card>

@@ -70,7 +70,7 @@ async function testAdminApproval() {
       umbrellaKey: pocApprovedClaim.umbrellaKey,
       qualification: pocApprovedClaim.qualification,
       claimId: pocApprovedClaim._id,
-      certificateNo: `CERT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      certificateNo: `rru_${pocApprovedClaim.umbrellaKey}_1`,
       issuedAt: new Date()
     });
     await certificate.save();

@@ -42,31 +42,29 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route 
-            path="/dashboard" 
-            element={<Dashboard user={user} onLogout={handleLogout} />} 
-          />
-          <Route 
-            path="/students" 
-            element={<StudentsPage user={user} onLogout={handleLogout} />} 
-          />
-          <Route 
-            path="/courses" 
-            element={<CoursesPage user={user} onLogout={handleLogout} />} 
-          />
-          <Route 
-            path="/mous" 
-            element={<MOUsPage user={user} onLogout={handleLogout} />} 
-          />
-          <Route 
-            path="/requests" 
-            element={<RequestsPage user={user} onLogout={handleLogout} />} 
-          />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route 
+          path="/dashboard" 
+          element={<Dashboard user={user} onLogout={handleLogout} />} 
+        />
+        <Route 
+          path="/students" 
+          element={<StudentsPage user={user} onLogout={handleLogout} />} 
+        />
+        <Route 
+          path="/courses" 
+          element={<CoursesPage user={user} onLogout={handleLogout} />} 
+        />
+        <Route 
+          path="/mous" 
+          element={<MOUsPage user={user} onLogout={handleLogout} />} 
+        />
+        <Route 
+          path="/requests" 
+          element={<RequestsPage user={user} onLogout={handleLogout} />} 
+        />
+      </Routes>
     </Router>
   );
 }

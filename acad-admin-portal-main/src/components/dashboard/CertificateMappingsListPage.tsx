@@ -233,7 +233,7 @@ const CertificateMappingsListPage = () => {
             variant="ghost"
             size="sm"
             onClick={() => navigate('/dashboard')}
-            className="text-primary hover:text-primary-hover"
+            className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           >
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
@@ -242,7 +242,7 @@ const CertificateMappingsListPage = () => {
         
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+            <RefreshCw className="h-8 w-8 animate-spin text-gray-600 mx-auto mb-4" />
             <p className="text-gray-600">Loading certificate mappings...</p>
           </div>
         </div>
@@ -258,20 +258,20 @@ const CertificateMappingsListPage = () => {
             variant="ghost"
             size="sm"
             onClick={() => navigate('/dashboard')}
-            className="text-primary hover:text-primary-hover"
+            className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           >
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
         </div>
         
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-red-200 bg-red-50 border border-red-200 shadow-sm">
           <CardHeader>
             <CardTitle className="text-red-800">Error Loading Data</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={fetchMappings} variant="outline" className="border-red-300 text-red-700">
+            <Button onClick={fetchMappings} variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
             </Button>
@@ -289,7 +289,7 @@ const CertificateMappingsListPage = () => {
           variant="ghost"
           size="sm"
           onClick={() => navigate('/dashboard')}
-          className="text-primary hover:text-primary-hover"
+          className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
         >
           <ChevronLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
@@ -302,16 +302,16 @@ const CertificateMappingsListPage = () => {
           </p>
         </div>
         
-        <Button onClick={exportToCSV} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={exportToCSV} className="bg-gray-800 hover:bg-gray-900 text-white">
           <Download className="h-4 w-4 mr-2" />
           Export CSV
         </Button>
       </div>
 
       {/* Filters and Search */}
-      <Card className="border-0 shadow-md">
-        <CardHeader>
-          <CardTitle className="text-lg">Filters & Search</CardTitle>
+      <Card className="border border-gray-200 shadow-sm bg-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg text-gray-900">Filters & Search</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -322,14 +322,14 @@ const CertificateMappingsListPage = () => {
                   placeholder="Search by certificate ID, student name, email, umbrella, or qualification..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 border-gray-300 focus:border-gray-400 focus:ring-gray-400"
                 />
               </div>
             </div>
             
             <div className="w-full sm:w-48">
               <Select value={filterQualification} onValueChange={setFilterQualification}>
-                <SelectTrigger>
+                <SelectTrigger className="border-gray-300 focus:border-gray-400 focus:ring-gray-400">
                   <SelectValue placeholder="Filter by qualification" />
                 </SelectTrigger>
                 <SelectContent>
@@ -348,15 +348,15 @@ const CertificateMappingsListPage = () => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-6">
           <div className="text-center">
-            <p className="text-2xl font-bold text-blue-600">{mappings.length}</p>
+            <p className="text-2xl font-bold text-gray-900">{mappings.length}</p>
             <p className="text-sm text-gray-600">Total Mappings</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">{filteredMappings.length}</p>
+            <p className="text-2xl font-bold text-gray-900">{filteredMappings.length}</p>
             <p className="text-sm text-gray-600">Filtered Results</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-purple-600">
+            <p className="text-2xl font-bold text-gray-900">
               {mappings.reduce((total, mapping) => total + mapping.courses.length, 0)}
             </p>
             <p className="text-sm text-gray-600">Total Courses</p>
@@ -366,7 +366,7 @@ const CertificateMappingsListPage = () => {
           onClick={fetchMappings}
           variant="outline"
           size="sm"
-          className="text-blue-600 border-blue-300 hover:bg-blue-50"
+          className="text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
         >
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
@@ -375,7 +375,7 @@ const CertificateMappingsListPage = () => {
 
       {/* Mappings Table */}
       {filteredMappings.length === 0 ? (
-        <Card className="border-0 shadow-md">
+        <Card className="border border-gray-200 shadow-sm bg-white">
           <CardContent className="p-8 text-center">
             <p className="text-gray-500 text-lg">No certificate mappings found</p>
             <p className="text-gray-400 mt-2">
@@ -389,7 +389,7 @@ const CertificateMappingsListPage = () => {
       ) : (
         <div className="space-y-4">
           {paginatedMappings.map((mapping) => (
-            <Card key={mapping._id} className="border-0 shadow-md hover:shadow-lg transition-shadow">
+            <Card key={mapping._id} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow bg-white">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -397,7 +397,7 @@ const CertificateMappingsListPage = () => {
                       <CardTitle className="text-lg text-gray-900">
                         {mapping.studentId?.Name || 'Unknown Student'}
                       </CardTitle>
-                      <Badge variant="outline" className="text-purple-700 border-purple-300 text-xs">
+                      <Badge variant="outline" className="text-gray-700 border-gray-300 text-xs">
                         {mapping.certificateId?.certificateNo || 'N/A'}
                       </Badge>
                     </div>
@@ -407,12 +407,12 @@ const CertificateMappingsListPage = () => {
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <div className="text-right">
-                      <Badge variant="outline" className="text-blue-700 border-blue-300">
+                      <Badge variant="outline" className="text-gray-700 border-gray-300">
                         {mapping.umbrellaKey.replace(/_/g, ' ')}
                       </Badge>
                       <p className="text-xs text-gray-500 mt-1">Certification Field</p>
                     </div>
-                    <Badge variant="secondary" className="text-green-700 bg-green-100">
+                    <Badge variant="secondary" className="text-gray-700 bg-gray-100">
                       {mapping.qualification}
                     </Badge>
                   </div>
@@ -420,30 +420,12 @@ const CertificateMappingsListPage = () => {
               </CardHeader>
               
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                  <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <p className="text-2xl font-bold text-blue-700">{mapping.courses.reduce((total, course) => total + course.totalCredits, 0).toFixed(2)}</p>
-                    <p className="text-sm text-blue-600">Total Credits Earned</p>
-                  </div>
-                  <div className="text-center p-3 bg-green-50 rounded-lg">
-                    <p className="text-2xl font-bold text-green-700">{calculateTotalCreditsUsed(mapping)}</p>
-                    <p className="text-sm text-green-600">Credits Used for Certification</p>
-                  </div>
-                  <div className="text-center p-3 bg-orange-50 rounded-lg">
-                    <p className="text-2xl font-bold text-orange-700">{mapping.totalCreditsRequired}</p>
-                    <p className="text-sm text-orange-600">Credits Required for Certification</p>
-                  </div>
-                  <div className="text-center p-3 bg-purple-50 rounded-lg">
-                    <p className="text-2xl font-bold text-purple-700">{calculateCreditEfficiency(mapping)}%</p>
-                    <p className="text-sm text-purple-600">Credit Efficiency</p>
-                  </div>
-                </div>
 
                 <div className="border-t pt-4">
                   <h4 className="font-semibold text-gray-900 mb-3">Courses ({mapping.courseCount || mapping.courses.length})</h4>
                   <div className="space-y-2">
                     {mapping.courses.map((course, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                         <div className="flex-1">
                           <p className="font-medium text-gray-900">{course.courseName} - {course.organization}</p>
                           <div className="flex gap-4 text-xs text-gray-500 mt-1">
@@ -454,7 +436,7 @@ const CertificateMappingsListPage = () => {
                         </div>
                         <div className="text-right">
                           <div className="flex flex-col items-end gap-1">
-                            <Badge variant="outline" className="text-green-700 border-green-300">
+                            <Badge variant="outline" className="text-gray-700 border-gray-300">
                               {course.creditsUsed} credits used for certification
                             </Badge>
                             <p className="text-xs text-gray-500 mt-1">
@@ -485,6 +467,7 @@ const CertificateMappingsListPage = () => {
             size="sm"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
           >
             Previous
           </Button>
@@ -498,6 +481,7 @@ const CertificateMappingsListPage = () => {
             size="sm"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
           >
             Next
           </Button>

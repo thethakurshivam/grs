@@ -24,7 +24,7 @@ export function useBPRNDCertifications(studentId: string | null | undefined) {
     setError(null);
     const controller = new AbortController();
     try {
-      const res = await fetch(`http://localhost:3004/student/${studentId}/certifications`, { signal: controller.signal });
+      const res = await fetch(`/api/student/${studentId}/certifications`, { signal: controller.signal });
       const ct = res.headers.get('content-type') || '';
       if (!ct.includes('application/json')) {
         const t = await res.text();

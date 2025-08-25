@@ -54,15 +54,18 @@ import POCBulkImportStudentsPage from './components/dashboard/POCBulkImportStude
 import POCLogin from './pages/POCLogin';
 import POCSignup from './pages/POCSignup';
 import POCAuthGuard from './components/auth/POCAuthGuard';
-import StudentAuthGuard from './components/auth/StudentAuthGuard';
 import AdminBPRNDClaimsPage from './components/dashboard/AdminBPRNDClaimsPage';
 import POCBPRNDClaimsPage from './components/dashboard/POCBPRNDClaimsPage';
 import BPRNDStudentClaimsPage from './components/student/BPRNDStudentClaimsPage';
 import BPRNDCertificationRequestPage from './components/dashboard/BPRNDCertificationRequestPage';
 import BPRNDPendingCreditsPage from './components/dashboard/BPRNDPendingCreditsPage';
+import AdminPendingCreditsPage from './components/dashboard/AdminPendingCreditsPage';
 import BPRNDPendingCreditRequestsPage from './components/student/BPRNDPendingCreditRequestsPage';
 import CertificateMappingsListPage from './components/dashboard/CertificateMappingsListPage';
 import { CenteredToastProvider } from '@/contexts/centered-toast-context';
+import BPRNDBulkImportStudents from './pages/BPRNDBulkImportStudents';
+import BPRNDStudentsPage from './components/dashboard/BPRNDStudentsPage';
+import BPRNDAnalyticsPage from './components/dashboard/BPRNDAnalyticsPage';
 
 const queryClient = new QueryClient();
 
@@ -127,7 +130,7 @@ const App = () => (
             <Route path="field-courses/:fieldId" element={<FieldCourses />} />
             <Route path="bprnd/claims" element={<AdminBPRNDClaimsPage />} />
             <Route path="bprnd-certification-request" element={<BPRNDCertificationRequestPage />} />
-            <Route path="bprnd-pending-credits" element={<BPRNDPendingCreditsPage />} />
+            <Route path="bprnd-pending-credits" element={<AdminPendingCreditsPage />} />
             <Route path="certificate-mappings" element={<CertificateMappingsListPage />} />
           </Route>
 
@@ -150,7 +153,10 @@ const App = () => (
           >
             <Route index element={<POCPortalPage />} />
             <Route path="students" element={<POCStudentsPage />} />
-            <Route path="students/list" element={<POCStudentsListPage />} />
+            <Route
+              path="students/list"
+              element={<POCStudentsListPage />}
+            />
             <Route
               path="bulk-import-students"
               element={<POCBulkImportStudentsPage />}
@@ -158,7 +164,6 @@ const App = () => (
             <Route path="courses" element={<POCCoursesListPage />} />
             <Route path="mous" element={<POCMOUsListPage />} />
             <Route path="requests" element={<POCRequestsPage />} />
-            <Route path="bprnd/claims" element={<POCBPRNDClaimsPage />} />
           </Route>
 
           {/* BPRND POC Portal Routes (Protected with Authentication) */}
@@ -171,21 +176,17 @@ const App = () => (
             }
           >
             <Route index element={<POCPortalPage type="bprnd" />} />
-            <Route path="students" element={<POCStudentsPage type="bprnd" />} />
-            <Route
-              path="students/list"
-              element={<POCStudentsListPage type="bprnd" />}
-            />
-            <Route
-              path="bulk-import-students"
-              element={<POCBulkImportStudentsPage type="bprnd" />}
-            />
+            <Route path="claims" element={<POCBPRNDClaimsPage />} />
+            <Route path="students" element={<BPRNDStudentsPage />} />
+            <Route path="analytics" element={<BPRNDAnalyticsPage />} />
+            <Route path="bulk-import-students" element={<BPRNDBulkImportStudents />} />
             <Route
               path="courses"
-              element={<POCCoursesListPage type="bprnd" />}
+              element={<POCCoursesListPage />}
             />
-            <Route path="mous" element={<POCMOUsListPage type="bprnd" />} />
-            <Route path="requests" element={<POCRequestsPage type="bprnd" />} />
+            <Route path="mous" element={<POCMOUsListPage />} />
+            <Route path="requests" element={<POCRequestsPage />} />
+            <Route path="claims" element={<POCBPRNDClaimsPage />} />
           </Route>
 
           {/* Student Routes */}

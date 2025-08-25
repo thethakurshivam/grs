@@ -44,16 +44,26 @@ const DashboardOverview = () => {
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-primary to-primary-hover rounded-lg p-6 text-primary-foreground">
-        <div className="flex items-center gap-4">
-          <div className="bg-primary-foreground/10 p-3 rounded-full">
-            <Activity className="h-8 w-8" />
+      <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg">
+        <div className="flex items-center gap-6">
+          <div className="bg-gradient-to-br from-blue-100 to-indigo-100 p-4 rounded-2xl shadow-md">
+            <Activity className="h-10 w-10 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white">Dashboard Overview</h1>
-            <p className="text-white/90 mt-1">
-              Welcome to your university admin panel. Monitor and manage all activities from here.
+            <h1 className="text-4xl font-bold text-gray-900">Dashboard Overview</h1>
+            <p className="text-gray-600 mt-2 text-lg">
+              Comprehensive university administration and analytics platform
             </p>
+            <div className="mt-3 flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-2 text-green-700">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="font-medium">System Operational</span>
+              </div>
+              <div className="flex items-center gap-2 text-blue-700">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span className="font-medium">Last Updated: {new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -78,23 +88,23 @@ const DashboardOverview = () => {
         {dashboardCards.map((card, index) => (
           <Card 
             key={index} 
-            className="hover:shadow-lg transition-all duration-200 border-0 shadow-md cursor-pointer"
+            className="hover:shadow-md transition-all duration-200 border border-gray-200 shadow-sm cursor-pointer bg-white"
             onClick={card.onClick}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-black">
+              <CardTitle className="text-sm font-medium text-gray-900">
                 {card.title}
               </CardTitle>
-              <div className={`p-2 rounded-full ${card.bgColor}`}>
-                <card.icon className={`h-5 w-5 ${card.color}`} />
+              <div className="p-2 rounded-full bg-gray-100">
+                <card.icon className="h-5 w-5 text-gray-700" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <div className="text-3xl font-bold text-black">
+                <div className="text-3xl font-bold text-gray-900">
                   {card.value}
                 </div>
-                <p className="text-sm text-black">
+                <p className="text-sm text-gray-600">
                   {card.description}
                 </p>
               </div>
@@ -110,41 +120,49 @@ const DashboardOverview = () => {
       </div>
 
       {/* Quick Actions */}
-      <Card className="border-0 shadow-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-black">
-            <Target className="h-5 w-5 text-primary" />
+      <Card className="border border-gray-200 shadow-xl rounded-2xl">
+        <CardHeader className="pb-6">
+          <CardTitle className="flex items-center gap-3 text-gray-900 text-xl">
+            <div className="bg-gradient-to-br from-purple-100 to-indigo-100 p-2 rounded-xl">
+              <Target className="h-6 w-6 text-purple-600" />
+            </div>
             Quick Actions
           </CardTitle>
-          <CardDescription className="text-black">
+          <CardDescription className="text-gray-600 text-base">
             Frequently used administrative functions
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div 
-              className="p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
+              className="p-6 rounded-2xl border border-gray-200 hover:shadow-lg hover:border-blue-300 hover:-translate-y-1 transition-all duration-300 cursor-pointer bg-gradient-to-br from-white to-blue-50"
               onClick={() => navigate('/dashboard/add-mou')}
             >
-              <FileText className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold text-black">Add MOU</h3>
-              <p className="text-sm text-black">Create new partnership agreements</p>
+              <div className="bg-blue-100 p-3 rounded-xl w-fit mb-4">
+                <FileText className="h-8 w-8 text-blue-600" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg mb-2">Add MOU</h3>
+              <p className="text-sm text-gray-600">Create new partnership agreements</p>
             </div>
             <div 
-              className="p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
+              className="p-6 rounded-2xl border border-gray-200 hover:shadow-lg hover:border-emerald-300 hover:-translate-y-1 transition-all duration-300 cursor-pointer bg-gradient-to-br from-white to-emerald-50"
               onClick={() => navigate('/dashboard/add-course')}
             >
-              <BookOpen className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold text-black">Add Course</h3>
-              <p className="text-sm text-black">Create new academic courses</p>
+              <div className="bg-emerald-100 p-3 rounded-xl w-fit mb-4">
+                <BookOpen className="h-8 w-8 text-emerald-600" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg mb-2">Add Course</h3>
+              <p className="text-sm text-gray-600">Create new academic courses</p>
             </div>
             <div 
-              className="p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
+              className="p-6 rounded-2xl border border-gray-200 hover:shadow-lg hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 cursor-pointer bg-gradient-to-br from-white to-purple-50"
               onClick={() => navigate('/dashboard/bulk-import-students')}
             >
-              <Users className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold text-black">Import Students</h3>
-              <p className="text-sm text-black">Bulk import student data</p>
+              <div className="bg-purple-100 p-3 rounded-xl w-fit mb-4">
+                <Users className="h-8 w-8 text-purple-600" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg mb-2">Import Students</h3>
+              <p className="text-sm text-gray-600">Bulk import student data</p>
             </div>
           </div>
         </CardContent>
