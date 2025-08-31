@@ -26,6 +26,15 @@ interface CourseHistoryItem {
   remainingTotalCredits?: number;
   creditsUsed?: number;
   isFullyAvailable?: boolean;
+  // API returns certificateContributed boolean
+  certificateContributed?: boolean;
+  // Legacy field for detailed certificate info
+  contributedToCertificate?: {
+    certificateNo: string;
+    qualification: string;
+    creditsContributed: number;
+    contributedAt: string;
+  };
 }
 
 interface CourseHistoryResponse {
@@ -88,13 +97,16 @@ export const CreditBankPage: React.FC = () => {
       
       // Encode the umbrella name for URL (handle spaces and special characters)
       const encodedUmbrella = encodeURIComponent(umbrellaName);
-      const response = await fetch(`http://localhost:3004/student/${studentId}/course-history/${encodedUmbrella}`);
+      const apiUrl = `http://localhost:3004/student/${studentId}/course-history/${encodedUmbrella}`;
+      
+      const response = await fetch(apiUrl);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch course history: ${response.status}`);
       }
 
       const data = await response.json();
+      
       if (data.success) {
         setCourseHistory(data.data);
         setIsModalOpen(true);
@@ -323,6 +335,7 @@ export const CreditBankPage: React.FC = () => {
                   <div>
                     <h2 className="text-2xl font-bold">{selectedUmbrella} Course History</h2>
                     <p className="text-gray-300">Detailed view of your courses and credits</p>
+                    <p className="text-gray-400 text-sm mt-1">Showing only available courses by default</p>
                   </div>
                 </div>
                 <button
@@ -333,6 +346,8 @@ export const CreditBankPage: React.FC = () => {
                 </button>
               </div>
             </div>
+
+
 
             {/* Modal Content */}
             <div className="p-6">
@@ -426,16 +441,30 @@ export const CreditBankPage: React.FC = () => {
                     )}
                   </div>
 
+
+
                   {/* Course List */}
-                  {courseHistory.courses.length > 0 ? (
-                    <div className="space-y-4">
-                      <h4 className="font-bold text-gray-900 text-xl flex items-center gap-3">
-                        <div className="w-6 h-6 bg-gray-600 rounded-full"></div>
-                        Course History & Credit Status
-                      </h4>
-                      {courseHistory.courses.map((course) => (
+                  {(() => {
+                    const availableCourses = courseHistory.courses.filter(course => !course.certificateContributed);
+                    
+                    return availableCourses.length > 0 ? (
+                      <div className="space-y-4">
+                        <h4 className="font-bold text-gray-900 text-xl flex items-center gap-3">
+                          <div className="w-6 h-6 bg-gray-600 rounded-full"></div>
+                          Available Courses (Not Used for Certificates) - {availableCourses.length} courses
+                        </h4>
+                        <p className="text-sm text-gray-600 mb-4">
+                          These courses have not been used for any certificate requests and are available for future use. 
+                          When you request a certificate, these courses will be marked as used and moved to the "Used for Certificates" section below.
+                        </p>
+                        {availableCourses.map((course) => (
                         <div key={course._id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300">
-                          <h5 className="font-bold text-gray-900 text-lg mb-3">{course.name}</h5>
+                          <div className="flex items-center justify-between mb-3">
+                            <h5 className="font-bold text-gray-900 text-lg">{course.name}</h5>
+                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full border border-green-200">
+                              Available for Certificates
+                            </span>
+                          </div>
                           <div className="flex items-center gap-2 text-sm text-gray-600 mb-3 p-2 bg-gray-50 rounded-lg">
                             <Building className="h-4 w-4 text-gray-600" />
                             <span className="font-medium">{course.organization}</span>
@@ -450,28 +479,89 @@ export const CreditBankPage: React.FC = () => {
                                 : 'bg-gray-50 border-gray-300 text-gray-800'
                           }`}>
                             <div className="flex items-center gap-2 mb-2">
-                              {course.isFullyAvailable ? (
-                                <span className="font-bold">✅ 100% Available</span>
-                              ) : course.remainingTotalCredits > 0 ? (
-                                <span className="font-bold">⚠️ {Math.round(((course.remainingTotalCredits || 0) / (course.originalTotalCredits || 1)) * 100)}% Available</span>
-                              ) : (
-                                <span className="font-bold">❌ 0% Available</span>
-                              )}
+                              {(() => {
+                                let percentage = 0;
+                                
+                                // For "Remaining Credits" entries, calculate based on original course total
+                                if (course.name && course.name.includes('(Remaining Credits)')) {
+                                  const originalCourseName = course.name.replace(' (Remaining Credits)', '');
+                                  const originalCourse = courseHistory?.courses?.find(c => 
+                                    c.name === originalCourseName && !c.name.includes('(Remaining Credits)')
+                                  );
+                                  
+                                  if (originalCourse && originalCourse.creditsEarned > 0) {
+                                    // Calculate percentage: (Remaining Credits / Original Course Total) × 100
+                                    percentage = Math.round(((course.remainingTotalCredits || 0) / originalCourse.creditsEarned) * 100);
+                                  } else {
+                                    // Fallback to current entry if original not found
+                                    percentage = course.originalTotalCredits > 0 ? Math.round(((course.remainingTotalCredits || 0) / course.originalTotalCredits) * 100) : 0;
+                                  }
+                                } else {
+                                  // For regular courses, use current logic
+                                  if (course.isFullyAvailable) {
+                                    percentage = 100;
+                                  } else if (course.remainingTotalCredits > 0) {
+                                    percentage = Math.round(((course.remainingTotalCredits || 0) / (course.originalTotalCredits || 1)) * 100);
+                                  } else {
+                                    percentage = 0;
+                                  }
+                                }
+                                
+                                if (percentage === 100) {
+                                  return <span className="font-bold">✅ 100% Available</span>;
+                                } else if (percentage > 0) {
+                                  return <span className="font-bold">⚠️ {percentage}% Available</span>;
+                                } else {
+                                  return <span className="font-bold">❌ 0% Available</span>;
+                                }
+                              })()}
                             </div>
                             
                             {/* Original vs Remaining Credits */}
                             <div className="grid grid-cols-2 gap-3 mb-3">
                               <div className="p-2 bg-white rounded-lg border border-gray-200">
                                 <p className="font-semibold text-gray-700 text-sm mb-1">Original Credits:</p>
-                                <p className="text-gray-900 text-sm">Theory: {Math.round(course.originalTheoryCredits || 0)}</p>
-                                <p className="text-gray-900 text-sm">Practical: {Math.round(course.originalPracticalCredits || 0)}</p>
-                                <p className="font-bold text-gray-900 text-base">Total: {Math.round(course.originalTotalCredits || 0)}</p>
+                                {course.name && course.name.includes('(Remaining Credits)') ? (
+                                  // For "Remaining Credits" entries, find and display original course credits
+                                  (() => {
+                                    const originalCourseName = course.name.replace(' (Remaining Credits)', '');
+                                    const originalCourse = courseHistory?.courses?.find(c => 
+                                      c.name === originalCourseName && !c.name.includes('(Remaining Credits)')
+                                    );
+                                    
+                                    if (originalCourse) {
+                                      return (
+                                        <>
+                                          <p className="text-gray-900 text-sm">Theory: {Math.round(originalCourse.theoryCredits || 0)}</p>
+                                          <p className="text-gray-900 text-sm">Practical: {Math.round(originalCourse.practicalCredits || 0)}</p>
+                                          <p className="font-bold text-gray-900 text-base">Total: {Math.round(originalCourse.creditsEarned || 0)}</p>
+                                        </>
+                                      );
+                                    } else {
+                                      // Fallback to current entry if original not found
+                                      return (
+                                        <>
+                                          <p className="text-gray-900 text-sm">Theory: {(course.originalTheoryCredits || 0).toFixed(2)}</p>
+                                          <p className="text-gray-900 text-sm">Practical: {(course.originalPracticalCredits || 0).toFixed(2)}</p>
+                                          <p className="font-bold text-gray-900 text-base">Total: {(course.originalTotalCredits || 0).toFixed(2)}</p>
+                                        </>
+                                      );
+                                    }
+                                  })()
+                                ) : (
+                                  // For regular courses, display current credits
+                                  <>
+                                    <p className="text-gray-900 text-sm">Theory: {(course.originalTheoryCredits || 0).toFixed(2)}</p>
+                                    <p className="text-gray-900 text-sm">Practical: {(course.originalPracticalCredits || 0).toFixed(2)}</p>
+                                    <p className="font-bold text-gray-900 text-base">Total: {(course.originalTotalCredits || 0).toFixed(2)}</p>
+                                  </>
+                                )}
                               </div>
                               <div className="p-2 bg-white rounded-lg border border-gray-200">
                                 <p className="font-semibold text-gray-700 text-sm mb-1">Remaining Credits:</p>
-                                <p className="text-gray-900 text-sm">Theory: {Math.round(course.remainingTheoryCredits || 0)}</p>
-                                <p className="text-gray-900 text-sm">Practical: {Math.round(course.remainingPracticalCredits || 0)}</p>
-                                <p className="font-bold text-gray-900 text-base">Total: {Math.round((course.remainingTheoryCredits || 0) + (course.remainingPracticalCredits || 0))}</p>
+                                <p className="text-gray-900 text-sm">Theory: {(course.remainingTheoryCredits || 0).toFixed(2)}</p>
+                                <p className="text-gray-900 text-sm">Practical: {(course.remainingPracticalCredits || 0).toFixed(2)}</p>
+                                <p className="font-bold text-gray-900 text-base">Total: {((course.remainingTheoryCredits || 0) + (course.remainingPracticalCredits || 0)).toFixed(2)}</p>
                               </div>
                             </div>
                             
@@ -480,14 +570,49 @@ export const CreditBankPage: React.FC = () => {
                               <div className="mt-3 pt-3 border-t border-gray-300">
                                 <div className="p-2 bg-white rounded-lg border border-gray-200">
                                   <p className="font-bold text-gray-800">
-                                    Credits Used: {Math.round(course.creditsUsed)} 
+                                    Credits Used: {(course.creditsUsed || 0).toFixed(2)} 
                                     <span className="text-sm font-normal text-gray-600 ml-2">
-                                      ({Math.round(((course.creditsUsed || 0) / (course.originalTotalCredits || 1)) * 100)}% of total)
+                                      {(() => {
+                                        let originalTotal = course.originalTotalCredits || 0;
+                                        
+                                        // For "Remaining Credits" entries, find original course total
+                                        if (course.name && course.name.includes('(Remaining Credits)')) {
+                                          const originalCourseName = course.name.replace(' (Remaining Credits)', '');
+                                          const originalCourse = courseHistory?.courses?.find(c => 
+                                            c.name === originalCourseName && !c.name.includes('(Remaining Credits)')
+                                          );
+                                          if (originalCourse) {
+                                            originalTotal = originalCourse.creditsEarned || 0;
+                                          }
+                                        }
+                                        
+                                        return `(${Math.round(((course.creditsUsed || 0) / (originalTotal || 1)) * 100)}% of total)`;
+                                      })()}
                                     </span>
                                   </p>
                                 </div>
                               </div>
                             )}
+
+                            {/* Certificate History */}
+                            {course.contributedToCertificate && (
+                              <div className="mt-3 pt-3 border-t border-gray-300">
+                                <div className="p-2 bg-white rounded-lg border border-gray-200">
+                                  <p className="font-semibold text-gray-700 text-sm mb-2 flex items-center gap-2">
+                                    <Award className="h-4 w-4 text-blue-600" />
+                                    Certificate History
+                                  </p>
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-200">
+                                      <span className="text-sm font-medium text-blue-800">Certificate ID:</span>
+                                      <span className="text-sm font-bold text-blue-900">{course.contributedToCertificate.certificateNo}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+
                           </div>
                           
                           {/* Course Details */}
@@ -502,7 +627,7 @@ export const CreditBankPage: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
                               <Award className="h-4 w-4 text-gray-600" />
-                              <span className="font-medium text-gray-700">{Math.round((course.remainingTheoryCredits || 0) + (course.remainingPracticalCredits || 0))} credits</span>
+                              <span className="font-medium text-gray-700">{((course.remainingTheoryCredits || 0) + (course.remainingPracticalCredits || 0)).toFixed(2)} credits</span>
                             </div>
                           </div>
                           
@@ -516,9 +641,131 @@ export const CreditBankPage: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-center py-8 text-gray-500">
-                      <p className="text-lg">No courses found for this umbrella field</p>
+                      <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Award className="h-8 w-8 text-gray-400" />
+                      </div>
+                      <p className="text-lg font-semibold text-gray-700">No Available Courses</p>
+                      <p className="text-sm text-gray-500 mt-2">All courses in this umbrella field have been used for certificate requests</p>
+                      <p className="text-xs text-gray-400 mt-1">You can view used courses in the collapsible section below</p>
+                      <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm text-blue-700">
+                          💡 <strong>Tip:</strong> To get more available courses, you can complete additional training programs or wait for new course offerings.
+                        </p>
+                      </div>
                     </div>
-                  )}
+                  );
+                  })()}
+
+                  {/* Used Courses Section (Collapsible) */}
+                  {(() => {
+                    const usedCourses = courseHistory.courses.filter(course => course.certificateContributed);
+                    return usedCourses.length > 0 ? (
+                      <div className="mt-8 pt-8 border-t border-gray-200">
+                        <details className="group">
+                          <summary className="cursor-pointer list-none">
+                            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors group-open:bg-gray-100">
+                              <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
+                                <Award className="h-3 w-3 text-white" />
+                              </div>
+                              <h4 className="font-bold text-gray-900 text-lg">
+                                Courses Used for Certificates ({usedCourses.length})
+                              </h4>
+                              <div className="ml-auto text-gray-500 group-open:rotate-180 transition-transform">
+                                ▼
+                              </div>
+                            </div>
+                          </summary>
+                          <div className="mt-4 space-y-4">
+                            <p className="text-sm text-gray-600 mb-4">
+                              These courses have been used for certificate requests and are no longer available for future use.
+                            </p>
+                            {usedCourses.map((course) => (
+                              <div key={course._id} className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h5 className="font-bold text-gray-700 text-lg">{course.name}</h5>
+                                  <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full border border-amber-200">
+                                    Used for Certificate
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-gray-600 mb-3 p-2 bg-white rounded-lg border border-gray-200">
+                                  <Building className="h-4 w-4 text-gray-600" />
+                                  <span className="font-medium">{course.organization}</span>
+                                </div>
+                                
+                                {/* Certificate Info */}
+                                {course.contributedToCertificate && (
+                                  <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <p className="font-semibold text-blue-800 text-sm mb-2 flex items-center gap-2">
+                                      <Award className="h-4 w-4 text-blue-600" />
+                                      Used for Certificate
+                                    </p>
+                                    <div className="space-y-2">
+                                      <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-blue-200">
+                                        <span className="text-sm font-medium text-blue-800">Certificate ID:</span>
+                                        <span className="text-sm font-bold text-blue-900">{course.contributedToCertificate.certificateNo}</span>
+                                      </div>
+                                      {course.contributedToCertificate.creditsContributed && (
+                                        <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-blue-200">
+                                          <span className="text-sm font-medium text-blue-800">Credits Used:</span>
+                                          <span className="text-sm font-bold text-blue-900">{course.contributedToCertificate.creditsContributed} credits</span>
+                                        </div>
+                                      )}
+                                      {course.contributedToCertificate.qualification && (
+                                        <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-blue-200">
+                                          <span className="text-sm font-medium text-blue-800">Qualification:</span>
+                                          <span className="text-sm font-bold text-blue-900">{course.contributedToCertificate.qualification}</span>
+                                        </div>
+                                      )}
+                                      {course.contributedToCertificate.contributedAt && (
+                                        <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-blue-200">
+                                          <span className="text-sm font-medium text-blue-800">Used On:</span>
+                                          <span className="text-sm font-bold text-blue-900">
+                                            {new Date(course.contributedToCertificate.contributedAt).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Course Details */}
+                                <div className="grid grid-cols-3 gap-3 text-sm text-gray-600">
+                                  <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200">
+                                    <Calendar className="h-4 w-4 text-gray-600" />
+                                    <span className="font-medium text-gray-700">{course.noOfDays} days</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200">
+                                    <Clock className="h-4 w-4 text-gray-600" />
+                                    <span className="font-medium text-gray-700">{course.totalHours} hours</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200">
+                                    <Award className="h-4 w-4 text-gray-600" />
+                                    <span className="font-medium text-gray-700">{((course.remainingTheoryCredits || 0) + (course.remainingPracticalCredits || 0)).toFixed(2)} credits</span>
+                                  </div>
+                                </div>
+                                
+                                <div className="mt-3 p-2 bg-white rounded-lg border border-gray-200">
+                                  <p className="text-sm text-gray-700 font-medium text-center">
+                                    🎓 Completed: {new Date(course.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      </div>
+                    ) : (
+                      <div className="mt-8 pt-8 border-t border-gray-200">
+                        <div className="text-center py-6 text-gray-500">
+                          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <Award className="h-6 w-6 text-gray-400" />
+                          </div>
+                          <p className="text-sm font-medium text-gray-600">No Courses Used for Certificates</p>
+                          <p className="text-xs text-gray-400 mt-1">All your courses are currently available for future certificate requests</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>

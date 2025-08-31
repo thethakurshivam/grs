@@ -2287,6 +2287,11 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
       for (const courseId of coursesToMarkIds) {
         const courseContribution = markedCourses.find(mc => mc.courseId.toString() === courseId.toString());
         if (courseContribution) {
+          // Get the original course details before updating
+          const originalCourse = await CourseHistory.findById(courseId);
+          if (!originalCourse) continue;
+
+          // Update the original course as contributed
           await CourseHistory.findByIdAndUpdate(
             courseId,
             {
@@ -2300,6 +2305,57 @@ app.post('/api/bprnd/claims/:claimId/approve', authenticateToken, asyncHandler(a
               }
             }
           );
+
+          // Check if this course contributed partially and create remaining credits entry
+          if (courseContribution.creditsContributed < originalCourse.creditsEarned) {
+            const remainingCredits = originalCourse.creditsEarned - courseContribution.creditsContributed;
+            
+            // Calculate proportional remaining hours and credits
+            const theoryRatio = originalCourse.creditsEarned > 0 ? (originalCourse.theoryCredits || 0) / originalCourse.creditsEarned : 0;
+            const practicalRatio = originalCourse.creditsEarned > 0 ? (originalCourse.practicalCredits || 0) / originalCourse.creditsEarned : 0;
+            
+            const remainingTheoryCredits = (originalCourse.theoryCredits || 0) - (courseContribution.creditsContributed * theoryRatio);
+            const remainingPracticalCredits = (originalCourse.practicalCredits || 0) - (courseContribution.creditsContributed * practicalRatio);
+            
+            const remainingTheoryHours = Math.round((originalCourse.theoryHours || 0) * (remainingCredits / originalCourse.creditsEarned));
+            const remainingPracticalHours = Math.round((originalCourse.practicalHours || 0) * (remainingCredits / originalCourse.creditsEarned));
+            const remainingTotalHours = remainingTheoryHours + remainingPracticalHours;
+
+            // Create the remaining credits entry with copied contributedToCertificate field
+            const remainingCreditsEntry = new CourseHistory({
+              studentId: originalCourse.studentId,
+              name: `${originalCourse.name} (Remaining Credits)`,
+              organization: originalCourse.organization,
+              discipline: originalCourse.discipline,
+              theoryHours: remainingTheoryHours,
+              practicalHours: remainingPracticalHours,
+              totalHours: remainingTotalHours,
+              noOfDays: originalCourse.noOfDays,
+              theoryCredits: remainingTheoryCredits,
+              practicalCredits: remainingPracticalCredits,
+              creditsEarned: remainingCredits,
+              count: remainingCredits,
+              certificateContributed: false, // Available for future certificates
+              // Copy the contributedToCertificate field to show this is from the same certificate process
+              contributedToCertificate: {
+                certificateId: certificate._id,
+                certificateNo: certificate.certificateNo,
+                qualification: claim.qualification,
+                contributedAt: new Date(),
+                creditsContributed: 0, // 0 because this entry represents remaining credits
+                isRemainingCredits: true, // Flag to identify this as a remaining credits entry
+                originalCourseId: originalCourse._id // Link to the original course
+              },
+              // Copy PDF information from original course
+              pdfPath: originalCourse.pdfPath,
+              pdfFileName: originalCourse.pdfFileName
+            });
+
+            await remainingCreditsEntry.save();
+            console.log(`✅ Created remaining credits entry: "${remainingCreditsEntry.name}" with ${remainingCredits} credits`);
+            console.log(`   📊 Theory: ${remainingTheoryHours}h = ${remainingTheoryCredits.toFixed(2)} credits`);
+            console.log(`   📊 Practical: ${remainingPracticalHours}h = ${remainingPracticalCredits.toFixed(2)} credits`);
+          }
         }
       }
       

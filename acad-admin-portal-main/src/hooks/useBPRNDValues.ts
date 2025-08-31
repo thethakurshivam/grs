@@ -16,7 +16,7 @@ export function useBPRNDValues() {
     setError(null);
     const controller = new AbortController();
     try {
-      const res = await fetch('http://localhost:3003/api/bprnd/values', { signal: controller.signal });
+      const res = await fetch('http://localhost:3004/api/bprnd/values', { signal: controller.signal });
       const ct = res.headers.get('content-type') || '';
       if (!ct.includes('application/json')) {
         const t = await res.text();

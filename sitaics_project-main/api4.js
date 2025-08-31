@@ -15,6 +15,7 @@ const CourseHistory = require('./model3/course_history');
 
 const BprndClaim = require('./model3/bprnd_certification_claim');
 const BprndCertificate = require('./model3/bprnd_certificate');
+const Value = require('./model3/value');
 
 // Load environment variables from .env.api4 file
 require('dotenv').config({ path: '.env.api4' });
@@ -700,6 +701,22 @@ app.get('/api/bprnd/pending-credits/student/:studentId', async (req, res) => {
       success: false,
       message: 'Internal server error',
     });
+  }
+});
+
+// Get all value mappings (credit → qualification)
+app.get('/api/bprnd/values', async (req, res) => {
+  try {
+    const values = await Value.find({}).sort({ credit: 1 }).lean();
+    return res.status(200).json({
+      success: true,
+      message: 'Values retrieved successfully',
+      data: values,
+      count: values.length,
+    });
+  } catch (error) {
+    console.error('Error retrieving values:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 

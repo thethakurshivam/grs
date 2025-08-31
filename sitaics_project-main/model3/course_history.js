@@ -72,7 +72,9 @@ const courseHistorySchema = new mongoose.Schema(
       certificateNo: String,
       qualification: String,
       contributedAt: Date,
-      creditsContributed: Number
+      creditsContributed: Number,
+      isRemainingCredits: { type: Boolean, default: false },
+      originalCourseId: { type: mongoose.Schema.Types.ObjectId, ref: 'CourseHistory' }
     },
     // Add PDF information fields
     pdfPath: {
