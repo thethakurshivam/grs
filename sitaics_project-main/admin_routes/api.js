@@ -824,7 +824,7 @@ app.get('/api/pending-credits', authenticateToken, asyncHandler(async (req, res)
         totalHours: pendingCreditData.totalHours,
         calculatedCredits: pendingCreditData.calculatedCredits,
         noOfDays: pendingCreditData.noOfDays,
-        pdf: pendingCreditData.pdf,
+        pdf: path.basename(pendingCreditData.pdf),
         admin_approved: pendingCreditData.admin_approved,
         bprnd_poc_approved: pendingCreditData.bprnd_poc_approved,
         createdAt: pendingCreditData.createdAt,
@@ -894,14 +894,14 @@ app.post('/api/pending-credits/:id/approve', authenticateToken, asyncHandler(asy
       
       // Now apply credits and save to course_history
       try {
-        // Calculate credits using new formula: theory (30 hours = 1 credit) + practical (15 hours = 1 credit)
+        // Calculate credits using new formula: theory (15 hours = 1 credit) + practical (30 hours = 1 credit)
         const theoryHours = Number(pendingCredit.theoryHours || 0);
         const practicalHours = Number(pendingCredit.practicalHours || 0);
-        const newCredits = (theoryHours / 30) + (practicalHours / 15);
+        const newCredits = (theoryHours / 15) + (practicalHours / 30);
         
         // Calculate individual credits for detailed logging
-        const theoryCredits = theoryHours / 30;
-        const practicalCredits = practicalHours / 15;
+        const theoryCredits = theoryHours / 15;
+        const practicalCredits = practicalHours / 30;
         
         console.log(`📊 Credit calculation: Theory ${theoryHours}h (${theoryCredits.toFixed(2)} credits) + Practical ${practicalHours}h (${practicalCredits.toFixed(2)} credits) = ${newCredits} total credits`);
         console.log(`📊 Detailed breakdown: Theory ${theoryCredits.toFixed(2)} credits, Practical ${practicalCredits.toFixed(2)} credits`);

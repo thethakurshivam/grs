@@ -3,9 +3,18 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { Button } from "@/components/ui/button";
 import { Bell, Settings } from "lucide-react";
+import { useAdminPendingCredits } from "@/hooks/useAdminPendingCredits";
+import { useAdminBPRNDClaims } from "@/hooks/useAdminBPRNDClaims";
 
 const DashboardLayout = () => {
   const isAuthenticated = localStorage.getItem("isAuthenticated");
+  
+  // Fetch data for header notification badge
+  const { count: pendingCreditsCount, isLoading: pendingCreditsLoading } = useAdminPendingCredits();
+  const { count: pendingCertificationCount, isLoading: pendingCertificationLoading } = useAdminBPRNDClaims();
+  
+  // Calculate total pending items
+  const totalPendingItems = (pendingCreditsCount || 0) + (pendingCertificationCount || 0);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -28,8 +37,19 @@ const DashboardLayout = () => {
             </div>
             
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors relative group"
+                title={`${pendingCreditsCount || 0} pending credits, ${pendingCertificationCount || 0} pending certification claims`}
+              >
                 <Bell className="h-5 w-5" />
+                {/* Notification Badge */}
+                {!pendingCreditsLoading && !pendingCertificationLoading && totalPendingItems > 0 && (
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full min-w-[20px] h-5">
+                    {totalPendingItems}
+                  </span>
+                )}
               </Button>
               <Button variant="ghost" size="icon" className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
                 <Settings className="h-5 w-5" />

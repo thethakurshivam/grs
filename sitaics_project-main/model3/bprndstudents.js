@@ -22,21 +22,20 @@ const creditCalculationSchema = new mongoose.Schema(
     Umbrella: { type: String, required: true },
     customId: { type: String, unique: true, sparse: true }, // Custom ID field
 
-    // Umbrella credit fields default to 0
+    // Updated umbrella credit fields - all 13 current umbrellas with underscores
+    Tourism_Police: { type: Number, default: 0 },
+    Women_in_Security_and_Police: { type: Number, default: 0 },
+    Traffic_Management_and_Road_Safety: { type: Number, default: 0 },
+    Border_Management: { type: Number, default: 0 },
+    Disaster_Risk_Reduction: { type: Number, default: 0 },
+    OSI_Model: { type: Number, default: 0 },
+    Social_Media_Security: { type: Number, default: 0 },
+    Cyber_Threat_Intelligence: { type: Number, default: 0 },
     Cyber_Security: { type: Number, default: 0 },
-    Criminology: { type: Number, default: 0 },
-    Military_Law: { type: Number, default: 0 },
-    Police_Administration: { type: Number, default: 0 },
-    Defence: { type: Number, default: 0 },
-    Forensics: { type: Number, default: 0 },
-    
-    // Legacy fields (kept for backward compatibility)
-    Forensic_Science: { type: Number, default: 0 },
-    National_Security: { type: Number, default: 0 },
-    International_Security: { type: Number, default: 0 },
-    Counter_Terrorism: { type: Number, default: 0 },
-    Intelligence_Studies: { type: Number, default: 0 },
-    Emergency_Management: { type: Number, default: 0 },
+    Cyber_Law: { type: Number, default: 0 },
+    Forensics_Psychology: { type: Number, default: 0 },
+    Gender_Sensitisisation: { type: Number, default: 0 },
+    Behavioral_Sciences: { type: Number, default: 0 },
   },
   { 
     collection: 'credit_calculations',

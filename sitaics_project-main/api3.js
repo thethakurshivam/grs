@@ -11,7 +11,7 @@ const multer = require('multer');
 const xlsx = require('xlsx');
 const nodemailer = require('nodemailer');
 const bprndStudents = require('./model3/bprndstudents');
-const umbrella = require('./model3/umbrella');
+const UmbrellaModel = require('./model3/umbrella');
 const bprnd_certification_claim = require('./model3/bprnd_certification_claim');
 
 require('dotenv').config();
@@ -204,7 +204,28 @@ app.post(
             continue;
           }
 
-          // Create new user
+          // Create new user with dynamic umbrella handling
+          // First, fetch available umbrellas from database
+          const availableUmbrellas = await UmbrellaModel.find().select('name');
+          
+          // Initialize all umbrella fields to 0
+          const umbrellaCredits = {};
+          availableUmbrellas.forEach(umbrellaItem => {
+            const fieldName = umbrellaItem.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+            umbrellaCredits[fieldName] = 0;
+          });
+
+          // Set the student's specific umbrella to their earned credits
+          const selectedUmbrellaField = umbrella.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+          if (umbrellaCredits.hasOwnProperty(selectedUmbrellaField)) {
+            umbrellaCredits[selectedUmbrellaField] = normalizedRow.Total_Credits;
+            console.log(`🎯 Assigning ${normalizedRow.Total_Credits} credits to umbrella field: ${selectedUmbrellaField}`);
+          } else {
+            console.warn(`⚠️ Warning: Umbrella '${umbrella}' not found in database. Available umbrellas:`, availableUmbrellas.map(u => u.name));
+          }
+
+          console.log(`🔍 DEBUG: Umbrella credits object:`, umbrellaCredits);
+
           const newUser = new bprndStudents({
             Name: normalizedRow.Name,
             email: normalizedRow.Email.toLowerCase().trim(),
@@ -212,6 +233,7 @@ app.post(
             State: normalizedRow.State,
             Organization: normalizedRow.Organization,
             Umbrella: umbrella,
+            password: 'password123', // Default password for bulk imported students
 
             Training_Topic: normalizedRow.Training_Topic,
             Per_session_minutes: normalizedRow.Per_session_minutes,
@@ -225,13 +247,8 @@ app.post(
             Total_Credits: normalizedRow.Total_Credits,
             date_of_birth: normalizedRow.date_of_birth,
 
-            // Default umbrella credit fields
-            Cyber_Security: 0,
-            Criminology: 0,
-            Military_Law: 0,
-            Police_Administration: 0,
-            Defence: 0,
-            Forensics: 0,
+            // Dynamic umbrella credit fields
+            ...umbrellaCredits,
           });
 
           // Debug: Log what we're trying to save
@@ -245,7 +262,7 @@ app.post(
             const courseHistoryEntry = new CourseHistory({
               studentId: newUser._id,
               name: normalizedRow.Training_Topic,
-              organization: normalizedRow.Organization,
+              organization: 'CDTI', // Default organization for bulk imported courses
               discipline: umbrella,
               theoryHours: normalizedRow.Theory_Hours,
               practicalHours: normalizedRow.Practical_Hours,
@@ -286,9 +303,9 @@ app.post(
                 <p>You can now login to the RRU portal with the following credentials:</p>
                 <ul>
                   <li><strong>Email:</strong> ${normalizedRow.Email}</li>
-                  <li><strong>Password:</strong> Your registered password</li>
+                  <li><strong>Password:</strong> password123</li>
                 </ul>
-                <p>Please login and change your password after first login.</p>
+                <p><strong>Important:</strong> Please login and change your password after first login for security.</p>
                 <p>Best regards,<br>RRU Portal Team</p>
               `,
             };
@@ -893,7 +910,7 @@ app.get('/api/bprnd/poc/pending-credits/count', async (req, res) => {
 // Get all umbrellas for BPRND bulk import
 app.get('/api/umbrellas', async (req, res) => {
   try {
-    const umbrellas = await umbrella.find({}).sort({ name: 1 }).lean();
+    const umbrellas = await UmbrellaModel.find({}).sort({ name: 1 }).lean();
     
     res.json({
       success: true,
@@ -915,10 +932,8 @@ app.get('/api/bprnd/students', async (req, res) => {
   try {
     console.log('👥 Fetching all BPRND students from credit_calculations collection...');
     
-    // Directly query the credit_calculations collection
-    const db = mongoose.connection.db;
-    const creditCalculationsCollection = db.collection('credit_calculations');
-    const students = await creditCalculationsCollection.find({}).toArray();
+    // Use the Mongoose model instead of raw MongoDB collection
+    const students = await bprndStudents.find({}).lean();
     
     console.log(`✅ Found ${students.length} BPRND students in credit_calculations collection`);
     

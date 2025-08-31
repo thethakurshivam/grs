@@ -125,30 +125,60 @@ export const CreditBankPage: React.FC = () => {
     setHistoryError(null);
   };
 
-  // Filter credit data to only show umbrellas that exist in the database
-  const filteredCreditEntries = useMemo(() => {
-    if (!creditData || !umbrellas.length) return [];
+  // Group umbrella fields into main categories
+  const groupedUmbrellas = useMemo(() => {
+    if (!umbrellas.length) return {};
+
+    const groups: Record<string, string[]> = {
+      'Police Administration': [
+        'Tourism Police',
+        'Women in Security and Police',
+        'Traffic Management and Road Safety',
+        'Border Management',
+        'Disaster Risk Reduction'
+      ],
+      'Cyber Security': [
+        'Cyber Law',
+        'Cyber Threat Intelligence',
+        'OSI Model',
+        'Social Media Security',
+        'Cyber Security'
+      ],
+      'Forensics': [
+        'Behavioral Sciences',
+        'Forensics Psychology',
+        'Gender Sensitisation'
+      ]
+    };
+
+    // Filter to only include umbrellas that exist in the database
+    const existingUmbrellaNames = umbrellas.map(u => u.name);
     
-    // Get umbrella names from the database
-    const umbrellaNames = umbrellas.map(u => u.name);
-    
-    // Filter credit data to only include existing umbrella fields
-    return Object.entries(creditData)
-      .filter(([key, value]) => {
-        // Skip non-umbrella fields
-        if (key === 'Total_Credits' || key === 'totalCredits') return false;
-        
-        // Check if this credit field corresponds to an existing umbrella
-        // The API converts umbrella names to field keys (e.g., "Cyber Security" -> "Cyber_Security")
-        const normalizedKey = key.replace(/_/g, ' ');
-        return umbrellaNames.some(umbrellaName => 
-          normalizedKey.toLowerCase() === umbrellaName.toLowerCase() ||
-          key.toLowerCase() === umbrellaName.toLowerCase()
-        );
-      })
-      // Show all umbrella fields, even with 0 credits
-      .sort(([a], [b]) => a.localeCompare(b)); // Sort alphabetically
-  }, [creditData, umbrellas]);
+    Object.keys(groups).forEach(category => {
+      groups[category] = groups[category].filter(umbrella => 
+        existingUmbrellaNames.includes(umbrella)
+      );
+    });
+
+    return groups;
+  }, [umbrellas]);
+
+  // Calculate total credits for each main category
+  const categoryTotals = useMemo(() => {
+    if (!creditData) return {};
+
+    const totals: Record<string, number> = {};
+    Object.entries(groupedUmbrellas).forEach(([category, umbrellas]) => {
+      totals[category] = umbrellas.reduce((sum, umbrella) => {
+        const fieldKey = umbrella.replace(/\s+/g, '_');
+        return sum + (Number(creditData[fieldKey]) || 0);
+      }, 0);
+    });
+
+    return totals;
+  }, [creditData, groupedUmbrellas]);
+
+
 
   const isLoading = creditsLoading || umbrellasLoading;
   const error = creditsError || umbrellasError;
@@ -180,7 +210,7 @@ export const CreditBankPage: React.FC = () => {
                 <CreditCard className="h-5 w-5 text-white" />
               </div>
               Credit Breakdown
-              <span className="text-sm font-normal text-gray-600 ml-3 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+              <span className="text-sm font-normal text-gray-600 ml-auto px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
                 🖱️ Click on any umbrella to view course history
               </span>
             </CardTitle>
@@ -192,7 +222,7 @@ export const CreditBankPage: React.FC = () => {
             {error && !isLoading && (
               <p className="text-red-600">{error}</p>
             )}
-            {!isLoading && !error && filteredCreditEntries.length === 0 && (
+            {!isLoading && !error && Object.keys(categoryTotals).length === 0 && (
               <div className="text-center py-8">
                 <p className="text-gray-600">No umbrella fields found in your profile.</p>
                 <p className="text-sm text-gray-500 mt-2">
@@ -200,56 +230,79 @@ export const CreditBankPage: React.FC = () => {
                 </p>
               </div>
             )}
-            {!isLoading && !error && filteredCreditEntries.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredCreditEntries.map(([label, value], index) => {
-                  const title = label.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-                  const credits = Number(value) || 0;
-  
-                  
-                  return (
-                    <Card 
-                      key={label} 
-                      className={`bg-white border transition-all duration-300 cursor-pointer rounded-lg overflow-hidden group hover:shadow-md ${
-                        credits > 0
-                          ? 'border-gray-200 hover:border-gray-300'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => handleCardClick(title, label)}
-                    >
-                      {/* Subtle top accent */}
-                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gray-300"></div>
-                      
-                      <CardHeader className="pb-3 pt-4">
-                        <CardTitle className="text-sm font-semibold text-gray-900 group-hover:text-gray-700 transition-colors flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center">
-                            <Award className="w-3 h-3 text-gray-600" />
-                          </div>
-                          {title}
-                        </CardTitle>
-                      </CardHeader>
-                      
-                      <CardContent className="pt-0">
-                        <div className="text-center">
-                          <div className={`text-2xl font-bold mb-2 ${
-                            credits > 0 
-                              ? 'text-gray-900' 
-                              : 'text-gray-400'
-                          }`}>
-                            {credits}
-                          </div>
-                          <div className={`px-3 py-1 rounded-md text-xs font-medium ${
-                            credits > 0 
-                              ? 'bg-gray-100 text-gray-700 border border-gray-200' 
-                              : 'bg-gray-50 text-gray-500 border border-gray-200'
-                          }`}>
-                            {credits > 0 ? 'Available' : 'None'}
-                          </div>
+            {!isLoading && !error && Object.keys(categoryTotals).length > 0 && (
+              <div className="space-y-6">
+                {Object.entries(categoryTotals).map(([category, totalCredits]) => (
+                  <Card 
+                    key={category} 
+                    className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden"
+                  >
+                    {/* Main Category Header */}
+                    <CardHeader className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+                      <CardTitle className="flex items-center gap-3 text-lg font-bold text-gray-900">
+                        <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
+                          <Award className="h-4 w-4 text-white" />
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                        {category}
+                        <span className="text-sm font-normal text-gray-600 ml-auto px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                          Total: {totalCredits} credits ({totalCredits > 0 ? '100% Available' : '0% Available'})
+                        </span>
+                      </CardTitle>
+                    </CardHeader>
+                    
+                    {/* Sub-cards Grid */}
+                    <CardContent className="p-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                        {groupedUmbrellas[category].map((umbrella) => {
+                          const fieldKey = umbrella.replace(/\s+/g, '_');
+                          const credits = Number(creditData?.[fieldKey]) || 0;
+                          
+                          return (
+                            <Card 
+                              key={umbrella}
+                              className={`bg-gray-50 border transition-all duration-300 cursor-pointer rounded-lg overflow-hidden group hover:shadow-md hover:bg-gray-100 ${
+                                credits > 0
+                                  ? 'border-gray-300 hover:border-gray-400'
+                                  : 'border-gray-200 hover:border-gray-300'
+                              }`}
+                              onClick={() => handleCardClick(umbrella, fieldKey)}
+                            >
+                              {/* Subtle top accent */}
+                              <div className={`absolute top-0 left-0 w-full h-0.5 ${
+                                credits > 0 ? 'bg-blue-400' : 'bg-gray-300'
+                              }`}></div>
+                              
+                              <CardHeader className="pb-2 pt-3">
+                                <CardTitle className="text-xs font-semibold text-gray-900 group-hover:text-gray-700 transition-colors text-center">
+                                  {umbrella}
+                                </CardTitle>
+                              </CardHeader>
+                              
+                              <CardContent className="pt-0 pb-3">
+                                <div className="text-center">
+                                  <div className={`text-xl font-bold mb-1 ${
+                                    credits > 0 
+                                      ? 'text-gray-900' 
+                                      : 'text-gray-400'
+                                  }`}>
+                                    {credits}
+                                  </div>
+                                  <div className={`px-2 py-1 rounded text-xs font-medium ${
+                                    credits > 0 
+                                      ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                                      : 'bg-gray-100 text-gray-500 border border-gray-200'
+                                  }`}>
+                                    {credits > 0 ? '100% Available' : '0% Available'}
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             )}
           </CardContent>
@@ -378,7 +431,7 @@ export const CreditBankPage: React.FC = () => {
                     <div className="space-y-4">
                       <h4 className="font-bold text-gray-900 text-xl flex items-center gap-3">
                         <div className="w-6 h-6 bg-gray-600 rounded-full"></div>
-                        Available Courses
+                        Course History & Credit Status
                       </h4>
                       {courseHistory.courses.map((course) => (
                         <div key={course._id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300">
@@ -398,11 +451,11 @@ export const CreditBankPage: React.FC = () => {
                           }`}>
                             <div className="flex items-center gap-2 mb-2">
                               {course.isFullyAvailable ? (
-                                <span className="font-bold">✅ Fully Available</span>
+                                <span className="font-bold">✅ 100% Available</span>
                               ) : course.remainingTotalCredits > 0 ? (
-                                <span className="font-bold">⚠️ Partially Available</span>
+                                <span className="font-bold">⚠️ {Math.round(((course.remainingTotalCredits || 0) / (course.originalTotalCredits || 1)) * 100)}% Available</span>
                               ) : (
-                                <span className="font-bold">❌ Fully Used</span>
+                                <span className="font-bold">❌ 0% Available</span>
                               )}
                             </div>
                             
@@ -426,7 +479,12 @@ export const CreditBankPage: React.FC = () => {
                             {course.creditsUsed > 0 && (
                               <div className="mt-3 pt-3 border-t border-gray-300">
                                 <div className="p-2 bg-white rounded-lg border border-gray-200">
-                                  <p className="font-bold text-gray-800">Credits Used: {Math.round(course.creditsUsed)}</p>
+                                  <p className="font-bold text-gray-800">
+                                    Credits Used: {Math.round(course.creditsUsed)} 
+                                    <span className="text-sm font-normal text-gray-600 ml-2">
+                                      ({Math.round(((course.creditsUsed || 0) / (course.originalTotalCredits || 1)) * 100)}% of total)
+                                    </span>
+                                  </p>
                                 </div>
                               </div>
                             )}
@@ -475,11 +533,12 @@ export const CreditBankPage: React.FC = () => {
             <CardTitle className="text-sm text-gray-600">Debug Info</CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-gray-500">
-            <p>Available umbrellas: {umbrellas.map(u => u.name).join(', ')}</p>
-            <p>Credit fields: {creditData ? Object.keys(creditData).join(', ') : 'None'}</p>
-            <p>Filtered entries: {filteredCreditEntries.length}</p>
-            <p>Selected umbrella: {selectedUmbrella || 'None'}</p>
-            <p>Course history loaded: {courseHistory ? 'Yes' : 'No'}</p>
+                          <p>Available umbrellas: {umbrellas.map(u => u.name).join(', ')}</p>
+              <p>Credit fields: {creditData ? Object.keys(creditData).join(', ') : 'None'}</p>
+              <p>Grouped categories: {Object.keys(groupedUmbrellas).join(', ')}</p>
+              <p>Category totals: {JSON.stringify(categoryTotals)}</p>
+              <p>Selected umbrella: {selectedUmbrella || 'None'}</p>
+              <p>Course history loaded: {courseHistory ? 'Yes' : 'No'}</p>
           </CardContent>
         </Card>
       )}

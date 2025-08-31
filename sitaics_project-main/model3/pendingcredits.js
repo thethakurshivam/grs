@@ -88,10 +88,10 @@ pendingCreditsSchema.pre('save', function(next) {
   this.totalHours = this.theoryHours + this.practicalHours;
   
   // Calculate individual credits
-  this.theoryCredits = this.theoryHours / 30;
-  this.practicalCredits = this.practicalHours / 15;
+  this.theoryCredits = this.theoryHours / 15;
+  this.practicalCredits = this.practicalHours / 30;
   
-  // Calculate total credits: theory (30 hours = 1 credit) + practical (15 hours = 1 credit)
+  // Calculate total credits: theory (15 hours = 1 credit) + practical (30 hours = 1 credit)
   this.calculatedCredits = this.theoryCredits + this.practicalCredits;
   
   next();

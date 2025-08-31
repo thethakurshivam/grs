@@ -35,7 +35,7 @@ async function updatePendingCredits() {
         // For old records, assume all hours are theory hours (conservative approach)
         const theoryHours = credit.totalHours || 0;
         const practicalHours = 0;
-        const theoryCredits = theoryHours / 30;
+        const theoryCredits = theoryHours / 15;
         const practicalCredits = 0;
         const calculatedCredits = theoryCredits;
 
@@ -57,8 +57,9 @@ async function updatePendingCredits() {
         });
       } else {
         // Calculate the new fields for records with theory/practical hours
-        const theoryCredits = credit.theoryHours / 30;
-        const practicalCredits = credit.practicalHours / 15;
+        // New formula: theory (15 hours = 1 credit) + practical (30 hours = 1 credit)
+        const theoryCredits = credit.theoryHours / 15;
+        const practicalCredits = credit.practicalHours / 30;
         const totalHours = credit.theoryHours + credit.practicalHours;
         const calculatedCredits = theoryCredits + practicalCredits;
 

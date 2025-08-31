@@ -441,9 +441,9 @@ app.post('/api/bprnd/pending-credits/:id/accept', async (req, res) => {
 
       
       try {
-        // Calculate credits: 15 hours = 1 credit
+        // Calculate credits: 30 hours = 1 credit (for total hours)
         const totalHours = Number(pendingCredit.totalHours || 0);
-        newCredits = totalHours > 0 ? Math.ceil(totalHours / 15) : 0;
+        newCredits = totalHours > 0 ? Math.ceil(totalHours / 30) : 0;
         
         if (newCredits > 0) {
           // Find student and update Total_Credits

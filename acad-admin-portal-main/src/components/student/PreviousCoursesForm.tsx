@@ -41,8 +41,8 @@ const PreviousCoursesForm: React.FC = () => {
     const total = theory + practical;
     setTotalHours(total.toString());
     
-    // Calculate credits: theory (30 hours = 1 credit) + practical (15 hours = 1 credit)
-    const credits = (theory / 30) + (practical / 15);
+    // Calculate credits: theory (15 hours = 1 credit) + practical (30 hours = 1 credit)
+    const credits = (theory / 15) + (practical / 30);
     setCalculatedCredits(credits.toFixed(2));
   }, [theoryHours, practicalHours]);
   
@@ -53,6 +53,7 @@ const PreviousCoursesForm: React.FC = () => {
     umbrellasError,
     umbrellasCount: umbrellas?.length || 0
   });
+  
   // Resolve BPRND student ID from localStorage
   const storedBprnd = typeof window !== 'undefined' ? localStorage.getItem('bprndStudentData') : null;
   let derivedStudentId: string | null = null;
@@ -63,6 +64,16 @@ const PreviousCoursesForm: React.FC = () => {
     }
   } catch (_) {}
   const studentId = derivedStudentId || (typeof window !== 'undefined' ? (localStorage.getItem('bprndStudentId') || localStorage.getItem('studentId')) : null);
+
+  // Auto-fill student name from localStorage when component mounts
+  useEffect(() => {
+    const storedName = localStorage.getItem('studentName');
+    
+    if (storedName && !applicantName) {
+      setApplicantName(storedName);
+      console.log('✅ Auto-filled student name from localStorage:', storedName);
+    }
+  }, [applicantName]);
 
   const addCourse = () => {
     setPreviousCourses([...previousCourses, { organization_name: '', course_name: '', certificate_pdf: null }]);
@@ -196,6 +207,9 @@ const PreviousCoursesForm: React.FC = () => {
             <div className="space-y-3">
               <Label htmlFor="applicant-name" className="text-gray-700 font-medium text-sm">
                 Your Name *
+                {localStorage.getItem('studentName') && (
+                  <span className="ml-2 text-xs text-green-600 font-normal">(Auto-filled from profile)</span>
+                )}
               </Label>
               <Input
                 id="applicant-name"
@@ -362,12 +376,12 @@ const PreviousCoursesForm: React.FC = () => {
                       <div className="text-sm text-gray-800">
                         <p className="font-medium mb-1">Credit Calculation Formula:</p>
                         <ul className="space-y-1 text-xs">
-                          <li>• <strong>Theory Hours:</strong> 30 hours = 1 credit</li>
-                          <li>• <strong>Practical Hours:</strong> 15 hours = 1 credit</li>
-                          <li>• <strong>Total Credits:</strong> (Theory ÷ 30) + (Practical ÷ 15)</li>
+                          <li>• <strong>Theory Hours:</strong> 15 hours = 1 credit</li>
+                          <li>• <strong>Practical Hours:</strong> 30 hours = 1 credit</li>
+                          <li>• <strong>Total Credits:</strong> (Theory ÷ 15) + (Practical ÷ 30)</li>
                         </ul>
                         <p className="text-xs mt-2 text-gray-700">
-                          Example: 60 theory + 30 practical = (60÷30) + (30÷15) = 2 + 2 = 4 credits
+                          Example: 30 theory + 60 practical = (30÷15) + (60÷30) = 2 + 2 = 4 credits
                         </p>
                       </div>
                     </div>

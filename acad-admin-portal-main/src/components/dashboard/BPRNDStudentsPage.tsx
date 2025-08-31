@@ -28,14 +28,10 @@ interface Student {
   Training_Topic: string;
   Umbrella: string;
   Total_Credits: number;
-  Cyber_Security: number;
-  Criminology: number;
-  Military_Law: number;
-  Police_Administration: number;
-  Defence: number;
-  Forensics: number;
   email: string;
   date_of_birth: string;
+  // Dynamic umbrella fields - will include all current and future umbrellas
+  [key: string]: any; // Allow any additional umbrella fields
 }
 
 const BPRNDStudentsPage: React.FC = () => {
@@ -87,18 +83,15 @@ const BPRNDStudentsPage: React.FC = () => {
   const exportToCSV = () => {
     if (filteredStudents.length === 0) return;
 
+    // Use the global umbrellaFields variable
+    // Create dynamic headers
     const headers = [
       'Name',
       'Designation',
       'State',
       'Training Topic',
       'Total Credits',
-      'Cyber Security',
-      'Criminology',
-      'Military Law',
-      'Police Administration',
-      'Defence',
-      'Forensics',
+      ...umbrellaFields.map(field => field.replace(/_/g, ' ')), // Convert "Tourism_Police" to "Tourism Police"
       'Email',
       'Date of Birth'
     ];
@@ -109,12 +102,7 @@ const BPRNDStudentsPage: React.FC = () => {
       student.State,
       student.Training_Topic,
       student.Total_Credits,
-      student.Cyber_Security,
-      student.Criminology,
-      student.Military_Law,
-      student.Police_Administration,
-      student.Defence,
-      student.Forensics,
+      ...umbrellaFields.map(field => student[field] || 0), // Get credit values for each umbrella
       student.email,
       new Date(student.date_of_birth).toLocaleDateString()
     ]);
@@ -134,10 +122,37 @@ const BPRNDStudentsPage: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  const formatCredits = (credits: number) => {
-    return credits ? credits.toFixed(2) : '0';
+  const formatCredits = (credits: any) => {
+    // Ensure credits is a valid number
+    const numericCredits = Number(credits);
+    if (isNaN(numericCredits)) {
+      return '0';
+    }
+    return numericCredits.toFixed(2);
   };
 
+  // Function to get umbrella fields dynamically
+  const getUmbrellaFields = () => {
+    if (filteredStudents.length === 0) return [];
+    const firstStudent = filteredStudents[0];
+    return Object.keys(firstStudent).filter(key => 
+      key.includes('_') && 
+      key !== 'date_of_birth' && 
+      key !== 'createdAt' && 
+      key !== 'updatedAt' && 
+      key !== '__v' &&
+      key !== 'customId' &&
+      key !== 'Per_session_minutes' &&
+      key !== 'Theory_sessions' &&
+      key !== 'Practical_sessions' &&
+      key !== 'Theory_Hours' &&
+      key !== 'Practical_Hours' &&
+      key !== 'Theory_Credits' &&
+      key !== 'Practical_Credits'
+    );
+  };
+
+  const umbrellaFields = getUmbrellaFields();
 
 
   if (loading) {
@@ -306,24 +321,11 @@ const BPRNDStudentsPage: React.FC = () => {
                    <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-6 py-4">
                      Total Credits
                    </TableHead>
-                   <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-6 py-4">
-                     Cyber Security
-                   </TableHead>
-                   <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-6 py-4">
-                     Criminology
-                   </TableHead>
-                   <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-6 py-4">
-                     Military Law
-                   </TableHead>
-                   <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-6 py-4">
-                     Police Admin
-                   </TableHead>
-                   <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-6 py-4">
-                     Defence
-                   </TableHead>
-                   <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-6 py-4">
-                     Forensics
-                   </TableHead>
+                   {umbrellaFields.map((field) => (
+                     <TableHead key={field} className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-6 py-4">
+                       {field.replace(/_/g, ' ')}
+                     </TableHead>
+                   ))}
                    <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-6 py-4">
                      Contact
                    </TableHead>
@@ -332,7 +334,7 @@ const BPRNDStudentsPage: React.FC = () => {
               <TableBody>
                 {filteredStudents.length === 0 ? (
                   <TableRow>
-                                         <TableCell colSpan={11} className="text-center py-16">
+                                         <TableCell colSpan={3 + umbrellaFields.length + 1} className="text-center py-16">
                       <div className="space-y-3">
                         <Users className="w-12 h-12 text-slate-300 mx-auto" />
                         <p className="text-slate-500 font-medium">
@@ -364,24 +366,11 @@ const BPRNDStudentsPage: React.FC = () => {
                           <p className="font-semibold text-slate-900">{formatCredits(student.Total_Credits)}</p>
                         </div>
                       </TableCell>
-                      <TableCell className="px-6 py-4 border-r border-slate-200">
-                        <span className="text-slate-700 font-medium">{formatCredits(student.Cyber_Security)}</span>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 border-r border-slate-200">
-                        <span className="text-slate-700 font-medium">{formatCredits(student.Criminology)}</span>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 border-r border-slate-200">
-                        <span className="text-slate-700 font-medium">{formatCredits(student.Military_Law)}</span>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 border-r border-slate-200">
-                        <span className="text-slate-700 font-medium">{formatCredits(student.Police_Administration)}</span>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 border-r border-slate-200">
-                        <span className="text-slate-700 font-medium">{formatCredits(student.Defence)}</span>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 border-r border-slate-200">
-                        <span className="text-slate-700 font-medium">{formatCredits(student.Forensics)}</span>
-                      </TableCell>
+                      {umbrellaFields.map((field) => (
+                        <TableCell key={field} className="px-6 py-4 border-r border-slate-200">
+                          <span className="text-slate-700 font-medium">{formatCredits(student[field] || 0)}</span>
+                        </TableCell>
+                      ))}
                       <TableCell className="px-6 py-4">
                         <div className="space-y-1">
                           <div className="flex items-center space-x-2">

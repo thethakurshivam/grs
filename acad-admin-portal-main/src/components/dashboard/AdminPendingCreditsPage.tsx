@@ -358,7 +358,7 @@ const AdminPendingCreditsPage: React.FC = () => {
                       <div className="flex items-center space-x-2">
                         <FileText className="h-4 w-4 text-gray-500" />
                         <a
-                          href={`http://localhost:3002/uploads/pdfs/${credit.pdf}`}
+                          href={`http://localhost:3002/files/${credit.pdf}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 text-sm flex items-center space-x-1"

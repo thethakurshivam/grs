@@ -165,20 +165,19 @@ export function DashboardSidebar() {
                       <span className="ml-2 flex items-center gap-2 min-w-0">
                         <span className="truncate">BPR&D Certification Request</span>
                         {!pendingCertificationLoading && pendingCertificationCount > 0 && (
-                          <Badge variant="notification" className="flex-shrink-0">
+                          <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full min-w-[20px]">
                             {pendingCertificationCount}
-                          </Badge>
+                          </span>
                         )}
                       </span>
                     )}
                     {/* Show badge only when there are pending requests */}
                     {!pendingCertificationLoading && pendingCertificationCount > 0 && (
-                      <Badge 
-                        variant="notification" 
-                        className={`absolute -top-1 -right-1 min-w-[20px] h-5 text-xs ${collapsed ? 'block' : 'hidden'}`}
+                      <span 
+                        className={`absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full min-w-[20px] h-5 ${collapsed ? 'block' : 'hidden'}`}
                       >
                         {pendingCertificationCount}
-                      </Badge>
+                      </span>
                     )}
                   </Button>
                 </SidebarMenuButton>
@@ -199,20 +198,19 @@ export function DashboardSidebar() {
                       <span className="ml-2 flex items-center gap-2 min-w-0">
                         <span className="truncate">BPR&D Pending Credits</span>
                         {!pendingCreditsLoading && pendingCreditsCount > 0 && (
-                          <Badge variant="notification" className="flex-shrink-0">
+                          <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full min-w-[20px]">
                             {pendingCreditsCount}
-                          </Badge>
+                          </span>
                         )}
                       </span>
                     )}
                     {/* Show badge even when collapsed */}
                     {!pendingCreditsLoading && pendingCreditsCount > 0 && (
-                      <Badge 
-                        variant="notification" 
-                        className={`absolute -top-1 -right-1 min-w-[20px] h-5 text-xs ${collapsed ? 'block' : 'hidden'}`}
+                      <span 
+                        className={`absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full min-w-[20px] h-5 ${collapsed ? 'block' : 'hidden'}`}
                       >
                         {pendingCreditsCount}
-                      </Badge>
+                      </span>
                     )}
                   </Button>
                 </SidebarMenuButton>

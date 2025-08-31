@@ -30,14 +30,14 @@ async function testCreditApplication() {
       console.log(`   Practical Hours: ${pendingCredit.practicalHours || 'N/A'}`);
       console.log(`   Total Hours: ${pendingCredit.totalHours || 'N/A'}`);
 
-      // Calculate credits using new formula: theory (30 hours = 1 credit) + practical (15 hours = 1 credit)
-      const theoryHours = Number(pendingCredit.theoryHours || 0);
-      const practicalHours = Number(pendingCredit.practicalHours || 0);
-      const newCredits = (theoryHours / 30) + (practicalHours / 15);
+              // Calculate credits using new formula: theory (15 hours = 1 credit) + practical (30 hours = 1 credit)
+        const theoryHours = Number(pendingCredit.theoryHours || 0);
+        const practicalHours = Number(pendingCredit.practicalHours || 0);
+        const newCredits = (theoryHours / 15) + (practicalHours / 30);
       
       // Calculate individual credits for detailed logging
-      const theoryCredits = theoryHours / 30;
-      const practicalCredits = practicalHours / 15;
+      const theoryCredits = theoryHours / 15;
+      const practicalCredits = practicalHours / 30;
       
       console.log(`📊 Credit calculation: Theory ${theoryHours}h (${theoryCredits.toFixed(2)} credits) + Practical ${practicalHours}h (${practicalCredits.toFixed(2)} credits) = ${newCredits} total credits`);
 
