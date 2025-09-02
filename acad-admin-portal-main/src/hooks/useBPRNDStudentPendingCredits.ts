@@ -45,7 +45,7 @@ export function useBPRNDStudentPendingCredits(studentId: string | null | undefin
     
     try {
       // Call the student-specific endpoint from API4
-      const res = await fetch(`/api/bprnd/pending-credits/student/${studentId}`, {
+      const res = await fetch(`http://localhost:3004/api/bprnd/pending-credits/student/${studentId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,

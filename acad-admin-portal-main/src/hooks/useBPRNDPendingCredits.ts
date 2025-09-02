@@ -32,7 +32,7 @@ export function useBPRNDPendingCredits(): UseBPRNDPendingCreditsResult {
   const [error, setError] = useState<string | null>(null);
 
   const endpoint = useMemo(
-    () => '/api/bprnd/pending-credits',
+    () => 'http://localhost:3003/api/bprnd/pending-credits',
     []
   );
 
@@ -71,6 +71,7 @@ export function useBPRNDPendingCredits(): UseBPRNDPendingCreditsResult {
   }, [endpoint]);
 
   useEffect(() => {
+    console.log('🚀 useBPRNDPendingCredits: Initial fetch on mount');
     fetchData();
     
     // Set up polling every 5 seconds for real-time updates

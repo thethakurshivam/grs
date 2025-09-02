@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
 interface PendingCredit {
-  _id: string;
+  id: string;
   studentId: {
     _id: string;
     Name: string;
@@ -30,8 +30,8 @@ interface PendingCredit {
   status?: string;
   createdAt: string;
   updatedAt: string;
-  approveLink: string;
-  declineLink: string;
+  acceptUrl: string;
+  rejectUrl: string;
 }
 
 const BPRNDPendingCreditsPage: React.FC = () => {
@@ -45,20 +45,28 @@ const BPRNDPendingCreditsPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem('authToken');
-      if (!token) throw new Error('Missing admin token');
+      
+      const token = localStorage.getItem('pocToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
       
       const res = await fetch('http://localhost:3003/api/bprnd/pending-credits', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       
       const json = await res.json();
+      
       if (!res.ok || json?.success === false) {
         throw new Error(json?.error || json?.message || `HTTP ${res.status}`);
       }
       
       setPendingCredits(json.data || []);
     } catch (e) {
+      console.error('Error fetching credits:', e);
       setError(e instanceof Error ? e.message : 'Failed to load pending credits');
       setPendingCredits([]);
     } finally {
@@ -70,16 +78,20 @@ const BPRNDPendingCreditsPage: React.FC = () => {
     fetchPendingCredits(); 
   }, [fetchPendingCredits]);
 
+
+
   const approve = async (creditId: string) => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) throw new Error('Missing admin token');
+      const token = localStorage.getItem('pocToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
       
       const res = await fetch(`http://localhost:3003/api/bprnd/pending-credits/${creditId}/accept`, {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
       });
       
@@ -107,14 +119,19 @@ const BPRNDPendingCreditsPage: React.FC = () => {
 
   const decline = async (creditId: string) => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) throw new Error('Missing admin token');
+      console.log('🚫 Decline function called with creditId:', creditId);
+      console.log('🚫 Making API call to:', `/api/bprnd/pending-credits/${creditId}/reject`);
+      
+      const token = localStorage.getItem('pocToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
       
       const res = await fetch(`http://localhost:3003/api/bprnd/pending-credits/${creditId}/reject`, {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
       });
       
@@ -190,8 +207,8 @@ const BPRNDPendingCreditsPage: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Pending Admin Approval</h1>
-          <p className="text-gray-700">Review and approve student certification requests awaiting admin approval</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Pending POC Approval</h1>
+          <p className="text-gray-700">Review and approve student certification requests awaiting POC approval</p>
         </div>
         <div className="ml-auto">
           <Button variant="outline" onClick={fetchPendingCredits} disabled={loading} className="flex items-center gap-2">
@@ -206,6 +223,8 @@ const BPRNDPendingCreditsPage: React.FC = () => {
         </Card>
       )}
 
+
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
@@ -213,8 +232,8 @@ const BPRNDPendingCreditsPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-yellow-600" />
               <div>
-                <p className="text-sm text-gray-700">Pending</p>
-                <p className="text-2xl font-semibold text-gray-900">{pendingCredits.filter(c => !c.admin_approved).length}</p>
+                <p className="text-sm text-gray-700">Pending POC Approval</p>
+                <p className="text-2xl font-semibold text-gray-900">{pendingCredits.filter(c => !c.bprnd_poc_approved && c.status !== 'poc_declined').length}</p>
               </div>
             </div>
           </CardContent>
@@ -224,8 +243,8 @@ const BPRNDPendingCreditsPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-green-600" />
               <div>
-                <p className="text-sm text-gray-700">Admin Approved</p>
-                <p className="text-2xl font-semibold text-gray-900">{pendingCredits.filter(c => c.admin_approved).length}</p>
+                <p className="text-sm text-gray-700">POC Approved</p>
+                <p className="text-2xl font-semibold text-gray-900">{pendingCredits.filter(c => c.bprnd_poc_approved).length}</p>
               </div>
             </div>
           </CardContent>
@@ -235,8 +254,8 @@ const BPRNDPendingCreditsPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-red-600" />
               <div>
-                <p className="text-sm text-gray-700">Fully Approved</p>
-                <p className="text-2xl font-semibold text-gray-900">{pendingCredits.filter(c => c.admin_approved && c.bprnd_poc_approved).length}</p>
+                <p className="text-sm text-gray-700">POC Declined</p>
+                <p className="text-2xl font-semibold text-gray-900">{pendingCredits.filter(c => c.status === 'poc_declined').length}</p>
               </div>
             </div>
           </CardContent>
@@ -255,7 +274,7 @@ const BPRNDPendingCreditsPage: React.FC = () => {
       ) : (
         <div className="space-y-4">
           {pendingCredits.map((credit) => (
-            <Card key={credit._id} className="hover:shadow-md transition-shadow">
+            <Card key={credit.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -432,41 +451,42 @@ const BPRNDPendingCreditsPage: React.FC = () => {
 
                     <div className="flex items-center gap-2">
                       <span className={`px-3 py-1 rounded-full text-base font-medium ${
-                        credit.admin_approved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        credit.bprnd_poc_approved ? 'bg-green-100 text-green-800' : 
+                        credit.status === 'poc_declined' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {credit.admin_approved ? 'Admin Approved' : 'Pending Admin Approval'}
+                        {credit.bprnd_poc_approved ? 'POC Approved' : 
+                         credit.status === 'poc_declined' ? 'POC Declined' : 'Pending POC Approval'}
                       </span>
                     </div>
                   </div>
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-2 ml-4">
-                    {!credit.admin_approved && (
+                    {!credit.bprnd_poc_approved && credit.status !== 'poc_declined' && (
                       <>
                         <Button 
                           variant="outline" 
-                          onClick={() => approve(credit._id)} 
+                          onClick={() => approve(credit.id)} 
                           className="flex items-center gap-2 text-green-700 border-green-200 hover:bg-green-50 hover:border-green-300"
                         >
                           <ShieldCheck className="h-4 w-4" /> Approve
                         </Button>
                         <Button 
                           variant="destructive" 
-                          onClick={() => decline(credit._id)} 
+                          onClick={() => {
+                            console.log('🚫 Decline button clicked for credit:', credit.id);
+                            decline(credit.id);
+                          }} 
                           className="flex items-center gap-2"
                         >
                           <ShieldAlert className="h-4 w-4" /> Decline
                         </Button>
                       </>
                     )}
-                    {credit.admin_approved && !credit.bprnd_poc_approved && (
-                      <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                        Awaiting POC Approval
-                      </span>
-                    )}
-                    {credit.admin_approved && credit.bprnd_poc_approved && (
+
+                    {credit.bprnd_poc_approved && (
                       <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                        Fully Approved
+                        POC Approved
                       </span>
                     )}
                   </div>

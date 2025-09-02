@@ -1011,6 +1011,94 @@ app.get('/api/bprnd/disciplines/count', async (req, res) => {
   }
 });
 
+// Get declined requests for BPRND POC
+app.get('/api/bprnd/poc/declined-requests', async (req, res) => {
+  try {
+    console.log('🔍 BPRND POC requesting declined requests...');
+    
+    // Find credits that have been declined by POC or Admin
+    const declinedRequests = await PendingCredits.find({ 
+      $or: [
+        { status: 'poc_declined' },
+        { status: 'admin_declined' },
+        { status: 'declined' }
+      ]
+    }).sort({ updatedAt: -1 }).lean();
+    
+    console.log(`📊 Found ${declinedRequests.length} declined requests`);
+    
+    // Transform the data to match frontend expectations
+    const transformedRequests = declinedRequests.map(request => ({
+      id: request._id,
+      studentId: request.studentId,
+      name: request.name,
+      organization: request.organization,
+      discipline: request.discipline,
+      theoryHours: request.theoryHours,
+      practicalHours: request.practicalHours,
+      totalHours: request.totalHours,
+      calculatedCredits: request.calculatedCredits,
+      noOfDays: request.noOfDays,
+      pdf: request.pdf,
+      status: request.status,
+      admin_approved: request.admin_approved,
+      bprnd_poc_approved: request.bprnd_poc_approved,
+      createdAt: request.createdAt,
+      updatedAt: request.updatedAt,
+      declinedBy: request.status === 'poc_declined' ? 'POC' : 'Admin',
+      declinedAt: request.updatedAt
+    }));
+    
+    res.json({
+      success: true,
+      message: 'Declined requests retrieved successfully',
+      data: transformedRequests
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching declined requests:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch declined requests',
+      error: error.message
+    });
+  }
+});
+
+// Get count of declined requests for BPRND POC
+app.get('/api/bprnd/poc/declined-requests/count', async (req, res) => {
+  try {
+    console.log('🔍 BPRND POC requesting declined requests count...');
+    
+    // Count declined requests
+    const declinedCount = await PendingCredits.countDocuments({ 
+      $or: [
+        { status: 'poc_declined' },
+        { status: 'admin_declined' },
+        { status: 'declined' }
+      ]
+    });
+    
+    console.log(`📊 Found ${declinedCount} declined requests`);
+    
+    res.json({
+      success: true,
+      message: 'Declined requests count retrieved successfully',
+      data: {
+        count: declinedCount
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching declined requests count:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch declined requests count',
+      error: error.message
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   if (err.message === 'Not allowed by CORS') {

@@ -71,6 +71,19 @@ const AdminPendingCreditsPage: React.FC = () => {
     fetchPendingCredits(); 
   }, [fetchPendingCredits]);
 
+  // Debug logging when data changes
+  useEffect(() => {
+    console.log('🔍 Admin Pending Credits - Data updated:', {
+      totalCredits: pendingCredits.length,
+      credits: pendingCredits.map(c => ({
+        name: c.name,
+        poc_approved: c.bprnd_poc_approved,
+        status: c.status,
+        admin_approved: c.admin_approved
+      }))
+    });
+  }, [pendingCredits]);
+
   const approve = async (creditId: string) => {
     try {
       const token = localStorage.getItem('authToken');
@@ -274,7 +287,19 @@ const AdminPendingCreditsPage: React.FC = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {pendingCredits.map((credit) => (
+          {pendingCredits
+            .filter(credit => {
+              // Debug logging for each credit
+              console.log(`🔍 Credit ${credit.name}:`, {
+                poc_approved: credit.bprnd_poc_approved,
+                status: credit.status,
+                willShow: credit.bprnd_poc_approved === true && credit.status !== 'admin_declined'
+              });
+              
+              // Only show credits that are POC approved and not admin declined
+              return credit.bprnd_poc_approved === true && credit.status !== 'admin_declined';
+            })
+            .map((credit) => (
             <Card key={credit._id} className="border-l-4 border-l-blue-500">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">

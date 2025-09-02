@@ -30,9 +30,7 @@ const POCLogin: React.FC<POCLoginProps> = ({ isBPRND = false }) => {
 
     try {
       const response = await fetch(
-        `/api/${
-          isBPRND ? 'poc' : 'poc'
-        }/login`,
+        `http://localhost:3003/api/poc/login`,
         {
           method: 'POST',
           headers: {

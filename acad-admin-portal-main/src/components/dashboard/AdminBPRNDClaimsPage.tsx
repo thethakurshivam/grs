@@ -25,7 +25,7 @@ interface Claim {
   umbrellaKey: string;
   qualification: 'certificate' | 'diploma' | 'pg diploma';
   requiredCredits: number;
-  status: 'pending' | 'admin_approved' | 'poc_approved' | 'approved' | 'declined';
+  status: 'pending' | 'poc_approved' | 'admin_approved' | 'approved' | 'poc_declined' | 'admin_declined';
   createdAt: string;
   updatedAt: string;
   adminApproval?: { by?: string; at?: string; decision?: string };
@@ -144,7 +144,15 @@ const AdminBPRNDClaimsPage: React.FC = () => {
                         <h3 className="font-semibold text-lg text-black">{c.umbrellaLabel} — {c.qualification}</h3>
                         <div className="text-sm text-gray-700 space-y-1 mt-1">
                           <p>Required Credits: {c.requiredCredits} | Available: {c.totalCreditsFromCourses.toFixed(2)}</p>
-                          <p>Status: <span className={`font-medium ${c.status === 'pending' ? 'text-yellow-600' : c.status === 'approved' ? 'text-green-600' : 'text-blue-600'}`}>{c.status}</span></p>
+                          <p>Status: <span className={`font-medium ${
+                          c.status === 'pending' ? 'text-yellow-600' : 
+                          c.status === 'poc_approved' ? 'text-blue-600' : 
+                          c.status === 'admin_approved' ? 'text-green-600' : 
+                          c.status === 'approved' ? 'text-green-600' : 
+                          c.status === 'poc_declined' ? 'text-red-600' : 
+                          c.status === 'admin_declined' ? 'text-red-600' : 
+                          'text-gray-600'
+                        }`}>{c.status}</span></p>
                           <p>Course Count: {c.courseCount} courses</p>
                         </div>
                       </div>

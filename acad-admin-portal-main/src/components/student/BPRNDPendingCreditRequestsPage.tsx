@@ -50,7 +50,7 @@ const BPRNDPendingCreditRequestsPage: React.FC = () => {
       if (!studentId) throw new Error('Missing studentId');
       setLoading(true);
       setError(null);
-      const res = await fetch(`/api/bprnd/pending-credits/student/${studentId}`);
+      const res = await fetch(`http://localhost:3004/api/bprnd/pending-credits/student/${studentId}`);
       const json = await res.json();
       if (!res.ok || json?.success === false) throw new Error(json?.message || `HTTP ${res.status}`);
       setRequests(json.data || []);

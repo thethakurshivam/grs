@@ -11,12 +11,14 @@ import {
   Home,
   Award,
   Shield,
+  ShieldAlert,
   User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useBPRNDPendingCredits } from '@/hooks/useBPRNDPendingCredits';
 import { useBPRNDPOCClaims } from '@/hooks/useBPRNDPOCClaims';
+import { useBPRNDDeclinedRequestsCount } from '@/hooks/useBPRNDDeclinedRequestsCount';
 import { Link } from 'react-router-dom';
 
 interface POCLayoutProps {
@@ -30,6 +32,7 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
   // Fetch data for badges using new efficient hooks (only for BPRND POC)
   const { count: pendingCreditsCount, isLoading: pendingCreditsLoading } = useBPRNDPendingCredits();
   const { count: pendingCertificationCount, loading: pendingCertificationLoading } = useBPRNDPOCClaims();
+  const { count: declinedRequestsCount, loading: declinedRequestsLoading } = useBPRNDDeclinedRequestsCount();
 
   const basePath = type === 'bprnd' ? '/poc-portal/bprnd' : '/poc-portal';
 
@@ -81,6 +84,13 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
       icon: Shield,
       path: `${basePath}/pending-credits`,
       color: 'text-red-600',
+    }] : []),
+    // Add Declined Requests button only for BPRND POC
+    ...(type === 'bprnd' ? [{
+      title: 'Declined Requests',
+      icon: ShieldAlert,
+      path: `${basePath}/declined-requests`,
+      color: 'text-orange-600',
     }] : []),
   ];
 
@@ -152,6 +162,14 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
                     <div className="ml-auto">
                       <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full min-w-[20px]">
                         {pendingCertificationCount}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {item.title === 'Declined Requests' && !declinedRequestsLoading && declinedRequestsCount > 0 && (
+                    <div className="ml-auto">
+                      <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full min-w-[20px]">
+                        {declinedRequestsCount}
                       </span>
                     </div>
                   )}

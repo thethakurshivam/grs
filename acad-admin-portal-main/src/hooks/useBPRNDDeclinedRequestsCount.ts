@@ -24,7 +24,7 @@ export const useBPRNDDeclinedRequestsCount = () => {
         return;
       }
 
-      const response = await fetch('/api/bprnd/poc/declined-requests/count', {
+      const response = await fetch('http://localhost:3003/api/bprnd/poc/declined-requests/count', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

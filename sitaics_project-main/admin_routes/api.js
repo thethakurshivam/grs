@@ -795,17 +795,13 @@ app.get('/api/pending-credits', authenticateToken, asyncHandler(async (req, res)
   try {
     console.log('🔍 Admin requesting pending credits for approval...');
     
-    // Find all pending credits that need admin approval (POC approved first, then admin)
-    // This will show only credits that have been approved by POC but not by admin yet
-    const pendingCredits = await PendingCredits.find({
-      bprnd_poc_approved: true,
-      admin_approved: false
-    })
+    // Find all pending credits (no filtering - let frontend handle it)
+    const pendingCredits = await PendingCredits.find({})
     .populate('studentId', 'Name email Designation State') // Populate student details
     .sort({ createdAt: -1 }); // Sort by newest first
     
-    console.log(`📊 Found ${pendingCredits.length} pending credits that need admin approval`);
-    console.log('🔍 Query criteria: admin_approved: false');
+    console.log(`📊 Found ${pendingCredits.length} pending credits in database`);
+    console.log('🔍 Query criteria: No filtering - sending all data to frontend');
 
     // Add approve and decline links to each pending credit document
     const pendingCreditsWithLinks = pendingCredits.map(pendingCredit => {
@@ -827,6 +823,7 @@ app.get('/api/pending-credits', authenticateToken, asyncHandler(async (req, res)
         pdf: path.basename(pendingCreditData.pdf),
         admin_approved: pendingCreditData.admin_approved,
         bprnd_poc_approved: pendingCreditData.bprnd_poc_approved,
+        status: pendingCreditData.status,
         createdAt: pendingCreditData.createdAt,
         updatedAt: pendingCreditData.updatedAt,
         // Action links
@@ -1076,12 +1073,12 @@ app.post('/api/pending-credits/:id/decline', authenticateToken, asyncHandler(asy
       });
     }
 
-    // Find and update the admin_approved field to false and set status to declined
+    // Find and update the admin_approved field to false and set status to admin_declined
     const pendingCredit = await PendingCredits.findByIdAndUpdate(
       id,
       { 
         admin_approved: false,
-        status: 'declined'
+        status: 'admin_declined'
       },
       { new: true }
     );
@@ -2106,13 +2103,8 @@ app.get('/api/bprnd/claims', authenticateToken, asyncHandler(async (req, res) =>
   const { status } = req.query;
   console.log('📝 Query parameters:', { status });
   
-  // If specific status requested, use it; otherwise show all claims that need admin attention
-  const filter = status ? { status } : { 
-    $or: [
-      { poc_approved: true, admin_approved: { $ne: true } },  // POC approved, admin pending
-      { poc_approved: false, admin_approved: false }          // Neither POC nor admin approved
-    ]
-  };
+  // If specific status requested, use it; otherwise show all claims (no filtering - let frontend handle it)
+  const filter = status ? { status } : {};
   console.log('🔍 Filter applied:', filter);
   
   try {
@@ -2768,10 +2760,12 @@ app.get('/api/pending-credits/:studentId', authenticateToken, asyncHandler(async
     }
 
     // Find pending credits for the given student ID (POC approved first, then admin)
+    // Also filter out declined requests
     const pendingCredits = await PendingCredits.find({ 
       studentId: studentId,
       bprnd_poc_approved: true,
-      admin_approved: false
+      admin_approved: false,
+      status: { $nin: ['declined', 'admin_declined', 'poc_declined'] }
     }).sort({ createdAt: -1 });
     
     if (!pendingCredits || pendingCredits.length === 0) {
@@ -2824,10 +2818,10 @@ app.post('/api/pending-credits/:studentId/decline', authenticateToken, asyncHand
       });
     }
 
-    // Update all found documents: set admin_approved to false and status to declined
+    // Update all found documents: set admin_approved to false and status to admin_declined
     const updatePromises = pendingCredits.map(async (pendingCredit) => {
       pendingCredit.admin_approved = false;
-      pendingCredit.status = 'declined';
+      pendingCredit.status = 'admin_declined';
       return pendingCredit.save();
     });
 

@@ -46,7 +46,7 @@ const BPRNDAnalyticsPage: React.FC = () => {
         throw new Error('Authentication token not found. Please log in.');
       }
 
-      const response = await fetch('/api/bprnd/disciplines/count', {
+      const response = await fetch('http://localhost:3003/api/bprnd/disciplines/count', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

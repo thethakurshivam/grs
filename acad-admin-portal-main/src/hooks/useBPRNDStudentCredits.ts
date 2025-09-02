@@ -29,7 +29,7 @@ export function useBPRNDStudentCredits(studentId: string | null | undefined): Us
 
     const controller = new AbortController();
     try {
-      const response = await fetch(`/api/student/${studentId}/credits`, {
+      const response = await fetch(`http://localhost:3004/student/${studentId}/credits`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,

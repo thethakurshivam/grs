@@ -86,7 +86,7 @@ const CertificateMappingsListPage = () => {
         throw new Error('Authentication token not found. Please log in again.');
       }
       
-      const response = await fetch('/api/certificate-course-mappings', {
+      const response = await fetch('http://localhost:3002/api/certificate-course-mappings', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

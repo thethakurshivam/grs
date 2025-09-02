@@ -49,7 +49,7 @@ const DeclinedRequestsPage: React.FC = () => {
       if (!token) throw new Error('Missing POC token');
       
       // Call the BPRND POC API endpoint for declined requests
-      const res = await fetch('/api/bprnd/poc/declined-requests', {
+      const res = await fetch('http://localhost:3003/api/bprnd/poc/declined-requests', {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -362,7 +362,7 @@ const DeclinedRequestsPage: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <FileText className="h-3 w-3 text-gray-400" />
                       <a
-                        href={`/api/bprnd/files/${request.pdf}`}
+                        href={`http://localhost:3003/api/bprnd/files/${request.pdf}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-700 text-xs font-medium flex items-center space-x-1"

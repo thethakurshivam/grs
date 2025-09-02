@@ -37,7 +37,7 @@ export const useBPRNDStudentCertificates = (): UseBPRNDStudentCertificatesReturn
     try {
       console.log('Fetching BPRND student certificates for ID:', studentId);
 
-      const response = await fetch(`/api/student/${studentId}/certificates`, {
+      const response = await fetch(`http://localhost:3004/student/${studentId}/certificates`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
