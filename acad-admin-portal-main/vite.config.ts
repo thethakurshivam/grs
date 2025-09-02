@@ -25,6 +25,11 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         secure: false,
       },
+      '/api/certificate-course-mappings': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+        secure: false,
+      },
       // POC authentication and routes to API3 (port 3003)
       '/api/poc': {
         target: 'http://localhost:3003',
