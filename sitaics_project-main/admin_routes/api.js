@@ -2852,6 +2852,107 @@ app.post('/api/pending-credits/:studentId/decline', authenticateToken, asyncHand
 
 // Note: Count-only routes removed - counts are now calculated in frontend from full data
 
+// Get declined requests for Admin
+app.get('/api/admin/declined-requests', authenticateToken, async (req, res) => {
+  try {
+    console.log('🔍 Admin requesting declined requests...');
+    
+    // Find credits that have been declined by Admin
+    const declinedRequests = await PendingCredits.find({ 
+      status: 'admin_declined'
+    }).sort({ updatedAt: -1 }).lean();
+    
+    console.log(`📊 Found ${declinedRequests.length} admin declined requests`);
+    
+    // Transform the data to match frontend expectations
+    const transformedRequests = declinedRequests.map(request => {
+      // Extract just the filename from the PDF path
+      const fileName = request?.pdf ? path.basename(request.pdf) : '';
+      
+      // Check if the file actually exists before constructing URL
+      let pdfUrl = null;
+      let pdfExists = false;
+      
+      if (fileName) {
+        const fs = require('fs');
+        const filePath = path.join(__dirname, '..', 'uploads', 'pdfs', fileName);
+        pdfExists = fs.existsSync(filePath);
+        
+        if (pdfExists) {
+          pdfUrl = `${req.protocol}://${req.get('host')}/files/${fileName}`;
+        }
+      }
+      
+      return {
+        id: request._id,
+        studentId: request.studentId,
+        name: request.name,
+        organization: request.organization,
+        discipline: request.discipline,
+        theoryHours: request.theoryHours,
+        practicalHours: request.practicalHours,
+        totalHours: request.totalHours,
+        calculatedCredits: request.calculatedCredits,
+        noOfDays: request.noOfDays,
+        pdf: fileName, // Store just the filename
+        pdfUrl: pdfUrl, // Store the full URL for easy access (null if file doesn't exist)
+        pdfExists: pdfExists, // Indicate if file actually exists
+        status: request.status,
+        admin_approved: request.admin_approved,
+        bprnd_poc_approved: request.bprnd_poc_approved,
+        createdAt: request.createdAt,
+        updatedAt: request.updatedAt,
+        declinedBy: 'Admin',
+        declinedAt: request.updatedAt
+      };
+    });
+    
+    res.json({
+      success: true,
+      message: 'Admin declined requests retrieved successfully',
+      data: transformedRequests
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching admin declined requests:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch admin declined requests',
+      error: error.message
+    });
+  }
+});
+
+// Get count of declined requests for Admin
+app.get('/api/admin/declined-requests/count', authenticateToken, async (req, res) => {
+  try {
+    console.log('🔍 Admin requesting declined requests count...');
+    
+    // Count admin declined requests
+    const declinedCount = await PendingCredits.countDocuments({ 
+      status: 'admin_declined'
+    });
+    
+    console.log(`📊 Found ${declinedCount} admin declined requests`);
+    
+    res.json({
+      success: true,
+      message: 'Admin declined requests count retrieved successfully',
+      data: {
+        count: declinedCount
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching admin declined requests count:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch admin declined requests count',
+      error: error.message
+    });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

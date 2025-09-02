@@ -60,6 +60,7 @@ import BPRNDStudentClaimsPage from './components/student/BPRNDStudentClaimsPage'
 import BPRNDCertificationRequestPage from './components/dashboard/BPRNDCertificationRequestPage';
 import BPRNDPendingCreditsPage from './components/dashboard/BPRNDPendingCreditsPage';
 import AdminPendingCreditsPage from './components/dashboard/AdminPendingCreditsPage';
+import AdminDeclinedRequestsPage from './components/dashboard/AdminDeclinedRequestsPage';
 import BPRNDPendingCreditRequestsPage from './components/student/BPRNDPendingCreditRequestsPage';
 import CertificateMappingsListPage from './components/dashboard/CertificateMappingsListPage';
 import { CenteredToastProvider } from '@/contexts/centered-toast-context';
@@ -133,6 +134,7 @@ const App = () => (
             <Route path="bprnd-certification-request" element={<BPRNDCertificationRequestPage />} />
             <Route path="bprnd-pending-credits" element={<AdminPendingCreditsPage />} />
             <Route path="certificate-mappings" element={<CertificateMappingsListPage />} />
+            <Route path="admin-declined-requests" element={<AdminDeclinedRequestsPage />} />
           </Route>
 
           {/* POC Authentication Routes */}

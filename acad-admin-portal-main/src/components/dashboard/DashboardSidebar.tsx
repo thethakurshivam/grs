@@ -23,11 +23,13 @@ import {
   GraduationCap,
   LogOut,
   Menu,
-  Send
+  Send,
+  ShieldAlert
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import useAdminPendingCredits from "@/hooks/useAdminPendingCredits";
 import useAdminBPRNDClaims from "@/hooks/useAdminBPRNDClaims";
+import { useAdminDeclinedRequestsCount } from "@/hooks/useAdminDeclinedRequestsCount";
 
 const sidebarItems = [
   {
@@ -68,6 +70,7 @@ export function DashboardSidebar() {
   // Fetch data for badges using new efficient hooks
   const { count: pendingCreditsCount, isLoading: pendingCreditsLoading } = useAdminPendingCredits();
   const { count: pendingCertificationCount, isLoading: pendingCertificationLoading } = useAdminBPRNDClaims();
+  const { count: declinedRequestsCount, loading: declinedRequestsLoading } = useAdminDeclinedRequestsCount();
   
 
   
@@ -210,6 +213,39 @@ export function DashboardSidebar() {
                         className={`absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full min-w-[20px] h-5 ${collapsed ? 'block' : 'hidden'}`}
                       >
                         {pendingCreditsCount}
+                      </span>
+                    )}
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Admin Declined Requests */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start hover:bg-blue-50 text-gray-700 hover:text-blue-900 relative"
+                    onClick={() =>
+                      navigate('/dashboard/admin-declined-requests')
+                    }
+                  >
+                    <ShieldAlert className="h-4 w-4" />
+                    {!collapsed && (
+                      <span className="ml-2 flex items-center gap-2 min-w-0">
+                        <span className="truncate">Declined Requests</span>
+                        {!declinedRequestsLoading && declinedRequestsCount > 0 && (
+                          <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full min-w-[20px]">
+                            {declinedRequestsCount}
+                          </span>
+                        )}
+                      </span>
+                    )}
+                    {/* Show badge even when collapsed */}
+                    {!declinedRequestsLoading && declinedRequestsCount > 0 && (
+                      <span 
+                        className={`absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full min-w-[20px] h-5 ${collapsed ? 'block' : 'hidden'}`}
+                      >
+                        {declinedRequestsCount}
                       </span>
                     )}
                   </Button>

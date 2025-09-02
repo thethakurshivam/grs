@@ -362,7 +362,7 @@ const DeclinedRequestsPage: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <FileText className="h-3 w-3 text-gray-400" />
                       <a
-                        href={`http://localhost:3003/api/bprnd/files/${request.pdf}`}
+                        href={`http://localhost:3003/files/${request.pdf}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-700 text-xs font-medium flex items-center space-x-1"
