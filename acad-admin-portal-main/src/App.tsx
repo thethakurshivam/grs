@@ -66,6 +66,7 @@ import { CenteredToastProvider } from '@/contexts/centered-toast-context';
 import BPRNDBulkImportStudents from './pages/BPRNDBulkImportStudents';
 import BPRNDStudentsPage from './components/dashboard/BPRNDStudentsPage';
 import BPRNDAnalyticsPage from './components/dashboard/BPRNDAnalyticsPage';
+import DeclinedRequestsPage from './components/dashboard/DeclinedRequestsPage';
 
 const queryClient = new QueryClient();
 
@@ -163,7 +164,6 @@ const App = () => (
             />
             <Route path="courses" element={<POCCoursesListPage />} />
             <Route path="mous" element={<POCMOUsListPage />} />
-            <Route path="requests" element={<POCRequestsPage />} />
           </Route>
 
           {/* BPRND POC Portal Routes (Protected with Authentication) */}
@@ -185,8 +185,8 @@ const App = () => (
               element={<POCCoursesListPage />}
             />
             <Route path="mous" element={<POCMOUsListPage />} />
-            <Route path="requests" element={<POCRequestsPage />} />
-            <Route path="claims" element={<POCBPRNDClaimsPage />} />
+            <Route path="pending-credits" element={<BPRNDPendingCreditsPage />} />
+            <Route path="declined-requests" element={<DeclinedRequestsPage />} />
           </Route>
 
           {/* Student Routes */}

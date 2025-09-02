@@ -483,14 +483,14 @@ app.get('/api/bprnd/pending-credits', async (req, res) => {
   try {
     console.log('🔍 BPRND POC requesting pending credits...');
     
-    // Only show credits that are initial requests (neither admin nor POC approved yet)
+    // Show credits that are waiting for BPRND POC approval (POC approves first, then admin)
     const records = await PendingCredits.find({ 
-      admin_approved: false,
-      bprnd_poc_approved: false 
+      bprnd_poc_approved: false,
+      status: { $nin: ['declined', 'poc_declined'] }  // Exclude both old and new declined requests
     }).sort({ createdAt: -1 }).lean();
     
     console.log(`📊 Found ${records.length} initial pending credits for BPRND POC review`);
-    console.log('🔍 Query criteria: admin_approved: false, bprnd_poc_approved: false');
+    console.log('🔍 Query criteria: bprnd_poc_approved: false, status not in [declined, poc_declined]');
     
     // Log each record for debugging
     records.forEach((rec, index) => {
@@ -560,7 +560,7 @@ app.post('/api/bprnd/pending-credits/:id/accept', async (req, res) => {
       id,
       { 
         bprnd_poc_approved: true,
-        status: 'poc_approved'
+        status: 'pending'
       },
       { new: true }
     );
@@ -591,7 +591,7 @@ app.post('/api/bprnd/pending-credits/:id/accept', async (req, res) => {
         id: pendingCredit._id,
         admin_approved: pendingCredit.admin_approved,
         bprnd_poc_approved: pendingCredit.bprnd_poc_approved,
-        status: 'poc_approved'
+        status: 'pending'
       }
     });
 
@@ -622,7 +622,7 @@ app.post('/api/bprnd/pending-credits/:id/reject', async (req, res) => {
       id,
       { 
         bprnd_poc_approved: false,
-        status: 'declined'
+        status: 'poc_declined'
       },
       { new: true }
     );
@@ -641,7 +641,7 @@ app.post('/api/bprnd/pending-credits/:id/reject', async (req, res) => {
         id: pendingCredit._id,
         admin_approved: pendingCredit.admin_approved,
         bprnd_poc_approved: pendingCredit.bprnd_poc_approved,
-        status: 'declined'
+        status: 'poc_declined'
       }
     });
 
@@ -669,11 +669,11 @@ app.get('/api/bprnd/pending-credits/student/:studentId', async (req, res) => {
       });
     }
 
-    // Find pending credits for the specific student (initial requests)
+    // Find pending credits for the specific student (waiting for POC approval)
     const records = await PendingCredits.find({ 
       studentId: studentId,
-      admin_approved: false,
-      bprnd_poc_approved: false 
+      bprnd_poc_approved: false,
+      status: { $nin: ['declined', 'poc_declined'] }  // Exclude both old and new declined requests
     }).sort({ createdAt: -1 }).lean();
     
     if (!records || records.length === 0) {
@@ -737,14 +737,18 @@ app.get('/api/bprnd/claims', async (req, res) => {
   try {
     const { status } = req.query;
     
-    // POC sees only initial requests (neither POC nor admin approved yet)
+    // POC sees only requests that POC has not approved yet
     let query = { 
       poc_approved: { $ne: true },  // POC has not approved yet
-      admin_approved: { $ne: true }  // Admin has not approved yet
+      status: { $nin: ['poc_declined', 'admin_declined'] } // Exclude declined claims
     };
     
     if (status) {
-      query.status = status;
+      // If status is provided, ensure it's not declined
+      if (status !== 'poc_declined' && status !== 'admin_declined') {
+        query.status = status;
+      }
+      // If status is declined, keep the original filter (will return empty results)
     }
 
     const claims = await bprnd_certification_claim.find(query)
@@ -799,7 +803,7 @@ app.post('/api/bprnd/claims/:claimId/approve', async (req, res) => {
     const claim = await bprnd_certification_claim.findByIdAndUpdate(
       claimId,
       { 
-        status: 'poc_approved',
+        status: 'pending',
         poc_approved: true,
         poc_approved_at: new Date()
       },
@@ -848,7 +852,7 @@ app.post('/api/bprnd/claims/:claimId/decline', async (req, res) => {
     const claim = await bprnd_certification_claim.findByIdAndUpdate(
       claimId,
       { 
-        status: 'declined',
+        status: 'poc_declined',
         poc_approved: false,
         declined_reason: reason,
         declined_at: new Date()

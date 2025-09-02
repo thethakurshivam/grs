@@ -6,7 +6,7 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: "localhost",
     port: 8080,
     proxy: {
       // Admin authentication and routes to port 3002
@@ -57,6 +57,23 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         secure: false,
       },
+      // BPRND declined requests endpoints
+      '/api/bprnd/poc/declined-requests': {
+        target: 'http://localhost:3003',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/api/bprnd/poc/declined-requests/count': {
+        target: 'http://localhost:3003',
+        changeOrigin: true,
+        secure: false,
+      },
+      // BPRND files endpoint
+      '/api/bprnd/files': {
+        target: 'http://localhost:3003',
+        changeOrigin: true,
+        secure: false,
+      },
       // BPRND student authentication and routes to API4 (port 3004)
       '/api/bprnd/student': {
         target: 'http://localhost:3004',
@@ -88,6 +105,17 @@ export default defineConfig(({ mode }) => ({
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
+  preview: {
+    port: 8080,
+    host: "localhost",
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

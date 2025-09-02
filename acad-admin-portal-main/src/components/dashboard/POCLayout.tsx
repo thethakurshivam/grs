@@ -68,18 +68,19 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
       path: type === 'bprnd' ? '/poc-portal/bprnd/bulk-import-students' : `${basePath}/bulk-import-students`,
       color: 'text-indigo-600',
     },
-    {
-      title: 'Requests',
-      icon: MessageSquare,
-      path: `${basePath}/requests`,
-      color: 'text-orange-600',
-    },
     // Add Certifications button only for BPRND POC
     ...(type === 'bprnd' ? [{
       title: 'Certifications',
       icon: Award,
       path: `${basePath}/claims`,
       color: 'text-amber-600',
+    }] : []),
+    // Add Pending Credits button only for BPRND POC
+    ...(type === 'bprnd' ? [{
+      title: 'Pending Credits',
+      icon: Shield,
+      path: `${basePath}/pending-credits`,
+      color: 'text-red-600',
     }] : []),
   ];
 
@@ -138,8 +139,8 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
                   }`} />
                   <span className="flex-1">{item.title}</span>
                   
-                  {/* Badge for Requests and Certifications */}
-                  {item.title === 'Requests' && !pendingCreditsLoading && pendingCreditsCount > 0 && (
+                  {/* Badge for Pending Credits and Certifications */}
+                  {item.title === 'Pending Credits' && !pendingCreditsLoading && pendingCreditsCount > 0 && (
                     <div className="ml-auto">
                       <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full min-w-[20px]">
                         {pendingCreditsCount}
