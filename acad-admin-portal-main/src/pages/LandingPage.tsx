@@ -147,7 +147,7 @@ const LandingPage: React.FC = () => {
                 </div>
               </div>
               <CardTitle className="text-xl font-bold text-[#0b2e63]">
-                BPR&D Candidate Portal
+                BPR&D Trainee Portal
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center">
@@ -159,7 +159,7 @@ const LandingPage: React.FC = () => {
                 className="w-full bg-[#0b2e63] hover:bg-[#09264f] text-white"
                 onClick={handleBPRNDClick}
               >
-                Access BPR&D Candidate Portal
+                Access BPR&D Trainee Portal
               </Button>
             </CardContent>
           </Card>

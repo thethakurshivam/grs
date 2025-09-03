@@ -329,14 +329,14 @@ const CertificateMappingsListPage = () => {
             
             <div className="w-full sm:w-48">
               <Select value={filterQualification} onValueChange={setFilterQualification}>
-                <SelectTrigger className="border-gray-300 focus:border-gray-400 focus:ring-gray-400">
-                  <SelectValue placeholder="Filter by qualification" />
+                <SelectTrigger className="border-gray-300 focus:border-gray-400 focus:ring-gray-400 text-gray-900 font-medium">
+                  <SelectValue placeholder="Filter by qualification" className="text-gray-900 font-medium" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Qualifications</SelectItem>
-                  <SelectItem value="certificate">Certificate</SelectItem>
-                  <SelectItem value="diploma">Diploma</SelectItem>
-                  <SelectItem value="pg diploma">PG Diploma</SelectItem>
+                  <SelectItem value="all" className="text-gray-900 font-medium">All Qualifications</SelectItem>
+                  <SelectItem value="certificate" className="text-gray-900 font-medium">Certificate</SelectItem>
+                  <SelectItem value="diploma" className="text-gray-900 font-medium">Diploma</SelectItem>
+                  <SelectItem value="pg diploma" className="text-gray-900 font-medium">PG Diploma</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -387,32 +387,32 @@ const CertificateMappingsListPage = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {paginatedMappings.map((mapping) => (
-            <Card key={mapping._id} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow bg-white">
-              <CardHeader>
+            <Card key={mapping._id} className="group border border-gray-200 shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-300 bg-white hover:bg-gray-50/50">
+              <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CardTitle className="text-lg text-gray-900">
+                    <div className="flex items-center gap-3 mb-3">
+                      <CardTitle className="text-xl font-semibold text-gray-900 group-hover:text-gray-800 transition-colors">
                         {mapping.studentId?.Name || 'Unknown Student'}
                       </CardTitle>
-                      <Badge variant="outline" className="text-gray-700 border-gray-300 text-xs">
+                      <Badge variant="outline" className="text-gray-600 border-gray-300 text-xs font-medium bg-white">
                         {mapping.certificateId?.certificateNo || 'N/A'}
                       </Badge>
                     </div>
-                    <div className="flex flex-wrap gap-2 text-sm text-gray-600">
-                      <span><strong>Email:</strong> {mapping.studentId?.email || 'N/A'}</span>
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Email:</span> {mapping.studentId?.email || 'N/A'}
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
+                  <div className="flex flex-col items-end gap-3">
                     <div className="text-right">
-                      <Badge variant="outline" className="text-gray-700 border-gray-300">
+                      <Badge variant="outline" className="text-gray-700 border-gray-300 font-medium bg-white">
                         {mapping.umbrellaKey.replace(/_/g, ' ')}
                       </Badge>
-                      <p className="text-xs text-gray-500 mt-1">Certification Field</p>
+                      <p className="text-xs text-gray-500 mt-1 font-medium">Certification Field</p>
                     </div>
-                    <Badge variant="secondary" className="text-gray-700 bg-gray-100">
+                    <Badge variant="secondary" className="text-gray-700 bg-gray-100 font-medium">
                       {mapping.qualification}
                     </Badge>
                   </div>
@@ -421,25 +421,26 @@ const CertificateMappingsListPage = () => {
               
               <CardContent>
 
-                <div className="border-t pt-4">
-                  <h4 className="font-semibold text-gray-900 mb-3">Courses ({mapping.courseCount || mapping.courses.length})</h4>
-                  <div className="space-y-2">
+                <div className="border-t border-gray-100 pt-6">
+                  <h4 className="font-semibold text-gray-900 mb-4 text-lg">Courses ({mapping.courseCount || mapping.courses.length})</h4>
+                  <div className="space-y-3">
                     {mapping.courses.map((course, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                      <div key={index} className="group/course flex items-center justify-between p-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-200">
                         <div className="flex-1">
-                          <p className="font-medium text-gray-900">{course.courseName} - {course.organization}</p>
-                          <div className="flex gap-4 text-xs text-gray-500 mt-1">
-                            <span>Theory: {course.theoryHours}h</span>
-                            <span>Practical: {course.practicalHours}h</span>
-                            <span>Credits Earned: {course.totalCredits}</span>
+                          <p className="font-semibold text-gray-900 group-hover/course:text-gray-800 transition-colors">{course.courseName}</p>
+                          <p className="text-sm text-gray-600 mt-1">{course.organization}</p>
+                          <div className="flex gap-6 text-sm text-gray-500 mt-2">
+                            <span className="font-medium">Theory: <span className="text-gray-700">{course.theoryHours}h</span></span>
+                            <span className="font-medium">Practical: <span className="text-gray-700">{course.practicalHours}h</span></span>
+                            <span className="font-medium">Credits: <span className="text-gray-700">{course.totalCredits}</span></span>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="flex flex-col items-end gap-1">
-                            <Badge variant="outline" className="text-gray-700 border-gray-300">
-                              {course.creditsUsed} credits used for certification
+                          <div className="flex flex-col items-end gap-2">
+                            <Badge variant="outline" className="text-gray-700 border-gray-300 font-medium bg-white">
+                              {course.creditsUsed} credits used
                             </Badge>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-500 font-medium">
                               {new Date(course.completionDate).toLocaleDateString()}
                             </p>
                           </div>
@@ -449,9 +450,9 @@ const CertificateMappingsListPage = () => {
                   </div>
                 </div>
 
-                <div className="border-t pt-4 mt-4 text-xs text-gray-500">
-                  Created: {new Date(mapping.createdAt).toLocaleString()} | 
-                  Updated: {new Date(mapping.updatedAt).toLocaleString()}
+                <div className="border-t border-gray-100 pt-4 mt-6 text-xs text-gray-400 font-medium">
+                  Created: {new Date(mapping.createdAt).toLocaleDateString()} • 
+                  Updated: {new Date(mapping.updatedAt).toLocaleDateString()}
                 </div>
               </CardContent>
             </Card>

@@ -35,7 +35,7 @@ export const BPRNDCertificatesPage: React.FC = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-4xl font-extrabold text-[#0b2e63]">BPR&D Candidate Certificates</h1>
+          <h1 className="text-4xl font-extrabold text-[#0b2e63]">BPR&D Trainee Certificates</h1>
           <p className="text-lg text-black mt-2">Loading your certificates...</p>
         </div>
         <div className="flex justify-center items-center h-64">
@@ -49,7 +49,7 @@ export const BPRNDCertificatesPage: React.FC = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-4xl font-extrabold text-[#0b2e63]">BPR&D Candidate Certificates</h1>
+          <h1 className="text-4xl font-extrabold text-[#0b2e63]">BPR&D Trainee Certificates</h1>
           <p className="text-lg text-black mt-2">Error loading certificates</p>
         </div>
         <Card className="border border-red-200 bg-white rounded-xl">
@@ -136,7 +136,7 @@ export const BPRNDCertificatesPage: React.FC = () => {
         <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl shadow-lg mb-4">
           <Award className="h-8 w-8 text-white" />
         </div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-3">BPR&D Candidate Certificates</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-3">BPR&D Trainee Certificates</h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">Your earned certifications and qualifications - a testament to your professional development</p>
       </div>
 

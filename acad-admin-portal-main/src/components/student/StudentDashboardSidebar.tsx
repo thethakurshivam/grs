@@ -119,7 +119,7 @@ export const StudentDashboardSidebar: React.FC = () => {
     <div className={`w-64 border-r ${isBprnd ? 'bg-gray-100 border-gray-300' : 'bg-sidebar-background'}`}>
       <div className="p-6 border-b border-gray-200">
         <h1 className={`text-xl font-semibold ${isBprnd ? 'text-gray-900' : 'text-gray-800'}`}>
-          {isBprnd ? 'BPR&D Candidate' : 'Student'} Portal
+          {isBprnd ? 'BPR&D Trainee' : 'Student'} Portal
         </h1>
       </div>
       

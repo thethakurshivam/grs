@@ -53,7 +53,7 @@ export const BPRNDProfileAPIPage: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl shadow-lg mb-4">
             <User className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">BPR&D Candidate Profile</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">BPR&D Trainee Profile</h1>
           <p className="text-lg text-gray-600">Loading your profile information...</p>
         </div>
         <div className="flex justify-center items-center h-64">
@@ -70,7 +70,7 @@ export const BPRNDProfileAPIPage: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl shadow-lg mb-4">
             <User className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">BPR&D Candidate Profile</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">BPR&D Trainee Profile</h1>
           <p className="text-lg text-gray-600">Error loading profile information</p>
         </div>
         <Card className="border border-gray-200 bg-white rounded-xl shadow-sm">
@@ -111,7 +111,7 @@ export const BPRNDProfileAPIPage: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl shadow-lg mb-4">
             <User className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">BPR&D Candidate Profile</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">BPR&D Trainee Profile</h1>
           <p className="text-lg text-gray-600">No profile data available</p>
         </div>
         
@@ -146,7 +146,7 @@ export const BPRNDProfileAPIPage: React.FC = () => {
         <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl shadow-lg mb-4">
           <User className="h-8 w-8 text-white" />
         </div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-3">BPR&D Candidate Profile</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-3">BPR&D Trainee Profile</h1>
         <p className="text-lg text-gray-600">Your complete profile information</p>
       </div>
 

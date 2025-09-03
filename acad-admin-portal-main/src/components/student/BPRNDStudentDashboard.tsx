@@ -14,7 +14,7 @@ export const BPRNDStudentDashboard: React.FC = () => {
   const studentName = localStorage.getItem('studentName') || 'Officer John Doe';
   const studentDesignation = localStorage.getItem('studentDesignation') || 'Police Officer';
   const studentState = localStorage.getItem('studentState') || 'Maharashtra';
-  const studentUmbrella = localStorage.getItem('studentUmbrella') || 'Cyber Security';
+
   // Prefer ID from stored BPRND student object; fallback to explicit keys
   const storedBprnd = localStorage.getItem('bprndStudentData');
   let derivedId: string | null = null;
@@ -78,7 +78,7 @@ export const BPRNDStudentDashboard: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl shadow-sm mb-4">
             <Award className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">BPR&D Candidate Portal</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">BPR&D Trainee Portal</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">Access your profile, credits, certifications, and track your professional development journey.</p>
         </div>
 
@@ -102,20 +102,7 @@ export const BPRNDStudentDashboard: React.FC = () => {
                   <p className="font-semibold text-gray-800 text-base">{studentName}</p>
                   <p className="text-sm text-gray-600">{studentDesignation} | {studentState} Police</p>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-sm text-gray-700">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>Training Hours: <span className="font-semibold">120 hrs</span></span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm text-gray-700">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Credits Earned: <span className="font-semibold">45</span></span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm text-gray-700">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span>Umbrella: <span className="font-semibold">{studentUmbrella}</span></span>
-                  </div>
-                </div>
+                {/* Training Hours, Credits Earned, and Umbrella sections removed */}
               </div>
             </CardContent>
           </Card>

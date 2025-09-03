@@ -6,7 +6,7 @@ const BPRNDStudentProfile: React.FC = () => {
     <StudentDashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-4xl font-extrabold text-[#0b2e63]">BPR&D Candidate Profile</h1>
+          <h1 className="text-4xl font-extrabold text-[#0b2e63]">BPR&D Trainee Profile</h1>
           <p className="text-lg text-black mt-2">View and manage your BPR&D candidate profile</p>
         </div>
         

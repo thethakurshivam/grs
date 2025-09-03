@@ -459,11 +459,46 @@ const AddCourseForm = () => {
                     ) : fieldsError ? (
                       <SelectItem value="" disabled>Error loading fields</SelectItem>
                     ) : (
-                      fields.map((field) => (
-                        <SelectItem key={field._id} value={field.name} className="text-black">
-                          {field.name}
-                        </SelectItem>
-                      ))
+                                              fields.filter((field) => field.name !== 'Cyber Security').map((field) => {
+                          // Define umbrella categories mapping
+                          const umbrellaCategories = {
+                            'Police Administration': [
+                              'Tourism Police',
+                              'Women in Security and Police',
+                              'Traffic Management and Road Safety',
+                              'Border Management',
+                              'Disaster Risk Reduction'
+                            ],
+                            'Cyber Security': [
+                              'Cyber Law',
+                              'Cyber Threat Intelligence',
+                              'OSI Model',
+                              'Social Media Security'
+                            ],
+                            'Forensics': [
+                              'Behavioral Sciences',
+                              'Forensics Psychology',
+                              'Gender Sensitisation'
+                            ]
+                          };
+
+                          // Find which category this field belongs to
+                          let category = '';
+                          Object.entries(umbrellaCategories).forEach(([cat, umbrellas]) => {
+                            if (umbrellas.includes(field.name)) {
+                              category = cat;
+                            }
+                          });
+
+                          // Add prefix if category is found
+                          const displayName = category ? `[${category}] - ${field.name}` : field.name;
+                          
+                          return (
+                            <SelectItem key={field._id} value={field.name} className="text-black">
+                              {displayName}
+                            </SelectItem>
+                          );
+                        })
                     )}
                   </SelectContent>
                 </Select>

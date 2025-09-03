@@ -180,7 +180,11 @@ const DeclinedRequestsPage: React.FC = () => {
                 variant={filterType === 'all' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilterType('all')}
-                className="text-xs px-3 py-1.5 h-8"
+                className={`text-xs px-3 py-1.5 h-8 font-medium ${
+                  filterType === 'all' 
+                    ? 'text-white bg-blue-600 hover:bg-blue-700' 
+                    : 'text-gray-900 border-gray-300 hover:bg-gray-50'
+                }`}
               >
                 All ({totalDeclinedCount})
               </Button>
@@ -188,7 +192,11 @@ const DeclinedRequestsPage: React.FC = () => {
                 variant={filterType === 'poc' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilterType('poc')}
-                className="text-xs px-3 py-1.5 h-8"
+                className={`text-xs px-3 py-1.5 h-8 font-medium ${
+                  filterType === 'poc' 
+                    ? 'text-white bg-blue-600 hover:bg-blue-700' 
+                    : 'text-gray-900 border-gray-300 hover:bg-gray-50'
+                }`}
               >
                 POC ({pocDeclinedCount})
               </Button>
@@ -196,7 +204,11 @@ const DeclinedRequestsPage: React.FC = () => {
                 variant={filterType === 'admin' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilterType('admin')}
-                className="text-xs px-3 py-1.5 h-8"
+                className={`text-xs px-3 py-1.5 h-8 font-medium ${
+                  filterType === 'admin' 
+                    ? 'text-white bg-blue-600 hover:bg-blue-700' 
+                    : 'text-gray-900 border-gray-300 hover:bg-gray-50'
+                }`}
               >
                 Admin ({adminDeclinedCount})
               </Button>

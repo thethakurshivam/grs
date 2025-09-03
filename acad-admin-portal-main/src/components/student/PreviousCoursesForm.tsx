@@ -232,9 +232,44 @@ const PreviousCoursesForm: React.FC = () => {
                 className="w-full border-gray-300 focus:border-gray-400 focus:ring-gray-400 h-12 text-base rounded-md text-gray-900"
               >
                 <option value="" disabled>{umbrellasLoading ? 'Loading...' : 'Select a discipline'}</option>
-                {(umbrellas || []).map((u) => (
-                  <option key={u._id} value={u.name}>{u.name}</option>
-                ))}
+                {(umbrellas || []).filter((u) => u.name !== 'Cyber Security').map((u) => {
+                  // Define umbrella categories mapping
+                  const umbrellaCategories = {
+                    'Police Administration': [
+                      'Tourism Police',
+                      'Women in Security and Police',
+                      'Traffic Management and Road Safety',
+                      'Border Management',
+                      'Disaster Risk Reduction'
+                    ],
+                    'Cyber Security': [
+                      'Cyber Law',
+                      'Cyber Threat Intelligence',
+                      'OSI Model',
+                      'Social Media Security'
+                    ],
+                    'Forensics': [
+                      'Behavioral Sciences',
+                      'Forensics Psychology',
+                      'Gender Sensitisation'
+                    ]
+                  };
+
+                  // Find which category this umbrella belongs to
+                  let category = '';
+                  Object.entries(umbrellaCategories).forEach(([cat, umbrellas]) => {
+                    if (umbrellas.includes(u.name)) {
+                      category = cat;
+                    }
+                  });
+
+                  // Add prefix if category is found
+                  const displayName = category ? `[${category}] - ${u.name}` : u.name;
+                  
+                  return (
+                    <option key={u._id} value={u.name}>{displayName}</option>
+                  );
+                })}
               </select>
               {umbrellasError && (
                 <p className="text-sm text-red-600">Failed to load disciplines: {umbrellasError}</p>

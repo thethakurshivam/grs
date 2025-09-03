@@ -231,46 +231,7 @@ const AdminPendingCreditsPage: React.FC = () => {
         </Card>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-blue-600" />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Pending</p>
-                <p className="text-2xl font-bold text-gray-900">{pendingCredits.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-2">
-              <ShieldCheck className="h-5 w-5 text-green-600" />
-              <div>
-                <p className="text-sm font-medium text-gray-600">POC Approved</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {pendingCredits.filter(c => c.bprnd_poc_approved).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-2">
-              <Award className="h-5 w-5 text-purple-600" />
-              <div>
-                <p className="text-sm font-medium text-gray-600">Ready for Admin</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {pendingCredits.filter(c => c.bprnd_poc_approved && !c.admin_approved).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+
 
       {/* Pending Credits List */}
       {pendingCredits.length === 0 ? (

@@ -178,13 +178,13 @@ const BPRNDBulkImportStudents: React.FC = () => {
     }
 
     try {
-      console.log('Making API call to:', '/api/bprnd/students/upload');
+      console.log('Making API call to:', 'http://localhost:3003/api/bprnd/students/upload');
       console.log('Request headers:', {
         Authorization: `Bearer ${localStorage.getItem('pocToken')}`,
       });
       
       const response = await fetch(
-        '/api/bprnd/students/upload',
+        'http://localhost:3003/api/bprnd/students/upload',
         {
           method: 'POST',
           body: formData,

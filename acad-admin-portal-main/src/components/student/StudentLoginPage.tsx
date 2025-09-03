@@ -141,7 +141,7 @@ const StudentLoginPage: React.FC<StudentLoginPageProps> = ({
             </div>
           </div>
                   <h1 className="text-3xl font-bold text-primary">
-          {isBPRND ? 'BPR&D Candidate Portal' : 'Student Portal'}
+          {isBPRND ? 'BPR&D Trainee Portal' : 'Student Portal'}
         </h1>
         <p className="text-gray-800 mt-2 font-medium">
           Sign in to your {isBPRND ? 'BPR&D candidate' : 'student'} account
