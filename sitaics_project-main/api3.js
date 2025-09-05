@@ -883,6 +883,88 @@ app.post('/api/bprnd/claims/:claimId/decline', async (req, res) => {
   }
 });
 
+// Get declined BPRND certification claims
+app.get('/api/bprnd/declined-certificates-request', async (req, res) => {
+  try {
+    // Find all certification claims with status 'poc_declined' or 'admin_declined'
+    const declinedClaims = await bprnd_certification_claim.find({
+      status: { $in: ['poc_declined', 'admin_declined'] }
+    })
+    .populate('studentId', 'Name Email Designation State Organization')
+    .sort({ declined_at: -1, createdAt: -1 })
+    .lean();
+
+    // Transform the data to include additional information
+    const transformedClaims = declinedClaims.map(claim => {
+      // Calculate total credits from courses
+      const totalCredits = claim.courses.reduce((sum, course) => sum + (course.creditsEarned || 0), 0);
+      
+      // Get the most recent decline reason and date
+      const declineInfo = {
+        reason: claim.declined_reason || 'No reason provided',
+        declinedAt: claim.declined_at || claim.updatedAt,
+        declinedBy: claim.status === 'poc_declined' ? 'POC' : 'Admin'
+      };
+
+      return {
+        _id: claim._id,
+        studentId: claim.studentId,
+        umbrellaKey: claim.umbrellaKey,
+        qualification: claim.qualification,
+        requiredCredits: claim.requiredCredits,
+        status: claim.status,
+        totalCredits,
+        courses: claim.courses,
+        declineInfo,
+        createdAt: claim.createdAt,
+        updatedAt: claim.updatedAt,
+        notes: claim.notes
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Declined certification claims retrieved successfully',
+      data: transformedClaims,
+      count: transformedClaims.length
+    });
+
+  } catch (error) {
+    console.error('Error retrieving declined certification claims:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving declined certification claims',
+      error: error.message
+    });
+  }
+});
+
+// Get count of declined BPRND certification claims
+app.get('/api/bprnd/declined-certificates-request/count', async (req, res) => {
+  try {
+    // Count certification claims with status 'poc_declined' or 'admin_declined'
+    const declinedCount = await bprnd_certification_claim.countDocuments({
+      status: { $in: ['poc_declined', 'admin_declined'] }
+    });
+
+    res.json({
+      success: true,
+      message: 'Declined certification claims count retrieved successfully',
+      data: {
+        count: declinedCount
+      }
+    });
+
+  } catch (error) {
+    console.error('Error retrieving declined certification claims count:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving declined certification claims count',
+      error: error.message
+    });
+  }
+});
+
 // Get count of pending credit requests for POC dashboard
 app.get('/api/bprnd/poc/pending-credits/count', async (req, res) => {
   try {

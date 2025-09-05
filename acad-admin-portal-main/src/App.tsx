@@ -69,6 +69,7 @@ import BPRNDStudentsPage from './components/dashboard/BPRNDStudentsPage';
 import BPRNDAnalyticsPage from './components/dashboard/BPRNDAnalyticsPage';
 import DeclinedRequestsPage from './components/dashboard/DeclinedRequestsPage';
 
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -189,6 +190,7 @@ const App = () => (
             <Route path="mous" element={<POCMOUsListPage />} />
             <Route path="pending-credits" element={<BPRNDPendingCreditsPage />} />
             <Route path="declined-requests" element={<DeclinedRequestsPage />} />
+
           </Route>
 
           {/* Student Routes */}
