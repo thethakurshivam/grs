@@ -10,9 +10,11 @@ import {
   BookOpen,
   CreditCard,
   User,
-  ClipboardList
+  ClipboardList,
+  Lock
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { BPRNDChangePassword } from './BPRNDChangePassword';
 
 export const StudentDashboardSidebar: React.FC = () => {
   const location = useLocation();
@@ -89,6 +91,7 @@ export const StudentDashboardSidebar: React.FC = () => {
     icon: React.ComponentType<{ className?: string }>;
     onClick: () => void;
     path: string;
+    isSpecial?: boolean;
   }> = [
     { name: 'Dashboard', icon: Home, onClick: handleBprndDashboard, path: '/student/bprnd/dashboard' },
     { name: 'Add courses', icon: Plus, onClick: handleAddCourseOtherThanRRU, path: '/student/bprnd/previous-courses' },
@@ -98,6 +101,7 @@ export const StudentDashboardSidebar: React.FC = () => {
     { name: 'Credit Bank', icon: CreditCard, onClick: handleBprndCreditBank, path: '/student/bprnd/credit-bank' },
     { name: 'My Certification Requests', icon: ClipboardList, onClick: handleBprndMyRequests, path: '/student/bprnd/claims' },
     { name: 'Rise', icon: ExternalLink, onClick: handleRise, path: '/student/bprnd/rise' },
+    { name: 'Change Password', icon: Lock, onClick: () => {}, path: '/student/bprnd/change-password', isSpecial: true },
   ];
 
   const studentMenuItems: Array<{
@@ -128,6 +132,25 @@ export const StudentDashboardSidebar: React.FC = () => {
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
+            
+            // Handle special Change Password button for BPR&D
+            if (isBprnd && item.isSpecial && item.name === 'Change Password') {
+              return (
+                <BPRNDChangePassword key={item.name}>
+                  <button
+                    className={`flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                      isActive 
+                        ? 'bg-gray-200 text-gray-900 border border-gray-300' 
+                        : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 mr-3 text-gray-600" />
+                    {item.name}
+                  </button>
+                </BPRNDChangePassword>
+              );
+            }
+            
             return (
               <button
                 key={item.name}

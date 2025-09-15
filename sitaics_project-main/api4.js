@@ -209,6 +209,76 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Change password for BPRND student
+router.post('/change-password', async (req, res) => {
+  try {
+    const { email, currentPassword, newPassword } = req.body;
+
+    // Validate input
+    if (!email || !currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email, current password, and new password are required',
+      });
+    }
+
+    // Validate new password strength
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters long',
+      });
+    }
+
+    // Find student by email
+    const student = await CreditCalculation.findOne({
+      email: email.toLowerCase(),
+    });
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found',
+      });
+    }
+
+    // Check if password exists
+    if (!student.password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Account not properly configured. Please contact administrator.',
+      });
+    }
+
+    // Verify current password using the schema method
+    const isCurrentPasswordValid = await student.comparePassword(currentPassword);
+    
+    if (!isCurrentPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect',
+      });
+    }
+
+    // Update password (schema middleware will handle hashing)
+    student.password = newPassword;
+    await student.save();
+
+    console.log(`✅ Password changed successfully for student: ${email}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Password changed successfully',
+    });
+  } catch (error) {
+    console.error('Password change error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+});
+
 // Get BPRND student profile by ID
 router.get('/student/:id', async (req, res) => {
   try {
