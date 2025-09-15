@@ -96,7 +96,7 @@ export const StudentDashboardSidebar: React.FC = () => {
     { name: 'Dashboard', icon: Home, onClick: handleBprndDashboard, path: '/student/bprnd/dashboard' },
     { name: 'Add courses', icon: Plus, onClick: handleAddCourseOtherThanRRU, path: '/student/bprnd/previous-courses' },
     { name: 'Training Calendar', icon: ExternalLink, onClick: handleTrainingCalendar, path: '/student/bprnd/training-calendar' },
-    { name: 'Certifications', icon: Award, onClick: handleCertifications, path: '/student/bprnd/certifications' },
+    { name: 'Certification Requests', icon: Award, onClick: handleCertifications, path: '/student/bprnd/certifications' },
     { name: 'Claim Credits', icon: BadgeCheck, onClick: handleClaimCredits, path: '/student/bprnd/claim-credits' },
     { name: 'Credit Bank', icon: CreditCard, onClick: handleBprndCreditBank, path: '/student/bprnd/credit-bank' },
     { name: 'My Certification Requests', icon: ClipboardList, onClick: handleBprndMyRequests, path: '/student/bprnd/claims' },

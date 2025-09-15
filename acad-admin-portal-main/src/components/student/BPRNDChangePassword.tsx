@@ -147,18 +147,18 @@ export const BPRNDChangePassword: React.FC<BPRNDChangePasswordProps> = ({ childr
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-gray-900">
             <Lock className="h-5 w-5" />
             Change Password
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-gray-700">
             Update your account password. Make sure to use a strong password.
           </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="currentPassword">Current Password</Label>
+            <Label htmlFor="currentPassword" className="text-gray-900 font-medium">Current Password</Label>
             <div className="relative">
               <Input
                 id="currentPassword"
@@ -167,6 +167,7 @@ export const BPRNDChangePassword: React.FC<BPRNDChangePasswordProps> = ({ childr
                 value={formData.currentPassword}
                 onChange={handleInputChange}
                 placeholder="Enter current password"
+                className="text-gray-900 placeholder:text-gray-500"
                 required
               />
               <Button
@@ -186,7 +187,7 @@ export const BPRNDChangePassword: React.FC<BPRNDChangePasswordProps> = ({ childr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="newPassword">New Password</Label>
+            <Label htmlFor="newPassword" className="text-gray-900 font-medium">New Password</Label>
             <div className="relative">
               <Input
                 id="newPassword"
@@ -195,6 +196,7 @@ export const BPRNDChangePassword: React.FC<BPRNDChangePasswordProps> = ({ childr
                 value={formData.newPassword}
                 onChange={handleInputChange}
                 placeholder="Enter new password"
+                className="text-gray-900 placeholder:text-gray-500"
                 required
                 minLength={6}
               />
@@ -215,7 +217,7 @@ export const BPRNDChangePassword: React.FC<BPRNDChangePasswordProps> = ({ childr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+            <Label htmlFor="confirmPassword" className="text-gray-900 font-medium">Confirm New Password</Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
@@ -224,6 +226,7 @@ export const BPRNDChangePassword: React.FC<BPRNDChangePasswordProps> = ({ childr
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 placeholder="Confirm new password"
+                className="text-gray-900 placeholder:text-gray-500"
                 required
                 minLength={6}
               />
@@ -249,10 +252,11 @@ export const BPRNDChangePassword: React.FC<BPRNDChangePasswordProps> = ({ childr
               variant="outline"
               onClick={() => setOpen(false)}
               disabled={loading}
+              className="text-gray-900 border-gray-300 hover:bg-gray-50"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
               {loading ? 'Changing...' : 'Change Password'}
             </Button>
           </DialogFooter>

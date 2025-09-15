@@ -71,9 +71,9 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
       path: type === 'bprnd' ? '/poc-portal/bprnd/bulk-import-students' : `${basePath}/bulk-import-students`,
       color: 'text-indigo-600',
     },
-    // Add Certifications button only for BPRND POC
+    // Add Certification Requests button only for BPRND POC
     ...(type === 'bprnd' ? [{
-      title: 'Certifications',
+      title: 'Certification Requests',
       icon: Award,
       path: `${basePath}/claims`,
       color: 'text-amber-600',
@@ -159,7 +159,7 @@ const POCLayout: React.FC<POCLayoutProps> = ({ type = 'standard' }) => {
                     </div>
                   )}
                   
-                  {item.title === 'Certifications' && !pendingCertificationLoading && pendingCertificationCount > 0 && (
+                  {item.title === 'Certification Requests' && !pendingCertificationLoading && pendingCertificationCount > 0 && (
                     <div className="ml-auto">
                       <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full min-w-[20px]">
                         {pendingCertificationCount}

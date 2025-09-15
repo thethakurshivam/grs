@@ -119,9 +119,6 @@ const BPRNDPendingCreditsPage: React.FC = () => {
 
   const decline = async (creditId: string) => {
     try {
-      console.log('🚫 Decline function called with creditId:', creditId);
-      console.log('🚫 Making API call to:', `/api/bprnd/pending-credits/${creditId}/reject`);
-      
       const token = localStorage.getItem('pocToken');
       if (!token) {
         throw new Error('No authentication token found');
@@ -167,11 +164,11 @@ const BPRNDPendingCreditsPage: React.FC = () => {
   // Helper function to get PDF URL for viewing
   const getPdfUrl = (pdfPath: string) => {
     if (!pdfPath) return null;
-    // The PDFs are stored by API4.js (BPRND Student API) and served by admin API
+    // The PDFs are stored and served by API4.js (BPRND Student API) on port 3004
     // Extract filename from the path and construct the correct URL
     const fileName = pdfPath.split('/').pop();
     if (!fileName) return null;
-    return `http://localhost:3002/files/${fileName}`;
+    return `http://localhost:3004/files/${fileName}`;
   };
 
   if (loading) {
@@ -207,8 +204,8 @@ const BPRNDPendingCreditsPage: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Pending POC Approval</h1>
-          <p className="text-base text-gray-500">Review and approve student certification requests awaiting POC approval</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Pending POC Approval</h1>
+          <p className="text-sm text-gray-600">Review and approve student certification requests awaiting POC approval</p>
         </div>
         <div className="ml-auto">
           <Button variant="outline" onClick={fetchPendingCredits} disabled={loading} className="flex items-center gap-2">
@@ -232,8 +229,8 @@ const BPRNDPendingCreditsPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-yellow-600" />
               <div>
-                <p className="text-base text-gray-500">Pending POC Approval</p>
-                <p className="text-2xl font-bold text-gray-900">{pendingCredits.filter(c => !c.bprnd_poc_approved && c.status !== 'poc_declined').length}</p>
+                <p className="text-sm text-gray-600">Pending POC Approval</p>
+                <p className="text-2xl font-semibold text-gray-900">{pendingCredits.filter(c => !c.bprnd_poc_approved && c.status !== 'poc_declined').length}</p>
               </div>
             </div>
           </CardContent>
@@ -243,8 +240,8 @@ const BPRNDPendingCreditsPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-green-600" />
               <div>
-                <p className="text-base text-gray-500">POC Approved</p>
-                <p className="text-2xl font-bold text-gray-900">{pendingCredits.filter(c => c.bprnd_poc_approved).length}</p>
+                <p className="text-sm text-gray-600">POC Approved</p>
+                <p className="text-2xl font-semibold text-gray-900">{pendingCredits.filter(c => c.bprnd_poc_approved).length}</p>
               </div>
             </div>
           </CardContent>
@@ -254,8 +251,8 @@ const BPRNDPendingCreditsPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-red-600" />
               <div>
-                <p className="text-base text-gray-500">POC Declined</p>
-                <p className="text-2xl font-bold text-gray-900">{pendingCredits.filter(c => c.status === 'poc_declined').length}</p>
+                <p className="text-sm text-gray-600">POC Declined</p>
+                <p className="text-2xl font-semibold text-gray-900">{pendingCredits.filter(c => c.status === 'poc_declined').length}</p>
               </div>
             </div>
           </CardContent>
@@ -281,11 +278,11 @@ const BPRNDPendingCreditsPage: React.FC = () => {
                     <div className="flex items-center gap-3 mb-3">
                       <Award className="h-5 w-5 text-blue-600" />
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900">
+                        <h3 className="text-lg font-semibold text-gray-900">
                           {credit.name}
                         </h3>
                         {credit.studentId?.Name && (
-                          <p className="text-base text-gray-500">
+                          <p className="text-sm text-gray-600">
                             Student: <span className="text-gray-900 font-medium">{credit.studentId.Name}</span>
                           </p>
                         )}
@@ -295,11 +292,11 @@ const BPRNDPendingCreditsPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-blue-600" />
-                        <span className="text-base text-gray-500">Discipline: <span className="text-gray-900 font-medium">{credit.discipline}</span></span>
+                        <span className="text-sm text-gray-600">Discipline: <span className="text-gray-900 font-medium">{credit.discipline}</span></span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="h-5 w-5 text-blue-600" />
-                        <span className="text-base text-gray-500">Days: <span className="text-gray-900 font-medium">{credit.noOfDays}</span></span>
+                        <span className="text-sm text-gray-600">Days: <span className="text-gray-900 font-medium">{credit.noOfDays}</span></span>
                       </div>
                     </div>
 
@@ -308,7 +305,7 @@ const BPRNDPendingCreditsPage: React.FC = () => {
                       <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                         <div className="flex items-center gap-2 mb-3">
                           <FileText className="h-5 w-5 text-blue-600" />
-                          <h4 className="text-xl font-bold text-gray-900">Uploaded Certificate</h4>
+                          <h4 className="text-lg font-semibold text-gray-900">Uploaded Certificate</h4>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -316,14 +313,11 @@ const BPRNDPendingCreditsPage: React.FC = () => {
                               <FileText className="h-5 w-5 text-blue-600" />
                             </div>
                             <div>
-                              <p className="text-base font-medium text-gray-900">
+                              <p className="text-sm font-medium text-gray-900">
                                 {getPdfFileName(credit.pdf)}
                               </p>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-xs text-gray-600">
                                 Certificate PDF uploaded by student
-                              </p>
-                              <p className="text-sm text-gray-400 mt-1">
-                                📍 Stored path: {credit.pdf}
                               </p>
                             </div>
                           </div>
@@ -373,12 +367,6 @@ const BPRNDPendingCreditsPage: React.FC = () => {
                             </Button>
                           </div>
                         </div>
-                        <div className="mt-3 pt-3 border-t border-blue-200">
-                          <p className="text-sm text-gray-500">
-                            💡 <strong>Note:</strong> PDFs are stored by the BPRND Student API and served through the Admin API. 
-                            If you cannot access the PDF, please ensure both APIs are running.
-                          </p>
-                        </div>
                       </div>
                     ) : (
                       <div className="mb-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
@@ -399,60 +387,54 @@ const BPRNDPendingCreditsPage: React.FC = () => {
                             </p>
                           </div>
                         </div>
-                        <div className="mt-3 pt-3 border-t border-yellow-200">
-                          <p className="text-sm text-gray-500">
-                            ⚠️ <strong>Warning:</strong> This request lacks supporting documentation. 
-                            Consider requesting the student to upload their certificate before approval.
-                          </p>
-                        </div>
                       </div>
                     )}
 
                     {/* Detailed Hours and Credits Breakdown */}
                     <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <h4 className="text-xl font-bold text-gray-900 mb-3">Credit Breakdown</h4>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-3">Credit Breakdown</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <div className="flex justify-between text-base">
-                            <span className="text-gray-500 font-medium">Theory Hours:</span>
-                            <span className="text-gray-900 font-bold">{credit.theoryHours || 0}h</span>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 font-medium">Theory Hours:</span>
+                            <span className="text-gray-900 font-semibold">{credit.theoryHours || 0}h</span>
                           </div>
-                          <div className="flex justify-between text-base">
-                            <span className="text-gray-500 font-medium">Theory Credits:</span>
-                            <span className="text-gray-900 font-bold">{(credit.theoryCredits || 0).toFixed(2)}</span>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 font-medium">Theory Credits:</span>
+                            <span className="text-gray-900 font-semibold">{(credit.theoryCredits || 0).toFixed(2)}</span>
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <div className="flex justify-between text-base">
-                            <span className="text-gray-500 font-medium">Practical Hours:</span>
-                            <span className="text-gray-900 font-bold">{credit.practicalHours || 0}h</span>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 font-medium">Practical Hours:</span>
+                            <span className="text-gray-900 font-semibold">{credit.practicalHours || 0}h</span>
                           </div>
-                          <div className="flex justify-between text-base">
-                            <span className="text-gray-500 font-medium">Practical Credits:</span>
-                            <span className="text-gray-900 font-bold">{(credit.practicalCredits || 0).toFixed(2)}</span>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 font-medium">Practical Credits:</span>
+                            <span className="text-gray-900 font-semibold">{(credit.practicalCredits || 0).toFixed(2)}</span>
                           </div>
                         </div>
                       </div>
                       <div className="mt-3 pt-3 border-t border-blue-200">
-                        <div className="flex justify-between text-base font-medium">
-                          <span className="text-gray-500">Total Hours:</span>
-                          <span className="text-gray-900 font-bold">{credit.totalHours || 0}h</span>
+                        <div className="flex justify-between text-sm font-medium">
+                          <span className="text-gray-600">Total Hours:</span>
+                          <span className="text-gray-900 font-semibold">{credit.totalHours || 0}h</span>
                         </div>
-                        <div className="flex justify-between text-base font-medium">
-                          <span className="text-gray-500">Total Credits:</span>
-                          <span className="text-gray-900 font-bold">{(credit.calculatedCredits || 0).toFixed(2)}</span>
+                        <div className="flex justify-between text-sm font-medium">
+                          <span className="text-gray-600">Total Credits:</span>
+                          <span className="text-gray-900 font-semibold">{(credit.calculatedCredits || 0).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                      <p className="text-base text-gray-500">
+                      <p className="text-sm text-gray-600">
                         <span className="text-gray-900 font-medium">Organization:</span> {credit.organization}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className={`px-3 py-1 rounded-full text-base font-medium ${
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                         credit.bprnd_poc_approved ? 'bg-green-100 text-green-800' : 
                         credit.status === 'poc_declined' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
                       }`}>
@@ -475,10 +457,7 @@ const BPRNDPendingCreditsPage: React.FC = () => {
                         </Button>
                         <Button 
                           variant="destructive" 
-                          onClick={() => {
-                            console.log('🚫 Decline button clicked for credit:', credit.id);
-                            decline(credit.id);
-                          }} 
+                          onClick={() => decline(credit.id)} 
                           className="flex items-center gap-2"
                         >
                           <ShieldAlert className="h-4 w-4" /> Decline
@@ -487,7 +466,7 @@ const BPRNDPendingCreditsPage: React.FC = () => {
                     )}
 
                     {credit.bprnd_poc_approved && (
-                      <span className="px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800">
+                      <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                         POC Approved
                       </span>
                     )}
@@ -501,7 +480,7 @@ const BPRNDPendingCreditsPage: React.FC = () => {
 
       {/* Refresh Button */}
       <div className="mt-6 text-center">
-        <Button onClick={fetchPendingCredits} variant="outline" className="flex items-center gap-2 mx-auto text-base text-gray-500 font-medium">
+        <Button onClick={fetchPendingCredits} variant="outline" className="flex items-center gap-2 mx-auto text-sm text-gray-600 font-medium">
           <RefreshCcw className="h-4 w-4" />
           Refresh Pending Credits
         </Button>
