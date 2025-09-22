@@ -1,3 +1,0 @@
-srNo,batchNo,rank,serialNumberRRU,enrollmentNumber,fullName,gender,dateOfBirth,birthPlace,birthState,country,aadharNo,mobileNumber,alternateNumber,email,address
-1,BATCH2024-01,1,RRU001,ENR001,John Doe,Male,1995-03-15,Mumbai,Maharashtra,India,123456789012,9876543210,9876543211,john.doe@example.com,"123 Main Street, Mumbai, Maharashtra, India"
-2,BATCH2024-01,2,RRU002,ENR002,Jane Smith,Female,1996-07-22,Delhi,Delhi,India,123456789013,9876543212,9876543213,jane.smith@example.com,"456 Park Avenue, Delhi, Delhi, India" 
