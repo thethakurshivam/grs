@@ -233,67 +233,6 @@ router.get('/umbrellas', async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
-// Get BPRND student profile by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Validate ID parameter
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Student ID is required',
-      });
-    }
-
-    console.log('Fetching BPRND student profile for ID:', id);
-
-    // Find student by ID in credit_calculations collection
-    const student = await CreditCalculation.findById(id);
-
-    if (!student) {
-      return res.status(404).json({
-        success: false,
-        message: 'Student not found',
-      });
-    }
-
-    // Remove password from response for security
-    const studentData = student.toObject();
-    delete studentData.password;
-
-    console.log('BPRND student profile found:', {
-      id: studentData._id,
-      name: studentData.Name,
-      email: studentData.email,
-      designation: studentData.Designation,
-      state: studentData.State,
-      umbrella: studentData.Umbrella,
-    });
-
-    // Send success response with complete student data
-    res.status(200).json({
-      success: true,
-      message: 'Student profile retrieved successfully',
-      student: studentData,
-    });
-  } catch (error) {
-    console.error('Error fetching student profile:', error);
-
-    // Handle invalid ObjectId format
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid student ID format',
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    });
-  }
-});
 
 // Get BPRND student's total credits by ID
 router.get('/:id/credits', async (req, res) => {
@@ -1447,38 +1386,6 @@ router.get('/:id/claims', async (req, res) => {
   }
 });
 
-// List student certificates
-router.get('/:id/certificates', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // Validate student ID format
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid student ID format' 
-      });
-    }
-
-    // Retrieve all certificates for the student
-    const certificates = await BprndCertificate.find({ studentId: new mongoose.Types.ObjectId(id) })
-      .sort({ issuedAt: -1 }) // Sort by most recent first
-      .lean();
-
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Certificates retrieved successfully',
-      count: certificates.length,
-      data: certificates 
-    });
-  } catch (error) {
-    console.error('Error listing student certificates:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Internal server error' 
-    });
-  }
-});
 
 // Internal finalize: called by admin/POC APIs once both approved; idempotent
 router.post('/internal/bprnd/claims/:claimId/finalize', async (req, res) => {
@@ -1623,7 +1530,7 @@ router.get('/:id/certificates', async (req, res) => {
     }
 
     // Find all certificates for the student
-    const certificates = await BprndCertificate.find({ studentId: id })
+    const certificates = await BprndCertificate.find({ studentId: new mongoose.Types.ObjectId(id) })
       .sort({ issuedAt: -1 }) // Sort by most recent first
       .lean();
     
