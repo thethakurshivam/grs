@@ -218,24 +218,17 @@ const AdminDeclinedRequestsPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  {request.pdf && (
+                  {request.pdf && request.pdfExists && request.pdfUrl && (
                     <div className="mt-3 pt-3 border-t border-gray-200">
-                      {request.pdfExists && request.pdfUrl ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => viewDocument(request.pdfUrl!)}
-                          className="flex items-center space-x-2 text-xs text-gray-700 border-gray-300 hover:bg-gray-50"
-                        >
-                          <FileText className="w-4 h-4" />
-                          <span>View Document</span>
-                        </Button>
-                      ) : (
-                        <div className="flex items-center space-x-2 text-xs text-gray-500">
-                          <FileText className="w-4 h-4" />
-                          <span>Document not available</span>
-                        </div>
-                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => viewDocument(request.pdfUrl!)}
+                        className="flex items-center space-x-2 text-xs text-gray-700 border-gray-300 hover:bg-gray-50"
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span>View Document</span>
+                      </Button>
                     </div>
                   )}
                 </div>
