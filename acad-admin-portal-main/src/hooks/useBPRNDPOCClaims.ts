@@ -45,7 +45,7 @@ export const useBPRNDPOCClaims = (): UseBPRNDPOCClaimsReturn => {
         throw new Error('Missing POC token');
       }
 
-      const response = await fetch('http://localhost:3003/api/bprnd/claims', {
+      const response = await fetch('http://localhost:3000/bprnd-poc/claims', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

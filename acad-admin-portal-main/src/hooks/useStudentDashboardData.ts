@@ -71,38 +71,38 @@ export const useStudentDashboardData = (studentId: string): StudentDashboardData
       } as const;
 
       // Courses
-      const coursesRes = await fetch(`http://localhost:3001/student/${studentId}/courses`, { headers });
+      const coursesRes = await fetch(`http://localhost:3000/student/${studentId}/courses`, { headers });
       if (coursesRes.ok) {
         const data = await coursesRes.json();
-        setCourses(Array.isArray(data) ? data : []);
+        setCourses(Array.isArray(data.data) ? data.data : []);
       }
 
       // Available credits
-      const availRes = await fetch(`http://localhost:3001/students/${studentId}/available-credits`, { headers });
+      const availRes = await fetch(`http://localhost:3000/student/${studentId}/available-credits`, { headers });
       if (availRes.ok) {
         const data = await availRes.json();
         setAvailableCredits(Number(data?.available_credit ?? 0));
       }
 
       // Used credits
-      const usedRes = await fetch(`http://localhost:3001/students/${studentId}/used-credits`, { headers });
+      const usedRes = await fetch(`http://localhost:3000/student/${studentId}/used-credits`, { headers });
       if (usedRes.ok) {
         const data = await usedRes.json();
         setUsedCredits(Number(data?.used_credit ?? 0));
       }
 
       // Completed courses
-      const completedRes = await fetch(`http://localhost:3001/students/${studentId}/completed-courses`, { headers });
+      const completedRes = await fetch(`http://localhost:3000/student/${studentId}/completed-courses`, { headers });
       if (completedRes.ok) {
         const data = await completedRes.json();
-        setCompletedCourses(Array.isArray(data) ? data : []);
+        setCompletedCourses(Array.isArray(data.data) ? data.data : []);
       }
 
       // Enrolled courses
-      const enrolledRes = await fetch(`http://localhost:3001/students/${studentId}/enrolled-courses`, { headers });
+      const enrolledRes = await fetch(`http://localhost:3000/student/${studentId}/enrolled-courses`, { headers });
       if (enrolledRes.ok) {
         const data = await enrolledRes.json();
-        setEnrolledCourses(Array.isArray(data) ? data : []);
+        setEnrolledCourses(Array.isArray(data.data) ? data.data : []);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data');

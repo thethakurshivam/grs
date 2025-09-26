@@ -65,13 +65,13 @@ const BulkImportForm = ({ type, title, description }: BulkImportFormProps) => {
       let apiEndpoint = '';
       switch (type) {
         case 'mou':
-          apiEndpoint = 'http://localhost:3002/api/mous/import';
+          apiEndpoint = 'http://localhost:3000/admin/mous/import';
           break;
         case 'courses':
-                      apiEndpoint = 'http://localhost:3002/api/courses/import';
+                      apiEndpoint = 'http://localhost:3000/admin/courses/import';
           break;
         case 'students':
-                      apiEndpoint = 'http://localhost:3002/api/participants/import';
+                      apiEndpoint = 'http://localhost:3000/admin/participants/import';
           break;
         default:
           throw new Error('Invalid import type');

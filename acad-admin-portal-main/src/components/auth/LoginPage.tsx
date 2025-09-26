@@ -30,8 +30,8 @@ const LoginPage = () => {
     }
 
     try {
-      // API call to backend login endpoint (admin routes in api.js)
-      const response = await fetch('http://localhost:3002/api/login', {
+      // API call to backend login endpoint (admin routes in unified server)
+      const response = await fetch('http://localhost:3000/admin/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

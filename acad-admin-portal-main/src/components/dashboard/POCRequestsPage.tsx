@@ -33,7 +33,7 @@ const POCRequestsPage: React.FC<Props> = ({ type = 'standard' }) => {
   }) => {
     try {
       // Use the acceptUrl provided by the backend, or construct it if not available
-      const acceptUrl = item.acceptUrl || `http://localhost:3003/api/bprnd/pending-credits/${item.id}/accept`;
+      const acceptUrl = item.acceptUrl || `http://localhost:3000/bprnd-poc/pending-credits/${item.id}/accept`;
       
       console.log('🔍 Accepting pending credit:', item.id);
       console.log('🔗 Using accept URL:', acceptUrl);

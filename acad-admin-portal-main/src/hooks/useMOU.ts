@@ -52,8 +52,8 @@ export const useMOU = () => {
         mode: 'admin' as const,
         token: adminToken,
         pocId: null,
-        listUrl: `http://localhost:3002/api/mous`,
-        byIdUrl: (mouId: string) => `http://localhost:3002/api/mous/${mouId}`,
+        listUrl: `http://localhost:3000/admin/mous`,
+        byIdUrl: (mouId: string) => `http://localhost:3000/admin/mous/${mouId}`,
       };
     }
 
@@ -62,8 +62,8 @@ export const useMOU = () => {
         mode: 'poc' as const,
         token: pocToken,
         pocId,
-        listUrl: `http://localhost:3002/api/poc/${pocId}/mous`,
-        byIdUrl: (mouId: string) => `http://localhost:3002/api/poc/${pocId}/mous/${mouId}`,
+        listUrl: `http://localhost:3000/poc/${pocId}/mous`,
+        byIdUrl: (mouId: string) => `http://localhost:3000/poc/${pocId}/mous/${mouId}`,
       };
     }
 

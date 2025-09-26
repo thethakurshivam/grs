@@ -47,7 +47,7 @@ export const usePOCMOUs = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:3002/api/poc/${pocUserId}/mous`, {
+      const response = await fetch(`http://localhost:3000/poc/${pocUserId}/mous`, {
         headers: {
           'Authorization': `Bearer ${pocToken}`,
           'Content-Type': 'application/json',

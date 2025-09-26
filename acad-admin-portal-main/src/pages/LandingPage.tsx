@@ -42,7 +42,7 @@ const LandingPage: React.FC = () => {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-[#0b2e63] mb-4">
-            University Portal
+            Credit Accreditation Portal
           </h1>
           <p className="text-black text-lg">Choose your portal to continue</p>
         </div>

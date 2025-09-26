@@ -32,7 +32,7 @@ export function useBPRNDPendingCredits(): UseBPRNDPendingCreditsResult {
   const [error, setError] = useState<string | null>(null);
 
   const endpoint = useMemo(
-    () => 'http://localhost:3003/api/bprnd/pending-credits',
+    () => 'http://localhost:3000/bprnd-poc/pending-credits',
     []
   );
 

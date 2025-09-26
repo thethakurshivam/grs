@@ -23,7 +23,7 @@ export function useBPRNDUmbrellas(): UseBPRNDUmbrellasResult {
 
     const controller = new AbortController();
     try {
-      const response = await fetch('http://localhost:3004/umbrellas', {
+      const response = await fetch('http://localhost:3000/bprnd-student/umbrellas', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,

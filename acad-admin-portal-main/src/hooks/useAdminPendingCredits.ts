@@ -53,7 +53,7 @@ export function useAdminPendingCredits(): UseAdminPendingCreditsResult {
 
       console.log('🔍 useAdminPendingCredits: Using auth token:', authToken.substring(0, 20) + '...');
 
-      const response = await fetch('http://localhost:3002/api/pending-credits', {
+      const response = await fetch('http://localhost:3000/admin/pending-credits', {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',

@@ -56,7 +56,7 @@ export function useAdminBPRNDClaims(): UseAdminBPRNDClaimsResult {
 
       console.log('🔍 useAdminBPRNDClaims: Using auth token:', authToken.substring(0, 20) + '...');
 
-      const response = await fetch('http://localhost:3002/api/bprnd/claims', {
+      const response = await fetch('http://localhost:3000/admin/bprnd/claims', {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',

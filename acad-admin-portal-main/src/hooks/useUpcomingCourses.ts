@@ -47,9 +47,9 @@ export const useUpcomingCourses = () => {
         throw new Error('No authentication token found. Please log in again.');
       }
 
-      console.log('Making API request to:', 'http://localhost:3000/api/courses/upcoming');
+      console.log('Making API request to:', 'http://localhost:3000/admin/courses/upcoming');
       
-      const response = await fetch('http://localhost:3002/api/courses/upcoming', {
+      const response = await fetch('http://localhost:3000/admin/courses/upcoming', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

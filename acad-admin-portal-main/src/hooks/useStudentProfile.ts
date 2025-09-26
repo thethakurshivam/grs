@@ -60,7 +60,7 @@ export const useStudentProfile = (): UseStudentProfileReturn => {
         return;
       }
 
-      const response = await fetch(`http://localhost:3001/students/${studentId}`, {
+      const response = await fetch(`http://localhost:3000/student/${studentId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

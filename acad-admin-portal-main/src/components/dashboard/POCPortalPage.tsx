@@ -18,6 +18,9 @@ import { Button } from '@/components/ui/button';
 
 import { POCComponentProps } from '@/types/poc';
 import useBPRNDStudentsCount from '@/hooks/useBPRNDStudentsCount';
+import usePOCStudents from '@/hooks/usePOCStudents';
+import { usePOCCourses } from '@/hooks/usePOCCourses';
+import { usePOCMOUs } from '@/hooks/usePOCMOUs';
 
 const POCPortalPage: React.FC<POCComponentProps> = ({ type = 'standard' }) => {
   const navigate = useNavigate();
@@ -28,6 +31,11 @@ const POCPortalPage: React.FC<POCComponentProps> = ({ type = 'standard' }) => {
   // Hook for BPRND students count
   const { count: bprndStudentsCount, isLoading: bprndStudentsLoading, error: bprndStudentsError } = useBPRNDStudentsCount();
 
+  // Hooks for normal POC data
+  const { students, loading: studentsLoading, error: studentsError } = usePOCStudents(pocId);
+  const { courses, loading: coursesLoading, error: coursesError } = usePOCCourses(pocId);
+  const { mous, loading: mousLoading, error: mousError } = usePOCMOUs(pocId);
+
   const [stats] = useState({
     requests: 8, // This is for standard POC requests
   });
@@ -37,29 +45,29 @@ const POCPortalPage: React.FC<POCComponentProps> = ({ type = 'standard' }) => {
     ...(type !== 'bprnd' ? [
       {
         title: 'Students',
-        value: 'Loading...', // studentsLoading is removed
+        value: studentsLoading ? 'Loading...' : studentsError ? 'Error' : `${students.length} students`,
         description: 'Total registered students',
         icon: Users,
-        color: 'text-gray-600',
-        bgColor: 'bg-gray-100',
+        color: studentsError ? 'text-red-600' : 'text-gray-800',
+        bgColor: studentsError ? 'bg-red-100' : 'bg-gray-100',
         path: '/poc-portal/students',
       },
       {
         title: 'Courses',
-        value: 'Loading...', // coursesLoading is removed
+        value: coursesLoading ? 'Loading...' : coursesError ? 'Error' : `${courses.length} courses`,
         description: 'Active courses available',
         icon: BookOpen,
-        color: 'text-gray-600',
-        bgColor: 'bg-gray-100',
+        color: coursesError ? 'text-red-600' : 'text-gray-800',
+        bgColor: coursesError ? 'bg-red-100' : 'bg-gray-100',
         path: '/poc-portal/courses',
       },
       {
         title: 'MOUs',
-        value: 'Loading...', // mousLoading is removed
+        value: mousLoading ? 'Loading...' : mousError ? 'Error' : `${mous.length} MOUs`,
         description: 'Memorandum of Understanding',
         icon: FileText,
-        color: 'text-gray-600',
-        bgColor: 'bg-gray-100',
+        color: mousError ? 'text-red-600' : 'text-gray-800',
+        bgColor: mousError ? 'bg-red-100' : 'bg-gray-100',
         path: '/poc-portal/mous',
       },
     ] : []),
@@ -113,21 +121,9 @@ const POCPortalPage: React.FC<POCComponentProps> = ({ type = 'standard' }) => {
           type === 'bprnd' ? 'text-lg leading-relaxed' : 'text-lg'
         }`}>
           {type === 'bprnd'
-            ? 'Comprehensive management portal for BPR&D candidate certification, analytics, and administrative operations.'
+            ? ''
             : 'Welcome to the POC (Proof of Concept) portal. Manage and monitor all POC activities from here.'}
         </p>
-        {type === 'bprnd' && (
-          <div className="mt-6 flex items-center gap-6 text-sm">
-            <div className="flex items-center gap-2 text-green-700">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="font-medium">System Operational</span>
-            </div>
-            <div className="flex items-center gap-2 text-blue-700">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="font-medium">Last Updated: {new Date().toLocaleDateString()}</span>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Stats Cards Grid */}
@@ -146,7 +142,7 @@ const POCPortalPage: React.FC<POCComponentProps> = ({ type = 'standard' }) => {
               type === 'bprnd' ? 'pt-6 px-6' : 'pt-6'
             }`}>
               <CardTitle className={`font-semibold group-hover:text-gray-700 transition-colors ${
-                type === 'bprnd' ? 'text-lg text-gray-800' : 'text-lg'
+                type === 'bprnd' ? 'text-lg text-gray-900' : 'text-lg text-gray-900'
               }`}>
                 {card.title}
               </CardTitle>
@@ -156,7 +152,7 @@ const POCPortalPage: React.FC<POCComponentProps> = ({ type = 'standard' }) => {
                   : 'h-12 w-12 rounded-xl bg-gray-200'
               }`}>
                 <card.icon className={`${
-                  type === 'bprnd' ? `h-7 w-7 ${card.color}` : 'h-6 w-6 text-gray-600'
+                  type === 'bprnd' ? `h-7 w-7 ${card.color}` : 'h-6 w-6 text-gray-800'
                 }`} />
               </div>
             </CardHeader>
@@ -177,7 +173,7 @@ const POCPortalPage: React.FC<POCComponentProps> = ({ type = 'standard' }) => {
                     </div>
                   )}
                 </div>
-                <p className={`text-gray-600 ${
+                <p className={`text-gray-800 ${
                   type === 'bprnd' ? 'text-sm leading-relaxed' : 'text-sm'
                 }`}>{card.description}</p>
                 {type === 'bprnd' && (

@@ -22,8 +22,8 @@ const useBPRNDStudentsCount = (): UseBPRNDStudentsCountResult => {
 
 
 
-      console.log('🌐 Making request to http://localhost:3003/api/bprnd/students');
-      const response = await fetch('http://localhost:3003/api/bprnd/students', {
+      console.log('🌐 Making request to http://localhost:3000/bprnd-poc/students');
+      const response = await fetch('http://localhost:3000/bprnd-poc/students', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

@@ -51,9 +51,9 @@ export const useSchoolMOUs = (schoolName: string) => {
       }
 
       const encodedSchoolName = encodeURIComponent(schoolName);
-      console.log('Making API request to:', `http://localhost:3000/api/schools/${encodedSchoolName}`);
+      console.log('Making API request to:', `http://localhost:3000/admin/schools/${encodedSchoolName}`);
       
-      const response = await fetch(`http://localhost:3002/api/schools/${encodedSchoolName}`, {
+      const response = await fetch(`http://localhost:3000/admin/schools/${encodedSchoolName}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

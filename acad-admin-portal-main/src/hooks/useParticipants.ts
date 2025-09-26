@@ -62,7 +62,7 @@ export const useParticipants = () => {
       return {
         mode: 'admin' as const,
         token: adminToken,
-        url: `http://localhost:3002/api/participants`,
+        url: `http://localhost:3000/admin/participants`,
       };
     }
 
@@ -70,7 +70,7 @@ export const useParticipants = () => {
       return {
         mode: 'poc' as const,
         token: pocToken,
-        url: `http://localhost:3002/api/poc/${pocId}/students`,
+        url: `http://localhost:3000/poc/${pocId}/students`,
       };
     }
 

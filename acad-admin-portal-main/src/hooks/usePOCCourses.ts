@@ -57,7 +57,7 @@ export const usePOCCourses = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:3002/api/poc/${pocUserId}/courses`, {
+      const response = await fetch(`http://localhost:3000/poc/${pocUserId}/courses`, {
         headers: {
           'Authorization': `Bearer ${pocToken}`,
           'Content-Type': 'application/json',

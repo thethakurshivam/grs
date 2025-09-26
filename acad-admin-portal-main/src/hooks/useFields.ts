@@ -35,7 +35,7 @@ export const useFields = (): UseFieldsReturn => {
 
       console.log('Making request to /api/fields with token:', token.substring(0, 15) + '...');
       
-      const response = await fetch('http://localhost:3002/api/fields', {
+      const response = await fetch('http://localhost:3000/admin/fields', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

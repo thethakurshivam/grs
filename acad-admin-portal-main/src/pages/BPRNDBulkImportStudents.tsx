@@ -178,13 +178,13 @@ const BPRNDBulkImportStudents: React.FC = () => {
     }
 
     try {
-      console.log('Making API call to:', 'http://localhost:3003/api/bprnd/students/upload');
+      console.log('Making API call to:', 'http://localhost:3000/bprnd-poc/students/upload');
       console.log('Request headers:', {
         Authorization: `Bearer ${localStorage.getItem('pocToken')}`,
       });
       
       const response = await fetch(
-        'http://localhost:3003/api/bprnd/students/upload',
+        'http://localhost:3000/bprnd-poc/students/upload',
         {
           method: 'POST',
           body: formData,
@@ -279,7 +279,7 @@ const BPRNDBulkImportStudents: React.FC = () => {
                   disabled={umbrellasLoading}
                 >
                   <SelectTrigger className="w-full border-gray-300 bg-white hover:bg-gray-50 focus:border-gray-400 focus:ring-gray-400">
-                    <SelectValue placeholder="Select an umbrella" className="text-gray-900 placeholder:text-gray-500" />
+                    <SelectValue placeholder="Select an umbrella" className="text-gray-900 placeholder:text-gray-700" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-gray-300 shadow-lg">
                     {umbrellas.map((option) => (

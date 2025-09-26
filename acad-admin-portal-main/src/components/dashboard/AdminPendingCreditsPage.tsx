@@ -49,7 +49,7 @@ const AdminPendingCreditsPage: React.FC = () => {
       if (!token) throw new Error('Missing admin token');
       
       // Call the ADMIN API endpoint (not BPRND POC API)
-      const res = await fetch('http://localhost:3002/api/pending-credits', {
+      const res = await fetch('http://localhost:3000/admin/pending-credits', {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -89,7 +89,7 @@ const AdminPendingCreditsPage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       if (!token) throw new Error('Missing admin token');
       
-      const res = await fetch(`http://localhost:3002/api/pending-credits/${creditId}/approve`, {
+      const res = await fetch(`http://localhost:3000/admin/pending-credits/${creditId}/approve`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ const AdminPendingCreditsPage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       if (!token) throw new Error('Missing admin token');
       
-      const res = await fetch(`http://localhost:3002/api/pending-credits/${creditId}/decline`, {
+      const res = await fetch(`http://localhost:3000/admin/pending-credits/${creditId}/decline`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -301,7 +301,7 @@ const AdminPendingCreditsPage: React.FC = () => {
                       </div>
                       <div className="space-y-2">
                         <p className="text-sm font-medium text-gray-600">Calculated Credits</p>
-                        <p className="text-sm text-gray-900">{credit.calculatedCredits}</p>
+                        <p className="text-sm text-gray-900">{credit.calculatedCredits.toFixed(2)}</p>
                       </div>
                     </div>
 
@@ -311,14 +311,14 @@ const AdminPendingCreditsPage: React.FC = () => {
                         <p className="text-sm font-medium text-gray-600">Theory</p>
                         <div className="flex items-center space-x-2">
                           <span className="text-sm text-gray-900">{credit.theoryHours}h</span>
-                          <span className="text-xs text-gray-500">({credit.theoryCredits} credits)</span>
+                          <span className="text-xs text-gray-500">({credit.theoryCredits.toFixed(2)} credits)</span>
                         </div>
                       </div>
                       <div className="space-y-2">
                         <p className="text-sm font-medium text-gray-600">Practical</p>
                         <div className="flex items-center space-x-2">
                           <span className="text-sm text-gray-900">{credit.practicalHours}h</span>
-                          <span className="text-xs text-gray-500">({credit.practicalCredits} credits)</span>
+                          <span className="text-xs text-gray-500">({credit.practicalCredits.toFixed(2)} credits)</span>
                         </div>
                       </div>
                       <div className="space-y-2">
@@ -344,7 +344,7 @@ const AdminPendingCreditsPage: React.FC = () => {
                       <div className="flex items-center space-x-2">
                         <FileText className="h-4 w-4 text-gray-500" />
                         <a
-                          href={`http://localhost:3002/files/${credit.pdf}`}
+                          href={`http://localhost:3000/files/${credit.pdf}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 text-sm flex items-center space-x-1"

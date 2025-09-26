@@ -46,7 +46,7 @@ const usePOCStudents = (pocId: string) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`http://localhost:3002/api/poc/${pocId}/students`, {
+      const response = await fetch(`http://localhost:3000/poc/${pocId}/students`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

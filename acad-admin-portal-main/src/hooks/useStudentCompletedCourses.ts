@@ -52,7 +52,7 @@ export const useStudentCompletedCourses = (): UseStudentCompletedCoursesReturn =
         return;
       }
 
-      const response = await fetch(`http://localhost:3001/students/${studentId}/completed-courses`, {
+      const response = await fetch(`http://localhost:3000/student/${studentId}/completed-courses`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ export const useStudentCompletedCourses = (): UseStudentCompletedCoursesReturn =
       }
 
       const data = await response.json();
-      setCompletedCourses(data);
+      setCompletedCourses(data.data || []);
     } catch (err) {
       console.error('Error fetching completed courses:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch completed courses');

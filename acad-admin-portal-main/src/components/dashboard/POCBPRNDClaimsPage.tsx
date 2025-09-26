@@ -45,7 +45,7 @@ const POCBPRNDClaimsPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('http://localhost:3003/api/bprnd/claims', {
+      const res = await fetch('http://localhost:3000/bprnd-poc/claims', {
         headers: { 'Content-Type': 'application/json' },
       });
       const json = await res.json();
@@ -67,7 +67,7 @@ const POCBPRNDClaimsPage: React.FC = () => {
   const approve = async (id: string) => {
     try {
       console.log('🔍 Approving claim:', id);
-      const res = await fetch(`http://localhost:3003/api/bprnd/claims/${id}/approve`, {
+      const res = await fetch(`http://localhost:3000/bprnd-poc/claims/${id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -103,7 +103,7 @@ const POCBPRNDClaimsPage: React.FC = () => {
   const decline = async (id: string) => {
     try {
       console.log('🔍 Declining claim:', id);
-      const res = await fetch(`http://localhost:3003/api/bprnd/claims/${id}/decline`, {
+      const res = await fetch(`http://localhost:3000/bprnd-poc/claims/${id}/decline`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: 'Declined by POC' })
@@ -148,7 +148,12 @@ const POCBPRNDClaimsPage: React.FC = () => {
           <p className="text-sm text-gray-600">Review and approve student certification requests awaiting POC approval</p>
         </div>
         <div className="ml-auto">
-          <Button variant="outline" onClick={fetchClaims} disabled={loading} className="flex items-center gap-2 text-sm">
+          <Button 
+            variant="default" 
+            onClick={fetchClaims} 
+            disabled={loading} 
+            className="flex items-center gap-2 text-sm bg-blue-600 hover:bg-blue-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
+          >
             <RefreshCcw className="h-4 w-4" /> Refresh
           </Button>
         </div>
@@ -161,18 +166,52 @@ const POCBPRNDClaimsPage: React.FC = () => {
       )}
 
       <Card className="border border-gray-200 bg-white shadow-sm">
-        <CardHeader className="pb-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
-          <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-            Requests
-          </CardTitle>
-          <CardDescription className="text-sm text-gray-600">Total: {claims.length}</CardDescription>
+        <CardHeader className="pb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold text-gray-900">Certification Requests</CardTitle>
+                <CardDescription className="text-sm text-gray-600 mt-1">Review and manage student certification requests</CardDescription>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-600">{claims.length}</div>
+              <div className="text-xs text-gray-500 uppercase tracking-wide">Pending Requests</div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-gray-600 text-sm">Loading...</p>
+            <div className="flex items-center justify-center py-12">
+              <div className="flex items-center gap-3 text-gray-600">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                <span className="text-sm">Loading requests...</span>
+              </div>
+            </div>
           ) : claims.length === 0 ? (
-            <p className="text-gray-600 text-sm">No requests found.</p>
+            <div className="flex flex-col items-center justify-center py-16 px-4">
+              <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">All Caught Up!</h3>
+              <p className="text-gray-600 text-center max-w-md mb-4">
+                There are currently no certification requests pending your approval. 
+                New requests will appear here as students submit them.
+              </p>
+              <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-lg">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>You'll be notified when new requests arrive</span>
+              </div>
+            </div>
           ) : (
             <div className="space-y-3">
               {claims.map((c) => (

@@ -86,7 +86,7 @@ const CertificateMappingsListPage = () => {
         throw new Error('Authentication token not found. Please log in again.');
       }
       
-      const response = await fetch('http://localhost:3002/api/certificate-course-mappings', {
+      const response = await fetch('http://localhost:3000/admin/certificate-course-mappings', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -195,7 +195,7 @@ const CertificateMappingsListPage = () => {
       mapping.umbrellaKey.replace(/_/g, ' '), // Show certification umbrella (formatted)
       mapping.qualification,
       mapping.courses.reduce((total, course) => total + course.totalCredits, 0).toFixed(2),
-      calculateTotalCreditsUsed(mapping),
+      calculateTotalCreditsUsed(mapping).toFixed(2),
       mapping.totalCreditsRequired,
       calculateCreditEfficiency(mapping),
       mapping.courses.length,
@@ -432,13 +432,13 @@ const CertificateMappingsListPage = () => {
                           <div className="flex gap-6 text-sm text-gray-500 mt-2">
                             <span className="font-medium">Theory: <span className="text-gray-700">{course.theoryHours}h</span></span>
                             <span className="font-medium">Practical: <span className="text-gray-700">{course.practicalHours}h</span></span>
-                            <span className="font-medium">Credits: <span className="text-gray-700">{course.totalCredits}</span></span>
+                            <span className="font-medium">Credits: <span className="text-gray-700">{course.totalCredits.toFixed(2)}</span></span>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="flex flex-col items-end gap-2">
                             <Badge variant="outline" className="text-gray-700 border-gray-300 font-medium bg-white">
-                              {course.creditsUsed} credits used
+                              {course.creditsUsed.toFixed(2)} credits used
                             </Badge>
                             <p className="text-xs text-gray-500 font-medium">
                               {new Date(course.completionDate).toLocaleDateString()}

@@ -51,7 +51,7 @@ const AdminDeclinedRequestsPage: React.FC = () => {
       if (!token) throw new Error('Missing admin token');
       
       // Call the Admin API endpoint for declined requests
-      const res = await fetch('http://localhost:3002/api/admin/declined-requests', {
+      const res = await fetch('http://localhost:3000/admin/declined-requests', {
         headers: { Authorization: `Bearer ${token}` },
       });
       

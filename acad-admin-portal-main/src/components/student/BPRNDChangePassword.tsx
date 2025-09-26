@@ -89,7 +89,7 @@ export const BPRNDChangePassword: React.FC<BPRNDChangePasswordProps> = ({ childr
         throw new Error('Student email not found. Please log in again.');
       }
 
-      const response = await fetch('http://localhost:3004/change-password', {
+      const response = await fetch('http://localhost:3000/bprnd-student/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

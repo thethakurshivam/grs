@@ -52,7 +52,7 @@ export const useStudentCourses = (): UseStudentCoursesReturn => {
         return;
       }
 
-      const response = await fetch(`http://localhost:3001/student/${studentId}/courses`, {
+      const response = await fetch(`http://localhost:3000/student/${studentId}/courses`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ export const useStudentCourses = (): UseStudentCoursesReturn => {
       }
 
       const data = await response.json();
-      setCourses(data);
+      setCourses(data.data || []);
     } catch (err) {
       console.error('Error fetching student courses:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch courses');

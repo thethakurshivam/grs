@@ -97,7 +97,7 @@ export const CreditBankPage: React.FC = () => {
       
       // Encode the umbrella name for URL (handle spaces and special characters)
       const encodedUmbrella = encodeURIComponent(umbrellaName);
-      const apiUrl = `http://localhost:3004/student/${studentId}/course-history/${encodedUmbrella}`;
+      const apiUrl = `http://localhost:3000/bprnd-student/${studentId}/course-history/${encodedUmbrella}`;
       
       const response = await fetch(apiUrl);
       

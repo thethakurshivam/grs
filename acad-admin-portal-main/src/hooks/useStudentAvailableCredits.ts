@@ -30,7 +30,7 @@ export const useStudentAvailableCredits = (): UseStudentAvailableCreditsReturn =
         return;
       }
 
-      const response = await fetch(`http://localhost:3001/students/${studentId}/available-credits`, {
+      const response = await fetch(`http://localhost:3000/student/${studentId}/available-credits`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

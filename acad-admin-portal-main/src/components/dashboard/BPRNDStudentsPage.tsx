@@ -64,7 +64,7 @@ const BPRNDStudentsPage: React.FC = () => {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3003/api/bprnd/students');
+      const response = await fetch('http://localhost:3000/bprnd-poc/students');
       const data = await response.json();
       
       if (data.success) {

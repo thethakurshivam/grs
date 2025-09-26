@@ -51,7 +51,7 @@ const BPRNDPendingCreditsPage: React.FC = () => {
         throw new Error('No authentication token found');
       }
       
-      const res = await fetch('http://localhost:3003/api/bprnd/pending-credits', {
+      const res = await fetch('http://localhost:3000/bprnd-poc/pending-credits', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -87,7 +87,7 @@ const BPRNDPendingCreditsPage: React.FC = () => {
         throw new Error('No authentication token found');
       }
       
-      const res = await fetch(`http://localhost:3003/api/bprnd/pending-credits/${creditId}/accept`, {
+      const res = await fetch(`http://localhost:3000/bprnd-poc/pending-credits/${creditId}/accept`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -124,7 +124,7 @@ const BPRNDPendingCreditsPage: React.FC = () => {
         throw new Error('No authentication token found');
       }
       
-      const res = await fetch(`http://localhost:3003/api/bprnd/pending-credits/${creditId}/reject`, {
+      const res = await fetch(`http://localhost:3000/bprnd-poc/pending-credits/${creditId}/reject`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -168,7 +168,7 @@ const BPRNDPendingCreditsPage: React.FC = () => {
     // Extract filename from the path and construct the correct URL
     const fileName = pdfPath.split('/').pop();
     if (!fileName) return null;
-    return `http://localhost:3004/files/${fileName}`;
+    return `http://localhost:3000/files/${fileName}`;
   };
 
   if (loading) {

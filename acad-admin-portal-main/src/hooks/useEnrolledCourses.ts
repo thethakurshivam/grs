@@ -58,7 +58,7 @@ export const useEnrolledCourses = (): UseEnrolledCoursesReturn => {
           throw new Error('Authentication token not found');
         }
 
-        const response = await fetch(`http://localhost:3001/students/${studentId}/enrolled-courses`, {
+        const response = await fetch(`http://localhost:3000/student/${studentId}/enrolled-courses`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -70,7 +70,8 @@ export const useEnrolledCourses = (): UseEnrolledCoursesReturn => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data: Course[] = await response.json();
+        const responseData = await response.json();
+        const data: Course[] = responseData.data || [];
         setEnrolledCourses(Array.isArray(data) ? data : []);
         setEnrolledCourseCount(Array.isArray(data) ? data.length : 0);
         lastStudentIdRef.current = studentId;

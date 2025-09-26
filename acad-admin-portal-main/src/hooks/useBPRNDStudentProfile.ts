@@ -41,7 +41,7 @@ export const useBPRNDStudentProfile = (): UseBPRNDStudentProfileReturn => {
       console.log('Fetching BPRND student profile for ID:', studentId);
       console.log('API URL:', `/api/student/${studentId}`);
 
-      const response = await fetch(`http://localhost:3004/student/${studentId}`, {
+      const response = await fetch(`http://localhost:3000/bprnd-student/${studentId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

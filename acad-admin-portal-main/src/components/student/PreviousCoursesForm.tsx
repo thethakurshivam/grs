@@ -145,7 +145,7 @@ const PreviousCoursesForm: React.FC = () => {
       formData.append('noOfDays', String(Number(noOfDays)));
       formData.append('pdf', first.certificate_pdf);
 
-      const response = await fetch('http://localhost:3004/pending-credits', {
+      const response = await fetch('http://localhost:3000/bprnd-student/pending-credits', {
         method: 'POST',
         body: formData,
       });

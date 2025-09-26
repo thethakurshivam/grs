@@ -27,8 +27,8 @@ export function useAdminRequestCounts(): UseAdminRequestCountsResult {
     try {
       // Fetch both counts in parallel
       console.log('🔍 useAdminRequestCounts: Making API calls to:', [
-        'http://localhost:3002/api/admin/pending-credits/count',
-        'http://localhost:3002/api/admin/bprnd-claims/count'
+        'http://localhost:3000/admin/pending-credits/count',
+        'http://localhost:3000/admin/bprnd-claims/count'
       ]);
       
       // Get admin authentication token
@@ -43,7 +43,7 @@ export function useAdminRequestCounts(): UseAdminRequestCountsResult {
       console.log('🔍 useAdminRequestCounts: Using auth token:', authToken.substring(0, 20) + '...');
 
       const [pendingCreditsResponse, pendingCertificationResponse] = await Promise.all([
-        fetch('http://localhost:3002/api/admin/pending-credits/count', {
+        fetch('http://localhost:3000/admin/pending-credits/count', {
           method: 'GET',
           headers: { 
             'Content-Type': 'application/json',
@@ -51,7 +51,7 @@ export function useAdminRequestCounts(): UseAdminRequestCountsResult {
           },
           signal: controller.signal,
         }),
-        fetch('http://localhost:3002/api/admin/bprnd-claims/count', {
+        fetch('http://localhost:3000/admin/bprnd-claims/count', {
           method: 'GET',
           headers: { 
             'Content-Type': 'application/json',

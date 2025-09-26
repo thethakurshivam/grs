@@ -7,6 +7,8 @@ import LoginPage from './components/auth/LoginPage';
 import SignupPage from './components/auth/SignupPage';
 import DashboardLayout from './components/dashboard/DashboardLayout';
 import DashboardOverview from './components/dashboard/DashboardOverview';
+import BPRNDDashboard from './components/dashboard/BPRNDDashboard';
+import AdminAnalyticsPage from './components/dashboard/AdminAnalyticsPage';
 import MOUListPage from './components/dashboard/MOUListPage';
 import CompletedCoursesListPage from './components/dashboard/CompletedCoursesListPage';
 import OngoingCoursesListPage from './components/dashboard/OngoingCoursesListPage';
@@ -131,7 +133,9 @@ const App = () => (
             <Route path="sector-training" element={<SectorTrainingFields />} />
             <Route path="sector-training/:fieldId" element={<FieldCourses />} />
             <Route path="field-courses/:fieldId" element={<FieldCourses />} />
+            <Route path="bprnd" element={<BPRNDDashboard />} />
             <Route path="bprnd/claims" element={<AdminBPRNDClaimsPage />} />
+            <Route path="bprnd-analytics" element={<AdminAnalyticsPage />} />
             <Route path="bprnd-certification-request" element={<BPRNDCertificationRequestPage />} />
             <Route path="bprnd-pending-credits" element={<AdminPendingCreditsPage />} />
             <Route path="certificate-mappings" element={<CertificateMappingsListPage />} />

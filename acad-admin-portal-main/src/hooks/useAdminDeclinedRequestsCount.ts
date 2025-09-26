@@ -24,7 +24,7 @@ export const useAdminDeclinedRequestsCount = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:3002/api/admin/declined-requests/count', {
+      const response = await fetch('http://localhost:3000/admin/declined-requests/count', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

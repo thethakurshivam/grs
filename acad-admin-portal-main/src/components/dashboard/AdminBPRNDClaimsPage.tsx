@@ -48,7 +48,7 @@ const AdminBPRNDClaimsPage: React.FC = () => {
       setError(null);
       const token = localStorage.getItem('authToken');
       if (!token) throw new Error('Missing admin token');
-      const res = await fetch('http://localhost:3002/api/bprnd/claims', {
+      const res = await fetch('http://localhost:3000/admin/bprnd/claims', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const json = await res.json();
@@ -68,7 +68,7 @@ const AdminBPRNDClaimsPage: React.FC = () => {
     try {
       const token = localStorage.getItem('authToken');
       if (!token) throw new Error('Missing admin token');
-      const res = await fetch(`http://localhost:3002/api/bprnd/claims/${id}/approve`, {
+      const res = await fetch(`http://localhost:3000/admin/bprnd/claims/${id}/approve`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -86,7 +86,7 @@ const AdminBPRNDClaimsPage: React.FC = () => {
     try {
       const token = localStorage.getItem('authToken');
       if (!token) throw new Error('Missing admin token');
-      const res = await fetch(`http://localhost:3002/api/bprnd/claims/${id}/decline`, {
+      const res = await fetch(`http://localhost:3000/admin/bprnd/claims/${id}/decline`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -1,0 +1,132 @@
+
+> sispa-university-admin-panel@1.0.0 start
+> node main-server.js
+
+
+🚀 ================================
+🎯 BPR&D Unified API Server Started
+🚀 ================================
+📡 Server running on port: 3000
+🌐 Base URL: http://localhost:3000
+
+📋 Available Services:
+   📊 Admin API:        /admin/*
+   👨‍🎓 Student API:      /student/*
+   👮‍♀️ POC API:          /poc/*
+   🎖️  BPR&D POC API:    /bprnd-poc/*
+   🎓 BPR&D Student API: /bprnd-student/*
+
+💡 Health Check: http://localhost:3000/health
+🚀 ================================
+
+✅ Connected to MongoDB
+🔍 Admin requesting pending credits for approval...
+🚀 Admin route /bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: {}
+❌ Error in admin route: ReferenceError: BprndClaim is not defined
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:309:20
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:68:19
+    at Layer.handle [as handle_request] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/route.js:149:13)
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:62:5
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:261:12
+    at getSecret (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:97:14)
+    at module.exports [as verify] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:101:10)
+    at authenticateToken (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:54:7)
+    at Layer.handle [as handle_request] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/layer.js:95:5)
+🚀 Admin route /bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: {}
+❌ Error in admin route: ReferenceError: BprndClaim is not defined
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:309:20
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:68:19
+    at Layer.handle [as handle_request] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/route.js:149:13)
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:62:5
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:261:12
+    at getSecret (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:97:14)
+    at module.exports [as verify] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:101:10)
+    at authenticateToken (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:54:7)
+    at Layer.handle [as handle_request] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/layer.js:95:5)
+📊 Found 16 pending credits in database
+📋 Admin can see 16 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 16 pending credits in database
+📋 Admin can see 16 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🚀 Admin route /bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: {}
+❌ Error in admin route: ReferenceError: BprndClaim is not defined
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:309:20
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:68:19
+    at Layer.handle [as handle_request] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/route.js:149:13)
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:62:5
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:261:12
+    at getSecret (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:97:14)
+    at module.exports [as verify] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:101:10)
+    at authenticateToken (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:54:7)
+    at Layer.handle [as handle_request] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/layer.js:95:5)
+🔍 Admin requesting pending credits for approval...
+🔍 Admin requesting declined requests count...
+🚀 Admin route /bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: {}
+❌ Error in admin route: ReferenceError: BprndClaim is not defined
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:309:20
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:68:19
+    at Layer.handle [as handle_request] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/route.js:149:13)
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:62:5
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:261:12
+    at getSecret (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:97:14)
+    at module.exports [as verify] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:101:10)
+    at authenticateToken (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:54:7)
+    at Layer.handle [as handle_request] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/layer.js:95:5)
+📊 Found 3 admin declined requests
+📊 Found 16 pending credits in database
+📋 Admin can see 16 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 16 pending credits in database
+📋 Admin can see 16 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+🚀 Admin route /bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: {}
+❌ Error in admin route: ReferenceError: BprndClaim is not defined
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:309:20
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:68:19
+    at Layer.handle [as handle_request] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/route.js:149:13)
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:62:5
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:261:12
+    at getSecret (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:97:14)
+    at module.exports [as verify] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:101:10)
+    at authenticateToken (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:54:7)
+    at Layer.handle [as handle_request] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/layer.js:95:5)
+🚀 Admin route /bprnd/claims called
+📝 Query parameters: { status: undefined }
+🔍 Filter applied: {}
+❌ Error in admin route: ReferenceError: BprndClaim is not defined
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:309:20
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:68:19
+    at Layer.handle [as handle_request] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/route.js:149:13)
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:62:5
+    at /Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:261:12
+    at getSecret (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:97:14)
+    at module.exports [as verify] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/jsonwebtoken/verify.js:101:10)
+    at authenticateToken (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/routes/admin.js:54:7)
+    at Layer.handle [as handle_request] (/Users/trinayanmahato/Desktop/grs 2/sitaics_project-main/node_modules/express/lib/router/layer.js:95:5)
+📊 Found 16 pending credits in database
+📋 Admin can see 16 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval
+🔍 Admin requesting pending credits for approval...
+📊 Found 16 pending credits in database
+📋 Admin can see 16 pending credits that need approval
+💡 These credits have been approved by POC and are now waiting for admin approval

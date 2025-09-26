@@ -55,9 +55,9 @@ export const useFieldCourses = (fieldId: string | null) => {
         throw new Error('No authentication token found. Please log in again.');
       }
 
-      console.log('Making API request to:', `http://localhost:3000/api/fields/${id}`);
+      console.log('Making API request to:', `http://localhost:3000/admin/fields/${id}`);
       
-      const response = await fetch(`http://localhost:3002/api/fields/${id}`, {
+      const response = await fetch(`http://localhost:3000/admin/fields/${id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

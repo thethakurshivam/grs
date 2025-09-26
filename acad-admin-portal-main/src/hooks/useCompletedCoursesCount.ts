@@ -55,9 +55,9 @@ export const useCompletedCoursesCount = () => {
         throw new Error('No authentication token found. Please log in again.');
       }
 
-      console.log('Making API request to:', 'http://localhost:3000/api/courses/completed');
+      console.log('Making API request to:', 'http://localhost:3000/admin/courses/completed');
       
-      const response = await fetch('http://localhost:3002/api/courses/completed', {
+      const response = await fetch('http://localhost:3000/admin/courses/completed', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

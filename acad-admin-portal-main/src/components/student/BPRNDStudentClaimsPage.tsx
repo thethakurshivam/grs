@@ -47,7 +47,7 @@ const BPRNDStudentClaimsPage: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const res = await fetch(`http://localhost:3004/student/${encodeURIComponent(studentId)}/claims`);
+      const res = await fetch(`http://localhost:3000/bprnd-student/${encodeURIComponent(studentId)}/claims`);
       console.log('Claims API response status:', res.status);
       
       if (!res.ok) {

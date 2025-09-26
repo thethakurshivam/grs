@@ -30,7 +30,7 @@ const POCLogin: React.FC<POCLoginProps> = ({ isBPRND = false }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:3003/api/poc/login`,
+        `http://localhost:3000/poc/login`,
         {
           method: 'POST',
           headers: {
@@ -53,13 +53,13 @@ const POCLogin: React.FC<POCLoginProps> = ({ isBPRND = false }) => {
         
         // Store authentication data
         localStorage.setItem('pocToken', data.token);
-        localStorage.setItem('pocUser', JSON.stringify(data.poc));
-        localStorage.setItem('pocUserId', data.poc.id);
+        localStorage.setItem('pocUser', JSON.stringify(data.data));
+        localStorage.setItem('pocUserId', data.data._id);
         localStorage.setItem('isPOCAuthenticated', 'true');
 
         toast({
           title: 'Login Successful',
-          description: `Welcome back, ${data.poc.name}!`,
+          description: `Welcome back, ${data.data.name}!`,
         });
 
         // Navigate to POC portal after a short delay

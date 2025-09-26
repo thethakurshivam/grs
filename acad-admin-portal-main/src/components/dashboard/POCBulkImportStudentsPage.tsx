@@ -147,7 +147,7 @@ const POCBulkImportStudentsPage: React.FC<POCBulkImportStudentsPageProps> = ({
         formData.append('umbrella', umbrella.trim());
 
         const response = await fetch(
-          'http://localhost:3003/api/bprnd/students/upload',
+          'http://localhost:3000/bprnd-poc/students/upload',
           {
             method: 'POST',
             body: formData,
@@ -189,8 +189,8 @@ const POCBulkImportStudentsPage: React.FC<POCBulkImportStudentsPageProps> = ({
 
         // Use different endpoints based on POC type
         const apiUrl = type === 'bprnd' 
-          ? `http://localhost:3003/api/bprnd/students/upload`
-          : `http://localhost:3002/api/poc/${pocUserId}/bulk-import-students`;
+          ? `http://localhost:3000/bprnd-poc/students/upload`
+          : `http://localhost:3000/poc/${pocUserId}/bulk-import-students`;
 
         const response = await fetch(apiUrl, {
           method: 'POST',
@@ -410,7 +410,7 @@ Jane Smith,Detective,Delhi,Digital Forensics,90,6,6,9,9,18,6,3,9,1996-07-22,jane
                   onValueChange={(value) => setUmbrella(value)}
                   disabled={umbrellasLoading}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="text-gray-900 placeholder:text-gray-600">
                     <SelectValue
                       placeholder={
                          umbrellasLoading

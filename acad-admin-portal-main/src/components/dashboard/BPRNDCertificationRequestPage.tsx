@@ -70,7 +70,7 @@ const BPRNDCertificationRequestPage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       if (!token) throw new Error('Missing admin token');
       
-      const res = await fetch('http://localhost:3002/api/bprnd/claims', {
+      const res = await fetch('http://localhost:3000/admin/bprnd/claims', {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -100,7 +100,7 @@ const BPRNDCertificationRequestPage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       if (!token) throw new Error('Missing admin token');
       
-      const res = await fetch(`http://localhost:3002/api/bprnd/claims/${id}/approve`, {
+      const res = await fetch(`http://localhost:3000/admin/bprnd/claims/${id}/approve`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -130,7 +130,7 @@ const BPRNDCertificationRequestPage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       if (!token) throw new Error('Missing admin token');
       
-      const res = await fetch(`http://localhost:3002/api/bprnd/claims/${id}/decline`, {
+      const res = await fetch(`http://localhost:3000/admin/bprnd/claims/${id}/decline`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -338,15 +338,15 @@ const BPRNDCertificationRequestPage: React.FC = () => {
                             <div className="space-y-1 text-xs text-gray-600">
                               <div className="flex justify-between">
                                 <span>Theory:</span>
-                                <span>{course.theoryCredits} credits</span>
+                                <span>{course.theoryCredits.toFixed(2)} credits</span>
                               </div>
                               <div className="flex justify-between">
                                 <span>Practical:</span>
-                                <span>{course.practicalCredits} credits</span>
+                                <span>{course.practicalCredits.toFixed(2)} credits</span>
                               </div>
                               <div className="flex justify-between font-medium">
                                 <span>Total:</span>
-                                <span>{course.creditsEarned} credits</span>
+                                <span>{course.creditsEarned.toFixed(2)} credits</span>
                               </div>
                             </div>
                             {course.pdfPath && (

@@ -25,7 +25,7 @@ export function useBPRNDCreditBreakdown(studentId: string): UseBPRNDCreditBreakd
       // Fetch stored credits from the credits/breakdown endpoint
       console.log('🔍 Fetching stored credits from /api/student/${studentId}/credits/breakdown endpoint...');
       const storedCreditsResponse = await fetch(
-        `http://localhost:3004/student/${studentId}/credits/breakdown`,
+        `http://localhost:3000/bprnd-student/${studentId}/credits/breakdown`,
         {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },

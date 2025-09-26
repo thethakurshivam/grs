@@ -42,7 +42,7 @@ const DashboardOverview = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Welcome Header */}
       <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg">
         <div className="flex items-center gap-6">
@@ -51,25 +51,12 @@ const DashboardOverview = () => {
           </div>
           <div>
             <h1 className="text-4xl font-bold text-gray-900">Dashboard Overview</h1>
-            <p className="text-gray-600 mt-2 text-lg">
-              Comprehensive university administration and analytics platform
-            </p>
-            <div className="mt-3 flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2 text-green-700">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="font-medium">System Operational</span>
-              </div>
-              <div className="flex items-center gap-2 text-blue-700">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="font-medium">Last Updated: {new Date().toLocaleDateString()}</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
       {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 lg:px-6">
         {/* MOU Card - Dynamic from API */}
         <MOUCard />
         

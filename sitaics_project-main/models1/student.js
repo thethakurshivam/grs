@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 const previousCourseSchema = new mongoose.Schema({
   organization_name: {
@@ -111,5 +112,25 @@ const studentSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Hash password before saving
+studentSchema.pre('save', async function(next) {
+  // Only hash the password if it has been modified (or is new)
+  if (!this.isModified('password')) return next();
+
+  try {
+    // Hash password with salt rounds of 10
+    const hashedPassword = await bcrypt.hash(this.password, 10);
+    this.password = hashedPassword;
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Method to compare password
+studentSchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 module.exports = mongoose.model('Student', studentSchema);

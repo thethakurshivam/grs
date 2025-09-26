@@ -128,7 +128,7 @@ export const BPRNDStudentDashboard: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 text-sm text-gray-700">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Current Balance: <span className="font-semibold text-green-700">{isLoading ? 'Loading...' : typeof totalCredits === 'number' ? `${totalCredits} Credits` : 'N/A'}</span></span>
+                    <span>Current Balance: <span className="font-semibold text-green-700">{isLoading ? 'Loading...' : typeof totalCredits === 'number' ? `${Math.ceil(totalCredits)} Credits` : 'N/A'}</span></span>
                   </div>
                   {error && (
                     <div className="flex items-center space-x-2 text-sm text-red-600">

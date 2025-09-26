@@ -85,7 +85,7 @@ export const BPRNDCertificatesPage: React.FC = () => {
   const handleDownloadCertificate = async (certificateId: string) => {
     setDownloadingId(certificateId);
     try {
-      const response = await fetch(`http://localhost:3004/student/certificate/${certificateId}/pdf`, {
+      const response = await fetch(`http://localhost:3000/bprnd-student/certificate/${certificateId}/pdf`, {
         method: 'GET',
       });
 

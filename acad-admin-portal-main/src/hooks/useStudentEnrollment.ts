@@ -40,7 +40,7 @@ export const useStudentEnrollment = (): UseStudentEnrollmentReturn => {
         return { success: false, error: errorMsg };
       }
 
-      const response = await fetch(`http://localhost:3001/students/${studentId}/courses/${courseId}`, {
+      const response = await fetch(`http://localhost:3000/student/${studentId}/courses/${courseId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

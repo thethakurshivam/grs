@@ -30,7 +30,7 @@ export const useCourseSearchByOrganization = () => {
         throw new Error('Authentication token not found');
       }
 
-      let url = `http://localhost:3002/api/courses/organization/${encodeURIComponent(organization)}`;
+      let url = `http://localhost:3000/admin/courses/organization/${encodeURIComponent(organization)}`;
       if (status) {
         url += `?status=${status}`;
       }

@@ -26,7 +26,7 @@ const BPRNDClaimCredits: React.FC = () => {
     }
 
     try {
-      const url = `http://localhost:3004/student/${encodeURIComponent(studentId)}/certifications/request`;
+      const url = `http://localhost:3000/bprnd-student/${encodeURIComponent(studentId)}/certifications/request`;
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
